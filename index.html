@@ -1,26 +1,59 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0048)file:///Users/tiagocamargos/Downloads/index.html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Assistente">
 <meta name="theme-color" content="#0f0e0c">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%230f0e0c'/%3E%3Ccircle cx='90' cy='90' r='60' fill='none' stroke='%23c9a84c' stroke-width='3'/%3E%3Ctext x='90' y='105' text-anchor='middle' font-size='52' fill='%23c9a84c' font-family='serif'%3E✦%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 180 180&#39;%3E%3Crect width=&#39;180&#39; height=&#39;180&#39; fill=&#39;%230f0e0c&#39;/%3E%3Ccircle cx=&#39;90&#39; cy=&#39;90&#39; r=&#39;60&#39; fill=&#39;none&#39; stroke=&#39;%23c9a84c&#39; stroke-width=&#39;3&#39;/%3E%3Ctext x=&#39;90&#39; y=&#39;105&#39; text-anchor=&#39;middle&#39; font-size=&#39;52&#39; fill=&#39;%23c9a84c&#39; font-family=&#39;serif&#39;%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
 <title>Assistente Pessoal</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="./Assistente Pessoal_files/css2" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
+  authDomain: "assistente-ee1f4.firebaseapp.com",
+  projectId: "assistente-ee1f4",
+  storageBucket: "assistente-ee1f4.firebasestorage.app",
+  messagingSenderId: "611661253806",
+  appId: "1:611661253806:web:d5358f3ec3ccada1f0313f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── FIREBASE HELPERS ──────────────────────────────
+window.fbSave = async (path, data) => {
+  await setDoc(doc(db, path), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+};
+window.fbGet = async (path) => {
+  const snap = await getDoc(doc(db, path));
+  return snap.exists() ? snap.data() : null;
+};
+window.fbDelete = async (path) => {
+  await deleteDoc(doc(db, path));
+};
+window.fbListen = (path, cb) => {
+  return onSnapshot(doc(db, path), snap => cb(snap.exists() ? snap.data() : null));
+};
+window.fbListenCol = (path, cb) => {
+  return onSnapshot(collection(db, path), snap => {
+    cb(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+};
+window.firebaseReady = true;
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
 <style>
-:root {
-  --bg:#0f0e0c;--surface:#1a1814;--surface2:#242018;--border:#2e2a22;
-  --gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6530;
-  --text:#ede8df;--text-muted:#8a8070;--text-dim:#5a5248;
-  --green:#5a9e6f;--red:#c06060;--blue:#5a7ea0;--purple:#9b6fa8;--radius:12px;
-}
-[data-theme="light"]{
-  --bg:#f5f2ec;--surface:#fffefa;--surface2:#f0ede6;--border:#ddd8cc;
-  --text:#2a2520;--text-muted:#6a6058;--text-dim:#9a9088;--gold-dim:#9a7040;
-}
+:root{--bg:#0f0e0c;--surface:#1a1814;--surface2:#242018;--border:#2e2a22;--gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6530;--text:#ede8df;--text-muted:#8a8070;--text-dim:#5a5248;--green:#5a9e6f;--red:#c06060;--blue:#5a7ea0;--purple:#9b6fa8;--radius:12px;}
+[data-theme="light"]{--bg:#f5f2ec;--surface:#fffefa;--surface2:#f0ede6;--border:#ddd8cc;--text:#2a2520;--text-muted:#6a6058;--text-dim:#9a9088;--gold-dim:#9a7040;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .25s,color .25s;}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.35;}
@@ -44,6 +77,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .login-divider{font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;}
 .google-btn{display:flex;align-items:center;gap:10px;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:11px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .google-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+.loading-bar{position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:9999;transition:width .3s ease;width:0;}
 
 /* HEADER */
 header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);}
@@ -60,11 +94,11 @@ header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid va
 .icon-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:5px;border-radius:6px;transition:color .2s;}
 .icon-btn:hover{color:var(--gold);}
 
-/* MAIN GRID */
+/* MAIN */
 .main{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 300px;max-height:calc(100vh - 62px);overflow:hidden;}
-
-/* LEFT */
 .left-panel{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;}
+
+/* INPUT */
 .input-section{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface);}
 .input-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:7px;font-weight:600;}
 .input-row{display:flex;gap:7px;align-items:flex-end;}
@@ -72,14 +106,11 @@ textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radiu
 textarea:focus{border-color:var(--gold-dim);}
 textarea::placeholder{color:var(--text-dim);}
 .send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:var(--radius);width:46px;height:52px;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.send-btn:hover{background:var(--gold-light);}
-.send-btn:active{transform:scale(.95);}
-.send-btn:disabled{opacity:.4;cursor:not-allowed;}
+.send-btn:hover{background:var(--gold-light);}.send-btn:active{transform:scale(.95);}.send-btn:disabled{opacity:.4;cursor:not-allowed;}
 .share-row{display:flex;align-items:center;gap:10px;margin-top:7px;}
 .share-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
 .tog-track{width:30px;height:17px;background:var(--border);border-radius:20px;position:relative;transition:background .2s;flex-shrink:0;}
-.tog-track.on{background:var(--purple);}
-.tog-knob{width:13px;height:13px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;}
+.tog-track.on{background:var(--purple);}.tog-knob{width:13px;height:13px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;}
 .tog-track.on .tog-knob{left:15px;}
 .share-lbl{font-size:12px;color:var(--text-muted);}
 .thinking{display:none;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);margin-top:6px;}
@@ -92,7 +123,7 @@ textarea::placeholder{color:var(--text-dim);}
 
 /* TABS */
 .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surface);}
-.tab{padding:9px 12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
+.tab{padding:9px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;background:var(--gold);color:var(--bg);border-radius:8px;font-size:9px;font-weight:700;margin-left:4px;padding:0 3px;}
 .tab-content{flex:1;overflow-y:auto;padding:11px 18px;display:none;}
@@ -135,28 +166,24 @@ textarea::placeholder{color:var(--text-dim);}
 .ev-time{font-size:11px;color:var(--gold);font-weight:600;letter-spacing:.05em;margin-bottom:2px;}
 .event-card.gcal .ev-time{color:var(--green);}
 .ev-title{font-size:13px;color:var(--text);line-height:1.3;}
-.ev-desc{font-size:11px;color:var(--text-muted);margin-top:2px;}
 
-/* WEEK VIEW */
+/* WEEK */
 .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;}
-.week-day{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s;min-height:70px;}
-.week-day:hover{border-color:var(--gold-dim);}
-.week-day.today{border-color:var(--gold);background:rgba(201,168,76,.08);}
-.week-day.selected{border-color:var(--gold);background:rgba(201,168,76,.12);}
-.wd-name{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:4px;}
-.wd-num{font-size:15px;font-family:'DM Serif Display',serif;color:var(--text);margin-bottom:4px;}
+.week-day{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .2s;min-height:68px;}
+.week-day:hover{border-color:var(--gold-dim);}.week-day.today{border-color:var(--gold);background:rgba(201,168,76,.08);}.week-day.selected{border-color:var(--gold);background:rgba(201,168,76,.12);}
+.wd-name{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:3px;}
+.wd-num{font-size:14px;font-family:'DM Serif Display',serif;color:var(--text);margin-bottom:3px;}
 .week-day.today .wd-num{color:var(--gold);}
 .wd-dots{display:flex;justify-content:center;gap:2px;flex-wrap:wrap;}
-.wd-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;}
-.wd-dot.gcal{background:var(--green);}
-.week-events{margin-top:8px;}
+.wd-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+.wd-dot.g{background:var(--green);}.wd-dot.b{background:var(--blue);}
 
 /* NOTES */
 .note-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;animation:si .25s ease;position:relative;}
 .note-card:hover{border-color:var(--gold-dim);}
 .note-text{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;}
 .note-meta{font-size:10px;color:var(--text-dim);margin-top:6px;}
-.note-del{position:absolute;top:8px;right:8px;opacity:0;transition:opacity .2s;}
+.note-del{position:absolute;top:8px;right:8px;opacity:0;transition:opacity .2s;background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:13px;}
 .note-card:hover .note-del{opacity:1;}
 
 /* RIGHT */
@@ -173,75 +200,71 @@ textarea::placeholder{color:var(--text-dim);}
 .conn-box{border:1px dashed var(--border);border-radius:10px;padding:12px;text-align:center;margin-bottom:8px;}
 .conn-box p{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:8px;}
 .conn-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
-.conn-btn:hover{background:rgba(201,168,76,.1);border-color:var(--gold);}
+.conn-btn:hover{background:rgba(201,168,76,.1);}
 .rep-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:8px;}
 .rep-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
 
-/* MODALS */
+/* MODAL */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:20px;}
 .modal-ov.open{display:flex;}
 .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:400px;width:100%;max-height:82vh;overflow-y:auto;}
 .modal-box h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);margin-bottom:14px;}
-.rep-sec{margin-bottom:14px;}
-.rep-sec h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:7px;}
+.rep-sec{margin-bottom:14px;}.rep-sec h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:7px;}
 .rep-bar{height:5px;background:var(--border);border-radius:3px;margin-bottom:3px;overflow:hidden;}
-.rep-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s ease;}
-.rep-fill.sh{background:var(--purple);}
+.rep-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s ease;}.rep-fill.sh{background:var(--purple);}
 .rep-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:5px;}
 .close-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:14px;transition:all .2s;}
 .close-btn:hover{color:var(--text);}
 
-/* NOTIFICATION */
+/* NOTIF */
 .notif{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);z-index:900;transform:translateY(70px);opacity:0;transition:all .3s ease;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.3);}
 .notif.show{transform:translateY(0);opacity:1;}
 .notif.success{border-left:3px solid var(--green)}.notif.error{border-left:3px solid var(--red)}.notif.info{border-left:3px solid var(--gold)}
-
-/* PUSH PROMPT */
 .push-banner{background:rgba(201,168,76,.08);border:1px solid var(--gold-dim);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .push-banner p{font-size:12px;color:var(--text-muted);flex:1;line-height:1.5;}
-.push-yes{background:var(--gold);color:var(--bg);border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;white-space:nowrap;}
+.push-yes{background:var(--gold);color:var(--bg);border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;}
 .push-no{background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:0 4px;}
 .empty-state{text-align:center;padding:32px 20px;color:var(--text-dim);font-size:13px;}
 .empty-state .icon{font-size:24px;margin-bottom:8px;}
+.fb-status{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;margin-left:8px;}
+.fb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);}
+.fb-dot.on{background:var(--green);}
 
-@media(max-width:680px){
-  .main{grid-template-columns:1fr;max-height:none;overflow:visible;}
-  .right-panel{display:none;}
-  body{overflow-y:auto;}
-}
+@media(max-width:680px){.main{grid-template-columns:1fr;max-height:none;overflow:visible;}.right-panel{display:none;}body{overflow-y:auto;}}
 </style>
 </head>
 <body>
+<div class="loading-bar" id="loadingBar"></div>
 
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-logo">✦</div>
   <div class="login-title">Assistente Pessoal</div>
-  <div class="login-sub">Quem está usando agora?</div>
+  <div class="login-sub">Tiago &amp; Monique — Quem está usando?</div>
   <div class="login-cards">
-    <div class="login-card" onclick="quickLogin('tiago')">
-      <div class="login-avatar" id="lavTiago"><img id="limgTiago" src="" alt=""><span id="lemoTiago">T</span></div>
-      <div class="login-name">Tiago</div>
-      <div class="login-hint">Entrar com Google</div>
+    <div class="login-card" onclick="quickLogin(&#39;tiago&#39;)">
+      <div class="login-avatar" id="lavT"><img id="limgT" src="file:///Users/tiagocamargos/Downloads/index.html" alt=""><span id="lemoT">T</span></div>
+      <div class="login-name">Tiago</div><div class="login-hint">Entrar com Google</div>
     </div>
-    <div class="login-card" onclick="quickLogin('monique')">
-      <div class="login-avatar" id="lavMonique"><img id="limgMonique" src="" alt=""><span id="lemoMonique">M</span></div>
-      <div class="login-name">Monique</div>
-      <div class="login-hint">Entrar com Google</div>
+    <div class="login-card" onclick="quickLogin(&#39;monique&#39;)">
+      <div class="login-avatar" id="lavM"><img id="limgM" src="file:///Users/tiagocamargos/Downloads/index.html" alt=""><span id="lemoM">M</span></div>
+      <div class="login-name">Monique</div><div class="login-hint">Entrar com Google</div>
     </div>
   </div>
   <div class="login-divider">ou</div>
   <button class="google-btn" onclick="startGoogleAuth()">
-    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path></svg>
     Entrar com Google
   </button>
 </div>
 
 <!-- HEADER -->
 <header>
-  <div class="logo"><div class="logo-icon">✦</div><span class="logo-text">Assistente</span></div>
+  <div class="logo"><div class="logo-icon">✦</div><span class="logo-text">Assistente</span>
+    <div class="fb-status"><div class="fb-dot" id="fbDot"></div><span id="fbLbl"></span></div>
+  </div>
   <div class="header-right">
-    <div class="header-date" id="headerDate"></div>
+    <div class="header-date" id="headerDate">Ter, 26 mai · 05:24</div>
     <div class="user-chip" onclick="logout()" title="Sair">
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
@@ -257,7 +280,7 @@ textarea::placeholder{color:var(--text-dim);}
     <div class="input-section">
       <div class="input-label">✦ Nova demanda</div>
       <div class="input-row">
-        <textarea id="userInput" placeholder="Ex: &quot;Reunião sexta 15h&quot; · &quot;Pagar conta hoje&quot; · &quot;Nota: comprar presente&quot; · &quot;O que tenho essa semana?&quot;" onkeydown="handleKey(event)"></textarea>
+        <textarea id="userInput" placeholder="Ex: &quot;Reunião sexta 15h&quot; · &quot;Pagar conta hoje&quot; · &quot;Nota: ideia de viagem&quot;" onkeydown="handleKey(event)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="processInput()">→</button>
       </div>
       <div class="share-row">
@@ -270,24 +293,24 @@ textarea::placeholder{color:var(--text-dim);}
       <div class="ai-resp" id="aiResp"></div>
     </div>
     <div class="tabs">
-      <div class="tab active" onclick="switchTab('tasks')">📋 Tarefas <span class="tab-badge" id="bdgT">0</span></div>
-      <div class="tab" onclick="switchTab('week')">🗓️ Semana</div>
-      <div class="tab" onclick="switchTab('notes')">📝 Notas</div>
+      <div class="tab active" onclick="switchTab(&#39;tasks&#39;)">📋 Tarefas <span class="tab-badge" id="bdgT">0</span></div>
+      <div class="tab" onclick="switchTab(&#39;week&#39;)">🗓️ Semana</div>
+      <div class="tab" onclick="switchTab(&#39;notes&#39;)">📝 Notas</div>
     </div>
     <div class="tab-content active" id="tab-tasks">
       <div class="filter-row">
-        <button class="filter-btn active" onclick="setFilter('all',this)">Todas</button>
-        <button class="filter-btn" onclick="setFilter('mine',this)">Minhas</button>
-        <button class="filter-btn sf" onclick="setFilter('shared',this)">👫 Compartilhadas</button>
-        <button class="filter-btn" onclick="setFilter('urgent',this)">🔴 Urgente</button>
-        <button class="filter-btn" onclick="setFilter('done',this)">✓ Feitas</button>
+        <button class="filter-btn active" onclick="setFilter(&#39;all&#39;,this)">Todas</button>
+        <button class="filter-btn" onclick="setFilter(&#39;mine&#39;,this)">Minhas</button>
+        <button class="filter-btn sf" onclick="setFilter(&#39;shared&#39;,this)">👫 Compartilhadas</button>
+        <button class="filter-btn" onclick="setFilter(&#39;urgent&#39;,this)">🔴 Urgente</button>
+        <button class="filter-btn" onclick="setFilter(&#39;done&#39;,this)">✓ Feitas</button>
       </div>
       <div id="taskList"></div>
     </div>
     <div class="tab-content" id="tab-week">
       <div class="week-grid" id="weekGrid"></div>
       <div class="sdiv">Eventos do dia selecionado</div>
-      <div class="week-events" id="weekEvents"></div>
+      <div id="weekEvents"></div>
     </div>
     <div class="tab-content" id="tab-notes">
       <div id="noteList"></div>
@@ -304,14 +327,14 @@ textarea::placeholder{color:var(--text-dim);}
         <button onclick="refreshAll()" class="icon-btn" style="font-size:13px;">↻</button>
       </div>
     </div>
-    <div class="briefing" id="briefing">
+    <div class="briefing">
       <div id="pushBanner"></div>
       <div class="stats-row">
         <div class="stat-card"><div class="stat-num" id="stPend">0</div><div class="stat-lbl">Pendentes</div></div>
         <div class="stat-card"><div class="stat-num" id="stShared">0</div><div class="stat-lbl">Compartilhadas</div></div>
       </div>
       <div class="sdiv">📅 Google Calendar — hoje</div>
-      <div id="calBriefing"><div class="conn-box"><p>Conecte o Google para ver sua agenda aqui.</p><button class="conn-btn" onclick="startGoogleAuth()">Conectar Google</button></div></div>
+      <div id="calBriefing"><div class="conn-box"><p>Conecte o Google para ver sua agenda.</p><button class="conn-btn" onclick="startGoogleAuth()">Conectar Google</button></div></div>
       <div class="sdiv" style="margin-top:12px;">👫 Atividade compartilhada</div>
       <div id="sharedAct" style="font-size:12px;color:var(--text-dim);line-height:1.7;">Nenhuma tarefa compartilhada ainda.</div>
       <button class="rep-btn" onclick="openReport()">📊 Relatório semanal</button>
@@ -324,53 +347,74 @@ textarea::placeholder{color:var(--text-dim);}
   <div class="modal-box">
     <h2>📊 Relatório Semanal</h2>
     <div id="reportContent"></div>
-    <button class="close-btn" onclick="document.getElementById('reportModal').classList.remove('open')">Fechar</button>
+    <button class="close-btn" onclick="document.getElementById(&#39;reportModal&#39;).classList.remove(&#39;open&#39;)">Fechar</button>
   </div>
 </div>
 
 <div class="notif" id="notif"></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────
 const CLIENT_ID='150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com';
 const SCOPES='https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const USERS={tiago:{name:'Tiago',emoji:'T',color:'#c9a84c'},monique:{name:'Monique',emoji:'M',color:'#9b6fa8'}};
-const SK='assistente_v5'; const SSK='assistente_shared_v5';
 
-// ── STATE ────────────────────────────────────────
+// STATE
 let cu=null,gToken=null,gProfile=null;
-let tasks=[],events=[],gcalEvs=[],notes=[];
+let tasks=[],gcalEvs=[],notes=[];
 let filter='all',shareMode=false,isDark=true,selectedDay=null;
-let swReg=null;
+let fbUnsubTasks=null,fbUnsubNotes=null;
 
-// ── PERSISTENCE ──────────────────────────────────
-async function save(){
-  const personal={tasks:tasks.filter(t=>!t.shared),events,notes,theme:isDark?'dark':'light'};
-  const shared=tasks.filter(t=>t.shared);
-  try{
-    await window.storage.set(`${SK}_${cu}`,JSON.stringify(personal));
-    await window.storage.set(SSK,JSON.stringify(shared),true);
-  }catch(e){
-    try{localStorage.setItem(`${SK}_${cu}`,JSON.stringify(personal));localStorage.setItem(SSK,JSON.stringify(shared));}catch(e2){}
-  }
+// ── FIREBASE PERSISTENCE (cloud) ─────────────────
+function fbPath(col,id){return`${col}/${id}`;}
+
+async function saveTask(task){
+  if(!window.fbSave)return;
+  const col=task.shared?'shared_tasks':`tasks_${cu}`;
+  await window.fbSave(`${col}/${task.id}`,task);
 }
-async function load(){
-  tasks=[];events=[];notes=[];
-  try{
-    const p=await window.storage.get(`${SK}_${cu}`);
-    if(p?.value){const d=JSON.parse(p.value);tasks=d.tasks||[];events=d.events||[];notes=d.notes||[];if(d.theme)applyTheme(d.theme==='dark');}
-    const s=await window.storage.get(SSK,true);
-    if(s?.value){const sh=JSON.parse(s.value);tasks=[...tasks,...sh];}
-  }catch(e){
-    try{
-      const p=localStorage.getItem(`${SK}_${cu}`);if(p){const d=JSON.parse(p);tasks=d.tasks||[];events=d.events||[];notes=d.notes||[];}
-      const s=localStorage.getItem(SSK);if(s)tasks=[...tasks,...JSON.parse(s)];
-    }catch(e2){}
-  }
+async function removeTask(id,shared){
+  if(!window.fbSave)return;
+  const col=shared?'shared_tasks':`tasks_${cu}`;
+  await window.fbDelete(`${col}/${id}`);
+}
+async function saveNote(note){
+  if(!window.fbSave)return;
+  await window.fbSave(`notes_${cu}/${note.id}`,note);
+}
+async function removeNote(id){
+  if(!window.fbSave)return;
+  await window.fbDelete(`notes_${cu}/${id}`);
+}
+async function savePrefs(){
+  if(!window.fbSave||!cu)return;
+  await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null});
+}
+
+function startListeners(){
+  // Unsubscribe previous
+  if(fbUnsubTasks)fbUnsubTasks();
+  if(fbUnsubNotes)fbUnsubNotes();
+
+  // Listen own tasks
+  fbUnsubTasks=window.fbListenCol(`tasks_${cu}`,myTasks=>{
+    // Listen shared tasks too — merge
+    window.fbListenCol('shared_tasks',sharedTasks=>{
+      tasks=[...myTasks,...sharedTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
+      renderTasks();updateStats();renderShared();
+      document.getElementById('fbDot').classList.add('on');
+      document.getElementById('fbLbl').textContent='';
+    });
+  });
+
+  fbUnsubNotes=window.fbListenCol(`notes_${cu}`,n=>{
+    notes=n.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
+    renderNotes();
+  });
 }
 
 // ── AUTH ─────────────────────────────────────────
 function quickLogin(uid){cu=uid;startGoogleAuth();}
+
 function startGoogleAuth(){
   const redirect='https://tiagocamargos1.github.io/Assistente';
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
@@ -381,36 +425,79 @@ function startGoogleAuth(){
     try{
       if(!popup||popup.closed){clearInterval(poll);return;}
       const hash=popup.location.hash;
-      if(hash&&hash.includes('access_token')){clearInterval(poll);popup.close();const p=new URLSearchParams(hash.substring(1));const tk=p.get('access_token');if(tk)onToken(tk);}
+      if(hash&&hash.includes('access_token')){
+        clearInterval(poll);popup.close();
+        const p=new URLSearchParams(hash.substring(1));
+        const tk=p.get('access_token');
+        if(tk)onToken(tk);
+      }
     }catch(e){}
   },500);
 }
+
 async function onToken(tk){
   gToken=tk;
+  // Store token expiry
+  gTokenExpiry=Date.now()+(3500*1000);
   try{
     const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:`Bearer ${tk}`}});
     gProfile=await r.json();
     if(!cu)cu=gProfile.email.toLowerCase().includes('monique')?'monique':'tiago';
+    // Update avatar in login screen
+    const img=document.getElementById(`limg${cu.charAt(0).toUpperCase()+cu.slice(1)}`);
+    if(img&&gProfile.picture){img.src=gProfile.picture;img.style.display='block';img.nextSibling&&(img.nextSibling.style.display='none');}
     await enterApp();
     notify(`✓ Olá, ${gProfile.given_name}!`,'success');
-    await fetchCal();
+    fetchCal();
     showPushBanner();
+    savePrefs();
   }catch(e){notify('Erro ao autenticar.','error');}
 }
+
+let gTokenExpiry=0;
+async function getValidToken(){
+  if(gToken&&Date.now()<gTokenExpiry)return gToken;
+  // Token expired — re-auth silently
+  return new Promise(resolve=>{
+    const redirect='https://tiagocamargos1.github.io/Assistente';
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none`;
+    const iframe=document.createElement('iframe');
+    iframe.style.display='none';
+    iframe.src=url;
+    document.body.appendChild(iframe);
+    setTimeout(()=>{document.body.removeChild(iframe);resolve(gToken);},3000);
+    // Fallback: ask user to re-login if needed
+    if(!gToken){notify('Sessão expirada. Faça login novamente.','error');resolve(null);}
+  });
+}
+
 async function enterApp(){
   if(!cu)cu='tiago';
   document.getElementById('loginScreen').classList.add('hidden');
   updateChip();
-  await load();
-  renderAll();
+  // Wait for firebase
+  if(!window.firebaseReady){
+    await new Promise(r=>window.addEventListener('firebaseReady',r,{once:true}));
+  }
+  startListeners();
+  // Load prefs
+  try{
+    const prefs=await window.fbGet(`prefs/${cu}`);
+    if(prefs?.theme)applyTheme(prefs.theme==='dark');
+  }catch(e){}
   initWeek();
 }
+
 function logout(){
   if(!confirm('Sair?'))return;
-  gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];events=[];notes=[];
+  if(fbUnsubTasks)fbUnsubTasks();
+  if(fbUnsubNotes)fbUnsubNotes();
+  gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];
   document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('fbDot').classList.remove('on');
   notify('Até logo!','info');
 }
+
 function updateChip(){
   const u=USERS[cu]||USERS.tiago;
   const av=document.getElementById('chipAv');
@@ -419,140 +506,159 @@ function updateChip(){
   document.getElementById('chipName').textContent=u.name;
 }
 
-// ── PUSH NOTIFICATIONS ───────────────────────────
+// ── PUSH ─────────────────────────────────────────
 function showPushBanner(){
-  if(!('Notification' in window)||Notification.permission==='granted'||Notification.permission==='denied')return;
-  const b=document.getElementById('pushBanner');
-  b.innerHTML=`<div class="push-banner"><p>🔔 Ativar notificações para receber lembretes no iPhone?</p><button class="push-yes" onclick="reqPush()">Ativar</button><button class="push-no" onclick="this.parentElement.parentElement.innerHTML=''">✕</button></div>`;
+  if(!('Notification' in window)||Notification.permission!=='default')return;
+  document.getElementById('pushBanner').innerHTML=`<div class="push-banner"><p>🔔 Ativar notificações?</p><button class="push-yes" onclick="reqPush()">Ativar</button><button class="push-no" onclick="this.closest('.push-banner').remove()">✕</button></div>`;
 }
 function reqPush(){
   Notification.requestPermission().then(p=>{
     document.getElementById('pushBanner').innerHTML='';
-    if(p==='granted')notify('🔔 Notificações ativadas!','success');
-    else notify('Notificações bloqueadas. Ative nas configurações do iPhone.','info');
+    notify(p==='granted'?'🔔 Notificações ativadas!':'Ative nas configurações.','info');
   });
 }
 function sendPush(title,body){
-  if(Notification.permission==='granted')new Notification(`🔔 ${title}`,{body,icon:''});
-}
-function scheduleReminder(task){
-  if(Notification.permission!=='granted'){notify('Ative as notificações primeiro.','info');return;}
-  sendPush('Lembrete',task.text);
-  notify('Lembrete enviado!','success');
+  if(Notification.permission==='granted')new Notification(`🔔 ${title}`,{body});
 }
 
 // ── GOOGLE CALENDAR ──────────────────────────────
 async function fetchCal(){
-  if(!gToken)return;
+  const tk=await getValidToken();
+  if(!tk)return;
   try{
     document.getElementById('syncLbl').textContent='sincronizando…';
     const now=new Date();
     const s=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
     const e=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59).toISOString();
-    const r=await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(s)}&timeMax=${encodeURIComponent(e)}&singleEvents=true&orderBy=startTime`,{headers:{Authorization:`Bearer ${gToken}`}});
-    if(!r.ok)throw new Error();
+    const r=await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(s)}&timeMax=${encodeURIComponent(e)}&singleEvents=true&orderBy=startTime`,{headers:{Authorization:`Bearer ${tk}`}});
+    if(!r.ok)throw new Error(`${r.status}`);
     const d=await r.json();
     gcalEvs=(d.items||[]).map(e=>({id:e.id,title:e.summary||'(sem título)',description:e.description||'',date:(e.start.dateTime||e.start.date||'').split('T')[0],time:e.start.dateTime?e.start.dateTime.split('T')[1].substring(0,5):null,gcal:true}));
     syncUI(true);renderCalBriefing();renderWeek();
     notify(`${gcalEvs.length} evento(s) hoje`,'success');
-  }catch(e){document.getElementById('syncLbl').textContent='erro';notify('Erro ao buscar agenda.','error');}
+  }catch(e){
+    document.getElementById('syncLbl').textContent='erro';
+    if(e.message==='401')notify('Sessão Google expirada. Faça login novamente.','error');
+    else notify('Erro ao buscar agenda.','error');
+  }
 }
-async function fetchWeekCal(startDate,endDate){
-  if(!gToken)return[];
-  try{
-    const r=await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(startDate)}&timeMax=${encodeURIComponent(endDate)}&singleEvents=true&orderBy=startTime`,{headers:{Authorization:`Bearer ${gToken}`}});
-    if(!r.ok)return[];
-    const d=await r.json();
-    return(d.items||[]).map(e=>({id:e.id,title:e.summary||'(sem título)',date:(e.start.dateTime||e.start.date||'').split('T')[0],time:e.start.dateTime?e.start.dateTime.split('T')[1].substring(0,5):null,gcal:true}));
-  }catch(e){return[];}
-}
+
 async function createCalEv(title,dateStr,timeStr,desc=''){
-  if(!gToken){notify('Conecte o Google Calendar para criar eventos.','info');return false;}
+  const tk=await getValidToken();
+  if(!tk){notify('Conecte o Google Calendar para criar eventos.','info');return false;}
   try{
     let start,end;
-    if(dateStr&&timeStr){start={dateTime:`${dateStr}T${timeStr}:00`,timeZone:'America/Sao_Paulo'};end={dateTime:`${dateStr}T${addH(timeStr)}:00`,timeZone:'America/Sao_Paulo'};}
-    else{const d=dateStr||new Date().toISOString().split('T')[0];start={date:d};end={date:d};}
-    const r=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{method:'POST',headers:{Authorization:`Bearer ${gToken}`,'Content-Type':'application/json'},body:JSON.stringify({summary:title,description:desc,start,end})});
-    if(!r.ok)throw new Error();
-    await fetchCal();return true;
-  }catch(e){notify('Erro ao criar evento.','error');return false;}
+    if(dateStr&&timeStr){
+      start={dateTime:`${dateStr}T${timeStr}:00`,timeZone:'Europe/Lisbon'};
+      end={dateTime:`${dateStr}T${addH(timeStr)}:00`,timeZone:'Europe/Lisbon'};
+    }else{
+      const d=dateStr||new Date().toISOString().split('T')[0];
+      start={date:d};end={date:d};
+    }
+    const body={summary:title,description:desc,start,end};
+    const r=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
+      method:'POST',
+      headers:{Authorization:`Bearer ${tk}`,'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    if(!r.ok){const err=await r.json();console.error('Cal error:',err);throw new Error(r.status);}
+    notify('✅ Criado no Google Calendar!','success');
+    setTimeout(fetchCal,1500);
+    return true;
+  }catch(e){
+    notify(`Erro ao criar evento (${e.message}). Verifique as permissões do Google.`,'error');
+    return false;
+  }
 }
 function addH(t){const[h,m]=t.split(':').map(Number);return`${String((h+1)%24).padStart(2,'0')}:${String(m).padStart(2,'0')}`;}
 function syncUI(on){document.getElementById('syncDot').classList.toggle('off',!on);document.getElementById('syncLbl').textContent=on?'sincronizado':'offline';}
 
-// ── WEEK VIEW ────────────────────────────────────
-let weekEvCache=[];
+// ── WEEK ─────────────────────────────────────────
 async function initWeek(){
   const today=new Date();
   selectedDay=today.toISOString().split('T')[0];
-  // Load week calendar events
-  const mon=new Date(today);mon.setDate(today.getDate()-today.getDay()+1);
-  const sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59);
-  if(gToken)weekEvCache=await fetchWeekCal(mon.toISOString(),sun.toISOString());
   renderWeek();
 }
 function renderWeek(){
   const today=new Date();
-  const startOfWeek=new Date(today);startOfWeek.setDate(today.getDate()-today.getDay()+1);
+  const dow=today.getDay()===0?6:today.getDay()-1;
+  const mon=new Date(today);mon.setDate(today.getDate()-dow);
   const days=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
   const grid=document.getElementById('weekGrid');
   grid.innerHTML='';
   for(let i=0;i<7;i++){
-    const d=new Date(startOfWeek);d.setDate(startOfWeek.getDate()+i);
+    const d=new Date(mon);d.setDate(mon.getDate()+i);
     const ds=d.toISOString().split('T')[0];
     const isToday=ds===today.toISOString().split('T')[0];
     const isSel=ds===selectedDay;
-    // dots: local events + gcal
-    const evs=[...weekEvCache,...gcalEvs,...events].filter(e=>e.date===ds);
-    const tasksDue=tasks.filter(t=>t.date===ds&&!t.done);
-    const dotsHtml=[...evs.map(e=>`<div class="wd-dot ${e.gcal?'gcal':''}"></div>`),...tasksDue.map(()=>`<div class="wd-dot" style="background:var(--blue)"></div>`)].slice(0,5).join('');
+    const evs=gcalEvs.filter(e=>e.date===ds);
+    const tks=tasks.filter(t=>t.date===ds&&!t.done);
+    const dots=[...evs.map(()=>`<div class="wd-dot g"></div>`),...tks.map(()=>`<div class="wd-dot b"></div>`)].slice(0,5).join('');
     const div=document.createElement('div');
     div.className=`week-day${isToday?' today':''}${isSel?' selected':''}`;
-    div.innerHTML=`<div class="wd-name">${days[i]}</div><div class="wd-num">${d.getDate()}</div><div class="wd-dots">${dotsHtml}</div>`;
+    div.innerHTML=`<div class="wd-name">${days[i]}</div><div class="wd-num">${d.getDate()}</div><div class="wd-dots">${dots}</div>`;
     div.onclick=()=>{selectedDay=ds;renderWeek();renderWeekDay(ds);};
     grid.appendChild(div);
   }
-  if(selectedDay)renderWeekDay(selectedDay);
+  renderWeekDay(selectedDay);
 }
 function renderWeekDay(ds){
   const el=document.getElementById('weekEvents');
-  const evs=[...weekEvCache,...gcalEvs,...events].filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const evs=gcalEvs.filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const tks=tasks.filter(t=>t.date===ds&&!t.done);
   if(!evs.length&&!tks.length){el.innerHTML=`<div class="empty-state"><div class="icon">📭</div>Sem compromissos neste dia</div>`;return;}
   el.innerHTML=[
-    ...evs.map(e=>`<div class="event-card ${e.gcal?'gcal':''}"><div class="ev-time">${e.time||'Dia todo'}</div><div class="ev-title">${esc(e.title)}</div></div>`),
+    ...evs.map(e=>`<div class="event-card gcal"><div class="ev-time">${e.time||'Dia todo'}</div><div class="ev-title">${esc(e.title)}</div></div>`),
     ...tks.map(t=>`<div class="event-card"><div class="ev-time" style="color:var(--blue)">Tarefa</div><div class="ev-title">${esc(t.text)}</div></div>`)
   ].join('');
 }
 
 // ── AI ───────────────────────────────────────────
 async function processInput(){
-  const inp=document.getElementById('userInput').value.trim();if(!inp)return;
+  const inp=document.getElementById('userInput').value.trim();
+  if(!inp)return;
   document.getElementById('sendBtn').disabled=true;
   document.getElementById('thinking').classList.add('visible');
   document.getElementById('thinkMsg').textContent='Processando…';
   document.getElementById('aiResp').classList.remove('visible');
+
   const today=new Date();
-  const sys=`Você é uma assistente pessoal. Responda APENAS com JSON válido, sem markdown.
-Hoje: ${today.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} (${today.toISOString().split('T')[0]}).
-Usuário: ${USERS[cu]?.name}.
-Formato: {"type":"task"|"event"|"note"|"query","title":"título","description":"detalhes ou null","urgency":"normal"|"urgent","date":"YYYY-MM-DD ou null","time":"HH:MM ou null","response":"confirmação em português"}
-Regras: compromisso/reunião/consulta com hora → event. Lembrete/pendência → task. "nota:", "lembrar de escrever", "anotação" → note. Pergunta → query.`;
+  const todayStr=today.toISOString().split('T')[0];
+  const sys=`Você é uma assistente pessoal inteligente. Responda APENAS com JSON válido sem markdown.
+Hoje: ${today.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} (${todayStr}).
+Usuário: ${USERS[cu]?.name}. Fuso horário: Europe/Lisbon (Portugal).
+Formato obrigatório:
+{"type":"task"|"event"|"note"|"query","title":"título curto","description":"detalhes ou null","urgency":"normal"|"urgent","date":"YYYY-MM-DD ou null","time":"HH:MM ou null","response":"confirmação amigável em português"}
+Regras:
+- Reunião/compromisso/consulta com hora → type "event"
+- Lembrete/pendência/tarefa → type "task"
+- "nota:", "anotação:", "escrever que" → type "note"
+- Pergunta sobre agenda → type "query"
+- Calcule datas: "amanhã"=+1 dia, "semana que vem"=+7 dias, dias da semana relativos ao hoje
+- Para eventos, SEMPRE tente extrair date e time`;
+
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:sys,messages:[{role:'user',content:inp}]})});
     const d=await r.json();
     const parsed=JSON.parse(d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+
     if(parsed.type==='event'){
       document.getElementById('thinkMsg').textContent='Criando no Google Calendar…';
       const ok=await createCalEv(parsed.title,parsed.date,parsed.time,parsed.description||'');
-      if(!ok)addEvent({id:Date.now(),title:parsed.title,description:parsed.description,date:parsed.date,time:parsed.time,gcal:false});
-      switchTab('week');initWeek();
+      if(!ok){
+        // Save locally as fallback
+        const ev={id:Date.now().toString(),title:parsed.title,description:parsed.description,date:parsed.date,time:parsed.time,gcal:false,owner:cu};
+        await saveTask({...ev,type:'event',shared:false,done:false,createdAt:new Date().toISOString()});
+      }
+      switchTab('week');setTimeout(renderWeek,500);
     }else if(parsed.type==='task'){
-      addTask({id:Date.now(),text:parsed.title,description:parsed.description,urgency:parsed.urgency||'normal',date:parsed.date,done:false,shared:shareMode,owner:cu,createdAt:new Date().toISOString()});
+      const task={id:Date.now().toString(),text:parsed.title,description:parsed.description,urgency:parsed.urgency||'normal',date:parsed.date,done:false,shared:shareMode,owner:cu,createdAt:new Date().toISOString()};
+      await saveTask(task);
       notify(shareMode?'👫 Tarefa compartilhada!':'✅ Tarefa adicionada!','success');
       switchTab('tasks');
     }else if(parsed.type==='note'){
-      addNote({id:Date.now(),text:parsed.title+(parsed.description?'\n'+parsed.description:''),owner:cu,createdAt:new Date().toISOString()});
+      const note={id:Date.now().toString(),text:parsed.title+(parsed.description?'\n'+parsed.description:''),owner:cu,createdAt:new Date().toISOString()};
+      await saveNote(note);
       notify('📝 Nota salva!','success');
       switchTab('notes');
     }
@@ -560,17 +666,13 @@ Regras: compromisso/reunião/consulta com hora → event. Lembrete/pendência �
     document.getElementById('aiResp').classList.add('visible');
     document.getElementById('userInput').value='';
   }catch(e){
-    const low=inp.toLowerCase();
-    if(/reunião|meeting|consulta|às\s+\d|amanhã|segunda|terça|quarta|quinta|sexta|\d+h\b/.test(low)){addEvent({id:Date.now(),title:inp,date:null,time:null,gcal:false});switchTab('week');}
-    else if(/^nota:|^anotação:|^lembrar de escrever/.test(low)){addNote({id:Date.now(),text:inp,owner:cu,createdAt:new Date().toISOString()});switchTab('notes');}
-    else{addTask({id:Date.now(),text:inp,urgency:'normal',done:false,shared:shareMode,owner:cu,createdAt:new Date().toISOString()});switchTab('tasks');}
-    document.getElementById('aiResp').textContent='Anotado!';
+    console.error(e);
+    notify('Erro ao processar. Tente novamente.','error');
+    document.getElementById('aiResp').textContent='Erro ao processar. Tente novamente.';
     document.getElementById('aiResp').classList.add('visible');
-    document.getElementById('userInput').value='';
   }
   document.getElementById('thinking').classList.remove('visible');
   document.getElementById('sendBtn').disabled=false;
-  updateStats();await save();
 }
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();processInput();}}
 function toggleShare(){
@@ -581,19 +683,21 @@ function toggleShare(){
 }
 
 // ── TASKS ────────────────────────────────────────
-function addTask(t){tasks.unshift(t);renderTasks();updateStats();renderShared();save();}
-function toggleTask(id){
-  const t=tasks.find(t=>t.id===id);if(!t)return;
+async function toggleTask(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t)return;
   t.done=!t.done;t.doneBy=t.done?cu:null;t.doneAt=t.done?new Date().toISOString():null;
-  if(t.done&&t.shared){const other=cu==='tiago'?'Monique':'Tiago';sendPush('Tarefa concluída',`${USERS[cu].name} concluiu: ${t.text}`);}
-  renderTasks();updateStats();renderShared();save();
+  await saveTask(t);
+  if(t.done&&t.shared)sendPush('Tarefa concluída',`${USERS[cu].name} concluiu: ${t.text}`);
   notify(t.done?'✓ Concluída!':'Reaberta',t.done?'success':'info');
 }
-function deleteTask(id){
-  const t=tasks.find(t=>t.id===id);if(!t)return;
+async function deleteTask(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t)return;
   if(t.shared&&t.owner!==cu){notify('Só quem criou pode excluir.','error');return;}
-  tasks=tasks.filter(t=>t.id!==id);renderTasks();updateStats();renderShared();save();
+  await removeTask(String(id),t.shared);
 }
+
 function renderTasks(){
   const el=document.getElementById('taskList');
   let f=tasks;
@@ -601,7 +705,6 @@ function renderTasks(){
   if(filter==='shared')f=tasks.filter(t=>t.shared);
   if(filter==='urgent')f=tasks.filter(t=>t.urgency==='urgent'&&!t.done);
   if(filter==='done')f=tasks.filter(t=>t.done);
-  if(filter==='all')f=tasks;
   if(!f.length){el.innerHTML=`<div class="empty-state"><div class="icon">✦</div>Nenhuma tarefa aqui</div>`;return;}
   const shared=f.filter(t=>t.shared),mine=f.filter(t=>!t.shared);
   let html='';
@@ -614,60 +717,59 @@ function renderTasks(){
 function taskHTML(t){
   const canDel=!t.shared||t.owner===cu;
   const other=t.owner&&t.owner!==cu?USERS[t.owner]?.name:null;
+  const tid=String(t.id).replace(/'/g,'');
   return`<div class="task-item${t.done?' done':''}">
-    <div class="task-check" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+    <div class="task-check" onclick="toggleTask('${tid}')">${t.done?'✓':''}</div>
     <div class="task-body">
-      <div class="task-text">${esc(t.text)}</div>
+      <div class="task-text">${esc(t.text||'')}</div>
       <div class="task-meta">
         ${t.date?`<span>📅 ${fd(t.date)}</span>`:''}
         ${t.shared?`<span class="ttag ts">👫</span>`:''}
         ${t.urgency==='urgent'?`<span class="ttag tu">🔴</span>`:''}
-        ${other?`<span style="font-size:10px;color:var(--text-dim);">por ${other}</span>`:''}
-        ${t.done&&t.doneBy?`<span style="font-size:10px;color:var(--green);">✓ ${USERS[t.doneBy]?.name||t.doneBy}</span>`:''}
+        ${other?`<span style="font-size:10px;color:var(--text-dim)">por ${other}</span>`:''}
+        ${t.done&&t.doneBy?`<span style="font-size:10px;color:var(--green)">✓ ${USERS[t.doneBy]?.name||t.doneBy}</span>`:''}
       </div>
     </div>
     <div class="task-acts">
-      <button class="tact rb" onclick="scheduleReminder({id:${t.id},text:'${esc(t.text)}'})">🔔</button>
-      ${canDel?`<button class="tact" onclick="deleteTask(${t.id})">✕</button>`:''}
+      <button class="tact rb" onclick="scheduleReminder('${esc(t.text||'')}')">🔔</button>
+      ${canDel?`<button class="tact" onclick="deleteTask('${tid}')">✕</button>`:''}
     </div>
   </div>`;
 }
-
-// ── EVENTS ───────────────────────────────────────
-function addEvent(ev){events.unshift(ev);renderCalBriefing();renderWeek();save();}
+function scheduleReminder(text){
+  if(Notification.permission==='granted'){new Notification('🔔 Lembrete — Assistente',{body:text});notify('Lembrete enviado!','success');}
+  else notify('Ative as notificações primeiro.','info');
+}
 
 // ── NOTES ────────────────────────────────────────
-function addNote(n){notes.unshift(n);renderNotes();save();}
-function deleteNote(id){notes=notes.filter(n=>n.id!==id);renderNotes();save();}
+async function deleteNote(id){await removeNote(String(id));}
 function renderNotes(){
   const el=document.getElementById('noteList');
   if(!notes.length){el.innerHTML=`<div class="empty-state"><div class="icon">📝</div>Nenhuma nota ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Nota: …"</small></div>`;return;}
   el.innerHTML=notes.map(n=>`
     <div class="note-card">
-      <div class="note-text">${esc(n.text)}</div>
+      <div class="note-text">${esc(n.text||'')}</div>
       <div class="note-meta">${fd2(n.createdAt)} · ${USERS[n.owner]?.name||'?'}</div>
-      <button class="tact note-del" onclick="deleteNote(${n.id})">✕</button>
+      <button class="note-del" onclick="deleteNote('${String(n.id)}')">✕</button>
     </div>`).join('');
 }
 
-// ── CAL BRIEFING ─────────────────────────────────
+// ── BRIEFING ─────────────────────────────────────
 function renderCalBriefing(){
   const today=new Date().toISOString().split('T')[0];
-  const todayEv=[...gcalEvs,...events].filter(e=>e.date===today).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const todayEv=gcalEvs.filter(e=>e.date===today).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const sec=document.getElementById('calBriefing');
-  if(!gToken){sec.innerHTML=`<div class="conn-box"><p>Conecte o Google para ver sua agenda aqui.</p><button class="conn-btn" onclick="startGoogleAuth()">Conectar Google</button></div>`;return;}
+  if(!gToken){sec.innerHTML=`<div class="conn-box"><p>Conecte o Google para ver sua agenda.</p><button class="conn-btn" onclick="startGoogleAuth()">Conectar Google</button></div>`;return;}
   sec.innerHTML=todayEv.length
-    ?todayEv.map(e=>`<div class="event-card${e.gcal?' gcal':''}"><div class="ev-time">${e.time||'Dia todo'}</div><div class="ev-title">${esc(e.title)}</div></div>`).join('')
+    ?todayEv.map(e=>`<div class="event-card gcal"><div class="ev-time">${e.time||'Dia todo'}</div><div class="ev-title">${esc(e.title)}</div></div>`).join('')
     :`<div style="font-size:12px;color:var(--text-dim);padding:8px 0;">Nenhum compromisso hoje ✓</div>`;
 }
 function renderShared(){
   const sh=tasks.filter(t=>t.shared);
   const el=document.getElementById('sharedAct');
   if(!sh.length){el.textContent='Nenhuma tarefa compartilhada ainda.';return;}
-  el.innerHTML=sh.slice(0,5).map(t=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><span style="font-size:11px;">${t.done?'✅':'⬜'}</span><span style="font-size:12px;color:${t.done?'var(--text-dim)':'var(--text)'};${t.done?'text-decoration:line-through':''}">${esc(t.text)}</span><span style="font-size:10px;color:var(--text-dim);margin-left:auto;">${USERS[t.owner]?.name||'?'}</span></div>`).join('')+(sh.length>5?`<div style="font-size:11px;color:var(--text-dim);">+${sh.length-5} mais</div>`:'');
+  el.innerHTML=sh.slice(0,5).map(t=>`<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><span>${t.done?'✅':'⬜'}</span><span style="font-size:12px;color:${t.done?'var(--text-dim)':'var(--text)'};${t.done?'text-decoration:line-through':''}">${esc(t.text||'')}</span><span style="font-size:10px;color:var(--text-dim);margin-left:auto;">${USERS[t.owner]?.name||'?'}</span></div>`).join('')+(sh.length>5?`<div style="font-size:11px;color:var(--text-dim);">+${sh.length-5} mais</div>`:'');
 }
-
-// ── STATS ────────────────────────────────────────
 function updateStats(){
   document.getElementById('stPend').textContent=tasks.filter(t=>!t.done).length;
   document.getElementById('stShared').textContent=tasks.filter(t=>t.shared).length;
@@ -676,37 +778,34 @@ function updateStats(){
 
 // ── REPORT ───────────────────────────────────────
 function openReport(){
-  const total=tasks.length,done=tasks.filter(t=>t.done).length,shared=tasks.filter(t=>t.shared).length,shDone=tasks.filter(t=>t.shared&&t.done).length;
-  const pct=total?Math.round(done/total*100):0,spct=shared?Math.round(shDone/shared*100):0;
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,shared=tasks.filter(t=>t.shared).length,shDone=tasks.filter(t=>t.shared&&t.done).length,pct=total?Math.round(done/total*100):0,spct=shared?Math.round(shDone/shared*100):0;
   document.getElementById('reportContent').innerHTML=`
     <div class="rep-sec"><h3>Geral — ${USERS[cu]?.name}</h3>
       <div class="rep-stat"><span>Total</span><strong>${total}</strong></div>
       <div class="rep-stat"><span>Concluídas</span><strong style="color:var(--green)">${done}</strong></div>
       <div class="rep-stat"><span>Pendentes</span><strong style="color:var(--gold)">${total-done}</strong></div>
       <div class="rep-bar"><div class="rep-fill" style="width:${pct}%"></div></div>
-      <div style="font-size:11px;color:var(--text-dim);text-align:right;">${pct}% concluído</div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:right;margin-top:2px;">${pct}% concluído</div>
     </div>
-    <div class="rep-sec"><h3>👫 Compartilhadas</h3>
+    <div class="rep-sec"><h3>👫 Compartilhadas com ${cu==='tiago'?'Monique':'Tiago'}</h3>
       <div class="rep-stat"><span>Total</span><strong>${shared}</strong></div>
       <div class="rep-stat"><span>Concluídas</span><strong style="color:var(--green)">${shDone}</strong></div>
       <div class="rep-bar"><div class="rep-fill sh" style="width:${spct}%"></div></div>
     </div>
     <div class="rep-sec"><h3>📝 Notas</h3>
-      <div class="rep-stat"><span>Total de notas</span><strong>${notes.length}</strong></div>
+      <div class="rep-stat"><span>Total</span><strong>${notes.length}</strong></div>
     </div>
     <div class="rep-sec"><h3>📅 Agenda</h3>
       <div class="rep-stat"><span>Eventos hoje (Google)</span><strong>${gcalEvs.length}</strong></div>
-      <div class="rep-stat"><span>Eventos locais</span><strong>${events.length}</strong></div>
     </div>`;
   document.getElementById('reportModal').classList.add('open');
 }
 
 // ── THEME ────────────────────────────────────────
-function toggleTheme(){applyTheme(!isDark);save();}
+function toggleTheme(){applyTheme(!isDark);savePrefs();}
 function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
 
 // ── UI ───────────────────────────────────────────
-function renderAll(){renderTasks();renderCalBriefing();renderShared();renderNotes();updateStats();}
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(tab==='tasks'&&i===0)||(tab==='week'&&i===1)||(tab==='notes'&&i===2)));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
@@ -714,14 +813,14 @@ function switchTab(tab){
   if(tab==='week')renderWeek();
 }
 function setFilter(f,btn){filter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTasks();}
-async function refreshAll(){await fetchCal();await initWeek();updateStats();notify('Atualizado!','info');}
+async function refreshAll(){await fetchCal();renderWeek();updateStats();notify('Atualizado!','info');}
 
 let nt;
 function notify(msg,type='info'){
   const el=document.getElementById('notif');el.textContent=msg;el.className=`notif ${type} show`;
   clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3500);
 }
-function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function fd(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});}catch(e){return d;}}
 function fd2(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('pt-BR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return'';}}
 function updateDate(){
@@ -730,14 +829,16 @@ function updateDate(){
 }
 
 // ── INIT ─────────────────────────────────────────
-updateDate();setInterval(updateDate,60000);
+updateDate();
+setInterval(updateDate,60000);
 
-// Handle OAuth redirect
+// Handle OAuth redirect (token in URL hash)
 if(window.location.hash.includes('access_token')){
   const p=new URLSearchParams(window.location.hash.substring(1));
   const tk=p.get('access_token');
   if(tk){history.replaceState(null,'',window.location.pathname);cu='tiago';onToken(tk);}
 }
 </script>
-</body>
-</html>
+
+
+</body></html>
