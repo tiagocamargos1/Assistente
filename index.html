@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0050)file:///Users/tiagocamargos/Downloads/index_2.html -->
+<!-- saved from url=(0050)file:///Users/tiagocamargos/Downloads/index_1.html -->
 <html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -107,6 +107,10 @@ textarea:focus{border-color:var(--gold-dim);}
 textarea::placeholder{color:var(--text-dim);}
 .send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:var(--radius);width:46px;height:52px;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .send-btn:hover{background:var(--gold-light);}.send-btn:active{transform:scale(.95);}.send-btn:disabled{opacity:.4;cursor:not-allowed;}
+.mic-btn{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius);width:46px;height:52px;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.mic-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+.mic-btn.listening{background:var(--red);border-color:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
+@keyframes micPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(192,96,96,0.4);}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(192,96,96,0);}}
 .share-row{display:flex;align-items:center;gap:10px;margin-top:7px;}
 .share-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
 .tog-track{width:30px;height:17px;background:var(--border);border-radius:20px;position:relative;transition:background .2s;flex-shrink:0;}
@@ -243,11 +247,11 @@ textarea::placeholder{color:var(--text-dim);}
   <div class="login-sub">Tiago &amp; Monique — Quem está usando?</div>
   <div class="login-cards">
     <div class="login-card" onclick="quickLogin(&#39;tiago&#39;)">
-      <div class="login-avatar" id="lavT"><img id="limgT" src="file:///Users/tiagocamargos/Downloads/index_2.html" alt=""><span id="lemoT">T</span></div>
+      <div class="login-avatar" id="lavT"><img id="limgT" src="file:///Users/tiagocamargos/Downloads/index_1.html" alt=""><span id="lemoT">T</span></div>
       <div class="login-name">Tiago</div><div class="login-hint">Entrar com Google</div>
     </div>
     <div class="login-card" onclick="quickLogin(&#39;monique&#39;)">
-      <div class="login-avatar" id="lavM"><img id="limgM" src="file:///Users/tiagocamargos/Downloads/index_2.html" alt=""><span id="lemoM">M</span></div>
+      <div class="login-avatar" id="lavM"><img id="limgM" src="file:///Users/tiagocamargos/Downloads/index_1.html" alt=""><span id="lemoM">M</span></div>
       <div class="login-name">Monique</div><div class="login-hint">Entrar com Google</div>
     </div>
   </div>
@@ -264,7 +268,7 @@ textarea::placeholder{color:var(--text-dim);}
     <div class="fb-status"><div class="fb-dot" id="fbDot"></div><span id="fbLbl"></span></div>
   </div>
   <div class="header-right">
-    <div class="header-date" id="headerDate">Ter, 26 mai · 05:37</div>
+    <div class="header-date" id="headerDate">Ter, 26 mai · 23:48</div>
     <div class="user-chip" onclick="logout()" title="Sair">
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
@@ -281,6 +285,7 @@ textarea::placeholder{color:var(--text-dim);}
       <div class="input-label">✦ Nova demanda</div>
       <div class="input-row">
         <textarea id="userInput" placeholder="Ex: &quot;Reunião sexta 15h&quot; · &quot;Pagar conta hoje&quot; · &quot;Nota: ideia de viagem&quot;" onkeydown="handleKey(event)"></textarea>
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Falar">🎤</button>
         <button class="send-btn" id="sendBtn" onclick="processInput()">→</button>
       </div>
       <div class="share-row">
@@ -351,7 +356,7 @@ textarea::placeholder{color:var(--text-dim);}
   </div>
 </div>
 
-<div class="notif" id="notif"></div>
+<div class="notif info" id="notif">Aguardando login Google…</div>
 
 <script>
 const CLIENT_ID='150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com';
@@ -747,6 +752,67 @@ function parseInput(inp, today){
     time,
     response
   };
+}
+
+// ── VOICE INPUT ──────────────────────────────────
+let recognition=null;
+let isListening=false;
+
+function toggleMic(){
+  if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){
+    notify('Reconhecimento de voz não suportado neste navegador.','error');
+    return;
+  }
+  if(isListening){stopMic();return;}
+  startMic();
+}
+
+function startMic(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SpeechRecognition();
+  recognition.lang='pt-PT'; // Portuguese Portugal (works for BR too)
+  recognition.continuous=false;
+  recognition.interimResults=true;
+
+  recognition.onstart=()=>{
+    isListening=true;
+    document.getElementById('micBtn').classList.add('listening');
+    document.getElementById('micBtn').textContent='⏹';
+    document.getElementById('thinkMsg').textContent='Ouvindo… fale agora!';
+    document.getElementById('thinking').classList.add('visible');
+    document.getElementById('aiResp').classList.remove('visible');
+  };
+
+  recognition.onresult=(e)=>{
+    let transcript='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      transcript+=e.results[i][0].transcript;
+    }
+    document.getElementById('userInput').value=transcript;
+    // Auto-submit when final result
+    if(e.results[e.results.length-1].isFinal){
+      document.getElementById('thinkMsg').textContent='Processando…';
+      setTimeout(()=>processInput(),400);
+    }
+  };
+
+  recognition.onerror=(e)=>{
+    stopMic();
+    if(e.error==='not-allowed')notify('Permita o acesso ao microfone nas configurações.','error');
+    else if(e.error==='no-speech')notify('Nenhuma fala detectada. Tente novamente.','info');
+    else notify(`Erro de voz: ${e.error}`,'error');
+  };
+
+  recognition.onend=()=>{stopMic();};
+  recognition.start();
+}
+
+function stopMic(){
+  isListening=false;
+  if(recognition)try{recognition.stop();}catch(e){}
+  document.getElementById('micBtn').classList.remove('listening');
+  document.getElementById('micBtn').textContent='🎤';
+  document.getElementById('thinking').classList.remove('visible');
 }
 
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();processInput();}}
