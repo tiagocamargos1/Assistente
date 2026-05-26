@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0048)file:///Users/tiagocamargos/Downloads/index.html -->
+<!-- saved from url=(0050)file:///Users/tiagocamargos/Downloads/index_2.html -->
 <html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#0f0e0c">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 180 180&#39;%3E%3Crect width=&#39;180&#39; height=&#39;180&#39; fill=&#39;%230f0e0c&#39;/%3E%3Ccircle cx=&#39;90&#39; cy=&#39;90&#39; r=&#39;60&#39; fill=&#39;none&#39; stroke=&#39;%23c9a84c&#39; stroke-width=&#39;3&#39;/%3E%3Ctext x=&#39;90&#39; y=&#39;105&#39; text-anchor=&#39;middle&#39; font-size=&#39;52&#39; fill=&#39;%23c9a84c&#39; font-family=&#39;serif&#39;%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
 <title>Assistente Pessoal</title>
-<link href="./Assistente Pessoal_files/css2" rel="stylesheet">
+<link href="./index_files/css2" rel="stylesheet">
 
 <!-- Firebase -->
 <script type="module">
@@ -243,11 +243,11 @@ textarea::placeholder{color:var(--text-dim);}
   <div class="login-sub">Tiago &amp; Monique — Quem está usando?</div>
   <div class="login-cards">
     <div class="login-card" onclick="quickLogin(&#39;tiago&#39;)">
-      <div class="login-avatar" id="lavT"><img id="limgT" src="file:///Users/tiagocamargos/Downloads/index.html" alt=""><span id="lemoT">T</span></div>
+      <div class="login-avatar" id="lavT"><img id="limgT" src="file:///Users/tiagocamargos/Downloads/index_2.html" alt=""><span id="lemoT">T</span></div>
       <div class="login-name">Tiago</div><div class="login-hint">Entrar com Google</div>
     </div>
     <div class="login-card" onclick="quickLogin(&#39;monique&#39;)">
-      <div class="login-avatar" id="lavM"><img id="limgM" src="file:///Users/tiagocamargos/Downloads/index.html" alt=""><span id="lemoM">M</span></div>
+      <div class="login-avatar" id="lavM"><img id="limgM" src="file:///Users/tiagocamargos/Downloads/index_2.html" alt=""><span id="lemoM">M</span></div>
       <div class="login-name">Monique</div><div class="login-hint">Entrar com Google</div>
     </div>
   </div>
@@ -264,7 +264,7 @@ textarea::placeholder{color:var(--text-dim);}
     <div class="fb-status"><div class="fb-dot" id="fbDot"></div><span id="fbLbl"></span></div>
   </div>
   <div class="header-right">
-    <div class="header-date" id="headerDate">Ter, 26 mai · 05:24</div>
+    <div class="header-date" id="headerDate">Ter, 26 mai · 05:37</div>
     <div class="user-chip" onclick="logout()" title="Sair">
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
@@ -624,31 +624,16 @@ async function processInput(){
 
   const today=new Date();
   const todayStr=today.toISOString().split('T')[0];
-  const sys=`Você é uma assistente pessoal inteligente. Responda APENAS com JSON válido sem markdown.
-Hoje: ${today.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} (${todayStr}).
-Usuário: ${USERS[cu]?.name}. Fuso horário: Europe/Lisbon (Portugal).
-Formato obrigatório:
-{"type":"task"|"event"|"note"|"query","title":"título curto","description":"detalhes ou null","urgency":"normal"|"urgent","date":"YYYY-MM-DD ou null","time":"HH:MM ou null","response":"confirmação amigável em português"}
-Regras:
-- Reunião/compromisso/consulta com hora → type "event"
-- Lembrete/pendência/tarefa → type "task"
-- "nota:", "anotação:", "escrever que" → type "note"
-- Pergunta sobre agenda → type "query"
-- Calcule datas: "amanhã"=+1 dia, "semana que vem"=+7 dias, dias da semana relativos ao hoje
-- Para eventos, SEMPRE tente extrair date e time`;
 
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:sys,messages:[{role:'user',content:inp}]})});
-    const d=await r.json();
-    const parsed=JSON.parse(d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+    const parsed = parseInput(inp, today);
 
     if(parsed.type==='event'){
       document.getElementById('thinkMsg').textContent='Criando no Google Calendar…';
       const ok=await createCalEv(parsed.title,parsed.date,parsed.time,parsed.description||'');
       if(!ok){
-        // Save locally as fallback
-        const ev={id:Date.now().toString(),title:parsed.title,description:parsed.description,date:parsed.date,time:parsed.time,gcal:false,owner:cu};
-        await saveTask({...ev,type:'event',shared:false,done:false,createdAt:new Date().toISOString()});
+        const ev={id:Date.now().toString(),title:parsed.title,description:parsed.description,date:parsed.date,time:parsed.time,gcal:false,owner:cu,type:'event',shared:false,done:false,createdAt:new Date().toISOString()};
+        await saveTask(ev);
       }
       switchTab('week');setTimeout(renderWeek,500);
     }else if(parsed.type==='task'){
@@ -674,6 +659,96 @@ Regras:
   document.getElementById('thinking').classList.remove('visible');
   document.getElementById('sendBtn').disabled=false;
 }
+// ── SMART LOCAL PARSER ────────────────────────────
+function parseInput(inp, today){
+  const low=inp.toLowerCase().trim();
+  const todayStr=today.toISOString().split('T')[0];
+
+  // ── Detect type ──
+  const isNote=/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
+  const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
+    || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
+    || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
+  const isUrgent=/\b(urgente|urgentemente|hoje|agora|já|imediato)\b/i.test(low);
+
+  // ── Extract time ──
+  let time=null;
+  const timeMatch=inp.match(/\b(\d{1,2})[h:](\d{2})?\s*(am|pm)?/i)
+    || inp.match(/\b(às|as|ás)\s*(\d{1,2})[h:]?(\d{2})?\s*(am|pm)?/i);
+  if(timeMatch){
+    let h,m=0;
+    if(timeMatch[0].match(/às|as|ás/i)){h=parseInt(timeMatch[2]);m=parseInt(timeMatch[3]||'0');}
+    else{h=parseInt(timeMatch[1]);m=parseInt(timeMatch[2]||'0');}
+    if(timeMatch[timeMatch.length-1]?.toLowerCase()==='pm'&&h<12)h+=12;
+    if(timeMatch[timeMatch.length-1]?.toLowerCase()==='am'&&h===12)h=0;
+    time=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+
+  // ── Extract date ──
+  let date=null;
+  const dow={segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,sábado:6,sabado:6,domingo:0};
+  const months={janeiro:1,fevereiro:2,março:3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+
+  if(/\bamanhã\b|\bamanha\b/i.test(low)){
+    const d=new Date(today);d.setDate(d.getDate()+1);date=d.toISOString().split('T')[0];
+  } else if(/\bhoje\b/i.test(low)){
+    date=todayStr;
+  } else if(/\bsemana (que vem|próxima|proxima)\b/i.test(low)){
+    const d=new Date(today);d.setDate(d.getDate()+7);date=d.toISOString().split('T')[0];
+  } else if(/\bpróximo mês\b|\bproximo mes\b/i.test(low)){
+    const d=new Date(today);d.setMonth(d.getMonth()+1);date=d.toISOString().split('T')[0];
+  } else {
+    // Day of week
+    for(const[name,num] of Object.entries(dow)){
+      if(low.includes(name)){
+        const d=new Date(today);
+        const diff=(num-d.getDay()+7)%7||7;
+        d.setDate(d.getDate()+diff);
+        date=d.toISOString().split('T')[0];
+        break;
+      }
+    }
+    // DD/MM or DD de Mês
+    const dmMatch=inp.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+    if(dmMatch){
+      const day=parseInt(dmMatch[1]),mon=parseInt(dmMatch[2]),yr=dmMatch[3]?parseInt(dmMatch[3]):today.getFullYear();
+      date=`${yr<100?2000+yr:yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    }
+    const deMatch=inp.match(/(\d{1,2})\s+de\s+(\w+)/i);
+    if(deMatch&&months[deMatch[2].toLowerCase()]){
+      const day=parseInt(deMatch[1]),mon=months[deMatch[2].toLowerCase()];
+      date=`${today.getFullYear()}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    }
+  }
+
+  // ── Clean title ──
+  let title=inp
+    .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
+    .replace(/\b(às|as|ás)\s*\d{1,2}[h:]?\d{0,2}\s*(am|pm)?\b/gi,'')
+    .replace(/\b\d{1,2}[h:]\d{0,2}\s*(am|pm)?\b/gi,'')
+    .replace(/\b(amanhã|amanha|hoje|semana que vem|semana próxima|próxima semana|segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)\b/gi,'')
+    .replace(/\s{2,}/g,' ').trim();
+  if(!title)title=inp.trim();
+
+  // ── Response ──
+  const dateLabel=date?` para ${fd(date)}`:'';
+  const timeLabel=time?` às ${time}`:'';
+  let response='';
+  if(isNote)response=`Nota salva! ✏️`;
+  else if(isEvent)response=`Compromisso "${title}" agendado${dateLabel}${timeLabel}. ✅`;
+  else response=`Tarefa "${title}" adicionada${dateLabel}. ✅`;
+
+  return{
+    type: isNote?'note': isEvent?'event':'task',
+    title,
+    description:null,
+    urgency: isUrgent?'urgent':'normal',
+    date,
+    time,
+    response
+  };
+}
+
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();processInput();}}
 function toggleShare(){
   shareMode=!shareMode;
