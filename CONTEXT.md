@@ -152,9 +152,46 @@ resolver isso primeiro.
     compartilhamento seletivo com outras pessoas, isso exigiria uma
     funcionalidade nova de "compartilhar com" por tarefa (não construída
     ainda — ver opção descartada por ora nos próximos passos).
+17. Corrigido o bug do "loop de login" (relatado pelo Tiago: tanto no
+    navegador quanto no app instalado via Google, o login voltava direto
+    para a tela inicial, sem erro nenhum). Diagnóstico: o app usava um
+    pop-up (`window.open`) + verificação por `setInterval` da URL do
+    pop-up para capturar o token do Google — mecanismo cada vez mais
+    quebrado porque o `accounts.google.com` aplica uma política de
+    segurança (Cross-Origin-Opener-Policy) que impede a janela principal
+    de ler a URL do pop-up depois do login, mesmo quando o login deu
+    certo. O pop-up fechava sozinho e a janela principal nunca sabia que
+    o token tinha chegado — daí o "loop" sem erro visível. Correção:
+    substituído por um redirecionamento de página inteira
+    (`window.location.href`) para a tela de login do Google, com a
+    identidade pretendida (Tiago/Monique/perfil dinâmico) guardada em
+    `localStorage` (`pendingLoginUid`) antes do redirect, já que a página
+    recarrega por completo e perde qualquer variável em memória. Também
+    foi adicionado log de erro real (`console.error` + notificação com a
+    mensagem específica) nos blocos de autenticação, para não repetir um
+    "falha silenciosa" no futuro. Corrigido e confirmado ao vivo: o site
+    publicado já serve o código novo (`location.href`, sem `window.open`).
+    Bug secundário identificado mas não corrigido (baixa prioridade,
+    inofensivo): a atualização do avatar após login calcula o id do
+    elemento como `limgTiago`/`limgMonique`, mas o HTML usa `limgT`/`limgM`
+    — o `getElementById` retorna `null` e a foto simplesmente não
+    atualiza (a letra inicial continua aparecendo no lugar da foto).
+18. Corrigido um bug de cache separado, descoberto ao testar o item 17: o
+    GitHub Pages serve `index.html`/`sw.js` com `Cache-Control: max-age=600`
+    (10 minutos), e o service worker antigo repassava esse cache antigo em
+    vez de buscar a versão nova na rede durante sua atualização em segundo
+    plano — ou seja, depois de cada publicação, quem já tinha o app aberto
+    podia continuar rodando a versão anterior por até 10 minutos. Corrigido
+    adicionando `{cache: 'reload'}` na busca de atualização do `sw.js`, o
+    que força ignorar o cache HTTP do navegador nessa checagem específica.
 
 ## Próximos passos (pendentes)
 
+- [ ] Pedir para o Tiago tentar o login de novo (navegador e app
+      instalado) para confirmar na prática que o loop de login (item 17)
+      está mesmo resolvido — a correção foi validada tecnicamente
+      (inspeção do código ao vivo), mas ainda não por um login real do
+      usuário desde que a correção foi publicada.
 - [ ] Ativar de fato as notificações push: alguém (Tiago/Monique) precisa
       abrir o app e clicar em "Ativar" no banner que aparece após o login.
       Sem isso não existe subscription salva e o job não tem para quem
