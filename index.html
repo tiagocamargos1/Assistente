@@ -794,7 +794,8 @@ async function onToken(tk){
     try{
       authUid=await window.fbSignInWithGoogleToken(tk);
     }catch(authErr){
-      notify('Não foi possível autenticar com segurança. Tente novamente.','error');
+      console.error('fbSignInWithGoogleToken failed:',authErr);
+      notify('Não foi possível autenticar com segurança: '+(authErr&&authErr.code||authErr&&authErr.message||'erro desconhecido'),'error');
       return;
     }
     if(!cu){
@@ -815,7 +816,10 @@ async function onToken(tk){
     savePrefs();
     persistGoogle(cu);
     if(!hasPin(cu))offerPinSetup(cu);
-  }catch(e){notify('Erro ao autenticar.','error');}
+  }catch(e){
+    console.error('onToken failed:',e);
+    notify('Erro ao autenticar: '+(e&&e.message||'erro desconhecido'),'error');
+  }
 }
 let gTokenExpiry=0;
 async function getValidToken(){
