@@ -1,0 +1,43 @@
+name: Daily briefing push
+
+on:
+  schedule:
+    # Runs every 10 minutes, all day. The script itself decides who (if
+    # anyone) is due for their briefing right now, based on each person's
+    # saved briefingTime + timezone, so this doesn't spam anyone.
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {} # lets you trigger a run manually from the Actions tab, for testing
+
+jobs:
+  send-briefing:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required so this job can mint a short-lived Google credential (Workload Identity Federation) — no downloaded key involved
+    steps:
+      - uses: actions/checkout@v4
+
+      # Exchanges GitHub's OIDC token for temporary Google Cloud credentials,
+      # scoped to the github-actions-briefing service account. Set up once in
+      # Google Cloud Console (Workload Identity Federation) — see repo notes.
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/611661253806/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'github-actions-briefing@assistente-ee1f4.iam.gserviceaccount.com'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: scripts
+        run: npm install --omit=dev
+
+      - name: Send due briefings
+        working-directory: scripts
+        env:
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: node send-daily-briefing.js
