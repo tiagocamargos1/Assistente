@@ -22,7 +22,11 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
+      // 'reload' forces this fetch to skip the browser's own HTTP cache and
+      // go to the network, so a background update actually picks up a fresh
+      // deploy instead of re-caching whatever GitHub Pages' Cache-Control
+      // (max-age=600) had already stored for this URL.
+      const network = fetch(event.request, { cache: 'reload' })
         .then((resp) => {
           if (resp && resp.ok && event.request.url.startsWith(self.location.origin)) {
             const copy = resp.clone();
