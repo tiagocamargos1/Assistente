@@ -11,8 +11,15 @@
  * It relies on Workload Identity Federation — the workflow's
  * "google-github-actions/auth" step exchanges GitHub's OIDC token for a
  * short-lived Google credential scoped to the github-actions-briefing
- * service account, which firebase-admin picks up automatically via
- * Application Default Credentials. Nothing secret is stored in this repo.
+ * service account. Nothing secret is stored in this repo.
+ *
+ * Note: firebase-admin's own applicationDefault() helper does not know how
+ * to read WIF-style "external_account" credential files (it only handles
+ * plain service-account/authorized-user JSON and throws
+ * "Invalid contents in the credentials file" otherwise). So instead we use
+ * google-auth-library's GoogleAuth directly - which DOES support
+ * external_account/WIF - to fetch access tokens, and hand firebase-admin a
+ * small custom Credential object that wraps it.
  *
  * Required environment variables (set as GitHub Actions secrets):
  *   VAPID_PUBLIC_KEY          Web Push public key (also embedded in index.html)
@@ -21,6 +28,7 @@
  */
 const admin = require('firebase-admin');
 const webpush = require('web-push');
+const { GoogleAuth } = require('google-auth-library');
 
 const FIREBASE_PROJECT_ID = 'assistente-ee1f4';
 
@@ -37,8 +45,16 @@ const vapidPublic = required('VAPID_PUBLIC_KEY');
 const vapidPrivate = required('VAPID_PRIVATE_KEY');
 const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:tiagocamargos@tocsmartgroup.com';
 
+const googleAuth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
+
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
+  credential: {
+    getAccessToken: async () => {
+      const client = await googleAuth.getClient();
+      const res = await client.getAccessToken();
+      return { access_token: res.token, expires_in: 3599 };
+    }
+  },
   projectId: FIREBASE_PROJECT_ID
 });
 const db = admin.firestore();
