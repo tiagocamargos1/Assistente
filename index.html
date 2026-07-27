@@ -278,6 +278,7 @@ textarea::placeholder{color:var(--text-dim);}
     Entrar com Google
   </button>
   <div style="margin-top:16px;font-size:12px;color:var(--text-dim);max-width:280px;">Novo por aqui? Seu acesso é criado automaticamente no primeiro login — não precisa de convite.</div>
+  <div id="loginDebugPanel" style="display:none;"></div>
 </div>
 <!-- PIN QUICK ACCESS -->
 <div class="login-screen hidden" id="pinScreen">
@@ -495,6 +496,44 @@ textarea::placeholder{color:var(--text-dim);}
 const CLIENT_ID='150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com';
 const SCOPES='https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const USERS={tiago:{name:'Tiago',emoji:'T',color:'#c9a84c'},monique:{name:'Monique',emoji:'M',color:'#9b6fa8'}};
+// ── LOGIN DEBUG TRAIL ──────────────────────────────
+// The Google login was looping back to the login screen with zero visible
+// error, on desktop AND mobile, even after fixing the popup→redirect issue.
+// That means whatever is failing throws somewhere our own try/catch isn't
+// showing to the user, or the failure happens in a way that never reaches
+// notify(). Instead of guessing blind from screenshots again, every login
+// attempt now leaves a short trail in localStorage (survives the full-page
+// redirect to Google and back) and — if a login was attempted but didn't
+// finish successfully — that trail is shown right on the login screen so it
+// can be read/screenshotted directly, no console needed.
+function dbg(msg){
+  try{
+    const log=JSON.parse(localStorage.getItem('loginDebugLog')||'[]');
+    log.push({t:Date.now(),msg:String(msg)});
+    while(log.length>25)log.shift();
+    localStorage.setItem('loginDebugLog',JSON.stringify(log));
+  }catch(e){}
+  renderLoginDebug();
+}
+function clearLoginDebug(){
+  try{localStorage.removeItem('loginDebugLog');}catch(e){}
+  renderLoginDebug();
+}
+function renderLoginDebug(){
+  const panel=document.getElementById('loginDebugPanel');
+  if(!panel)return;
+  let log=[];
+  try{log=JSON.parse(localStorage.getItem('loginDebugLog')||'[]');}catch(e){}
+  if(!log.length){panel.style.display='none';panel.innerHTML='';return;}
+  const t0=log[0].t;
+  const lines=log.map(e=>`+${((e.t-t0)/1000).toFixed(1)}s  ${esc(e.msg)}`).join('\n');
+  panel.style.display='block';
+  panel.innerHTML=`<div style="font-size:11px;color:var(--text-dim);margin-top:14px;max-width:320px;text-align:left;">`
+    +`<div style="margin-bottom:4px;font-weight:600;">Última tentativa de login não concluiu. Detalhes técnicos:</div>`
+    +`<pre style="white-space:pre-wrap;font-family:monospace;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;margin:0;">${lines}</pre>`
+    +`<div style="margin-top:6px;cursor:pointer;text-decoration:underline;" onclick="clearLoginDebug()">Limpar</div>`
+    +`</div>`;
+}
 // STATE
 let cu=null,gToken=null,gProfile=null;
 let tasks=[],gcalEvs=[],notes=[];
@@ -770,29 +809,43 @@ function initLoginScreen(){
 // consistently inside an installed PWA, where popups are unreliable anyway.
 function quickLogin(uid){
   cu=uid;
+  dbg(`quickLogin(${uid})`);
   try{localStorage.setItem('pendingLoginUid',uid);}catch(e){}
   startGoogleAuth();
 }
 function startGoogleAuth(){
   const redirect='https://tiagocamargos1.github.io/Assistente';
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
+  dbg(`startGoogleAuth: standalone=${window.navigator.standalone===true} ua=${(navigator.userAgent||'').slice(0,70)}`);
+  dbg('startGoogleAuth: redirecting to accounts.google.com now');
   window.location.href=url;
 }
 async function onToken(tk){
+  dbg('onToken: started');
   gToken=tk;
   // Store token expiry
   gTokenExpiry=Date.now()+(3500*1000);
   try{
+    dbg('onToken: fetching Google userinfo');
     const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:`Bearer ${tk}`}});
+    if(!r.ok){dbg(`onToken: userinfo fetch HTTP ${r.status}`);}
     gProfile=await r.json();
-    if(!window.firebaseReady)await new Promise(res=>window.addEventListener('firebaseReady',res,{once:true}));
+    dbg(`onToken: userinfo ok, email=${gProfile&&gProfile.email||'?'}`);
+    if(!window.firebaseReady){
+      dbg('onToken: waiting for firebaseReady…');
+      await new Promise(res=>window.addEventListener('firebaseReady',res,{once:true}));
+      dbg('onToken: firebaseReady arrived');
+    }
     // Establish a REAL Firebase Auth session using the Google token we already have.
     // Everything below this point can rely on request.auth being populated for Firestore rules.
     let authUid;
     try{
+      dbg('onToken: calling Firebase signInWithCredential');
       authUid=await window.fbSignInWithGoogleToken(tk);
+      dbg(`onToken: Firebase auth OK, authUid=${authUid}`);
     }catch(authErr){
       console.error('fbSignInWithGoogleToken failed:',authErr);
+      dbg(`onToken: Firebase auth FAILED — ${authErr&&authErr.code||''} ${authErr&&authErr.message||authErr}`);
       notify('Não foi possível autenticar com segurança: '+(authErr&&authErr.code||authErr&&authErr.message||'erro desconhecido'),'error');
       return;
     }
@@ -802,12 +855,16 @@ async function onToken(tk){
       else if(email==='tiagocamargos@tocsmartgroup.com')cu='tiago';
       else cu=await resolveDynamicUser(gProfile);
     }
+    dbg(`onToken: resolved identity = ${cu}`);
     await window.fbSave(`authMap/${authUid}`,{appUid:cu});
     try{localStorage.setItem(`authUidFor_${cu}`,authUid);}catch(e){}
     // Update avatar in login screen
     const img=document.getElementById(`limg${cu.charAt(0).toUpperCase()+cu.slice(1)}`);
     if(img&&gProfile.picture){img.src=gProfile.picture;img.style.display='block';img.nextSibling&&(img.nextSibling.style.display='none');}
+    dbg('onToken: calling enterApp()');
     await enterApp();
+    dbg('onToken: enterApp() done — SUCCESS');
+    clearLoginDebug();
     notify(`✓ Olá, ${gProfile.given_name}!`,'success');
     fetchCal();
     showPushBanner();
@@ -816,6 +873,7 @@ async function onToken(tk){
     if(!hasPin(cu))offerPinSetup(cu);
   }catch(e){
     console.error('onToken failed:',e);
+    dbg(`onToken: FAILED — ${e&&e.message||e}`);
     notify('Erro ao autenticar: '+(e&&e.message||'erro desconhecido'),'error');
   }
 }
@@ -1487,7 +1545,23 @@ function updateDate(){
 // ── PWA / QUICK CAPTURE ───────────────────────────
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      // Without this, a device that already had the app open/installed could
+      // keep running an old cached version indefinitely — the new service
+      // worker installs in the background but never actually takes over the
+      // already-open page until a reload happens to land on it. This forces
+      // exactly one automatic reload the moment a new version takes control,
+      // so bug fixes (like this login flow) actually reach people who
+      // already have the app open, instead of requiring them to manually
+      // clear the site's cache/data.
+      let reloading=false;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(reloading)return;
+        reloading=true;
+        window.location.reload();
+      });
+      if(reg&&reg.update)reg.update().catch(()=>{});
+    }).catch(()=>{});
   });
 }
 const quickCapture=new URLSearchParams(window.location.search).get('quick')==='1';
@@ -1516,9 +1590,11 @@ initLoginScreen();
 // flow now does a full top-level redirect (see startGoogleAuth), so this is
 // the ONLY place a login ever actually completes — the page fully reloads
 // here after Google sends the user back.
+dbg(`page load — hash has token: ${window.location.hash.includes('access_token')} — standalone=${window.navigator.standalone===true}`);
 if(window.location.hash.includes('access_token')){
   const p=new URLSearchParams(window.location.hash.substring(1));
   const tk=p.get('access_token');
+  dbg(`hash parsed — access_token present: ${!!tk}`);
   if(tk){
     history.replaceState(null,'',window.location.pathname);
     // If the person tapped a specific card (Tiago/Monique/a known dynamic
@@ -1530,6 +1606,9 @@ if(window.location.hash.includes('access_token')){
     if(pendingUid)cu=pendingUid;
     onToken(tk);
   }
+}else if(window.location.hash.includes('error')){
+  dbg(`page load — Google returned an OAuth error in hash: ${window.location.hash}`);
 }
+renderLoginDebug();
 </script>
 </body></html>
