@@ -133,6 +133,25 @@ resolver isso primeiro.
     notificação é um limite de segurança do navegador — não dá pra
     automatizar mais que isso. O banner já aparece sozinho a cada login
     até a pessoa decidir (ativar ou recusar).
+15. Tela inicial de login tornada genérica: antes mostrava sempre "Tiago &
+    Monique — Quem está usando?" com os dois cartões fixos, o que confundia
+    quem recebia o link pela primeira vez (ex: a Annie, testadora
+    convidada) — parecia que o app só era para essas duas pessoas. Agora um
+    aparelho novo vê só "Entre com sua conta Google para começar"; os
+    cartões de acesso rápido (Tiago, Monique, ou qualquer usuário dinâmico)
+    só aparecem naquele aparelho específico depois que a pessoa já logou
+    nele alguma vez. De quebra, corrigido um bug real encontrado no mesmo
+    trecho: o fallback de login via redirect (usado quando o navegador
+    bloqueia pop-up) atribuía qualquer novo login automaticamente à
+    identidade "tiago" antes de resolver quem realmente era — corrigido
+    para sempre resolver a identidade a partir do perfil Google retornado.
+16. Decisão de produto: testadores dinâmicos (ex: Annie) ficam com dados
+    100% privados/isolados por padrão — sem compartilhamento com Tiago.
+    `shared_tasks` continua exclusiva de Tiago + Monique (o "grupo família"
+    é fixo no código, não configurável ainda). Se no futuro for necessário
+    compartilhamento seletivo com outras pessoas, isso exigiria uma
+    funcionalidade nova de "compartilhar com" por tarefa (não construída
+    ainda — ver opção descartada por ora nos próximos passos).
 
 ## Próximos passos (pendentes)
 
@@ -146,10 +165,16 @@ resolver isso primeiro.
       aparecem normalmente.
 - [ ] Convidar mais alguém para testar o app via "Entrar com Google"
       (sistema de usuário dinâmico), como parte do objetivo de eventualmente
-      vender a ferramenta.
+      vender a ferramenta. Annie já recebeu o link; app agora mostra tela
+      de login genérica pra ela (não mais os cartões do Tiago/Monique).
 - [ ] Opcional: tornar o banner de ativação de push mais difícil de ignorar
       (remover o "✕" de dispensa rápida, obrigando escolher entre "Ativar"
       ou "Agora não" explicitamente).
+- [ ] Não decidido/descartado por ora: compartilhamento seletivo de tarefas
+      entre usuários dinâmicos e Tiago (feature nova de "compartilhar com",
+      tarefa por tarefa). Decisão tomada: por enquanto NENHUM
+      compartilhamento com testadores — cada um fica isolado até decidirmos
+      o contrário.
 - [ ] Opcional/sem urgência: depois de confirmar a migração, pode-se (não é
       obrigatório) limpar as coleções antigas `tasks_tiago`, `tasks_monique`,
       `notes_tiago`, `notes_monique`, `routines_tiago`, `routines_monique`
