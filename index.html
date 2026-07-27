@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!-- saved from url=(0050)file:///Users/tiagocamargos/Downloads/index_1.html -->
 <html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -10,12 +9,10 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 180 180&#39;%3E%3Crect width=&#39;180&#39; height=&#39;180&#39; fill=&#39;%230f0e0c&#39;/%3E%3Ccircle cx=&#39;90&#39; cy=&#39;90&#39; r=&#39;60&#39; fill=&#39;none&#39; stroke=&#39;%23c9a84c&#39; stroke-width=&#39;3&#39;/%3E%3Ctext x=&#39;90&#39; y=&#39;105&#39; text-anchor=&#39;middle&#39; font-size=&#39;52&#39; fill=&#39;%23c9a84c&#39; font-family=&#39;serif&#39;%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
 <title>Assistente Pessoal</title>
 <link href="./index_files/css2" rel="stylesheet">
-
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
   authDomain: "assistente-ee1f4.firebaseapp.com",
@@ -24,10 +21,8 @@ const firebaseConfig = {
   messagingSenderId: "611661253806",
   appId: "1:611661253806:web:d5358f3ec3ccada1f0313f"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 // ── FIREBASE HELPERS ──────────────────────────────
 window.fbSave = async (path, data) => {
   await setDoc(doc(db, path), { ...data, updatedAt: serverTimestamp() }, { merge: true });
@@ -50,14 +45,12 @@ window.fbListenCol = (path, cb) => {
 window.firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
 </script>
-
 <style>
 :root{--bg:#0f0e0c;--surface:#1a1814;--surface2:#242018;--border:#2e2a22;--gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6530;--text:#ede8df;--text-muted:#8a8070;--text-dim:#5a5248;--green:#5a9e6f;--red:#c06060;--blue:#5a7ea0;--purple:#9b6fa8;--radius:12px;}
 [data-theme="light"]{--bg:#f5f2ec;--surface:#fffefa;--surface2:#f0ede6;--border:#ddd8cc;--text:#2a2520;--text-muted:#6a6058;--text-dim:#9a9088;--gold-dim:#9a7040;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .25s,color .25s;}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.35;}
-
 /* LOGIN */
 .login-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;}
 .login-screen.hidden{display:none;}
@@ -78,7 +71,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .google-btn{display:flex;align-items:center;gap:10px;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:11px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
 .google-btn:hover{border-color:var(--gold-dim);color:var(--text);}
 .loading-bar{position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:9999;transition:width .3s ease;width:0;}
-
 /* HEADER */
 header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);}
 .logo{display:flex;align-items:center;gap:9px;}
@@ -93,11 +85,9 @@ header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid va
 .chip-name{font-size:12px;color:var(--text-muted);}
 .icon-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:5px;border-radius:6px;transition:color .2s;}
 .icon-btn:hover{color:var(--gold);}
-
 /* MAIN */
 .main{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 300px;max-height:calc(100vh - 62px);overflow:hidden;}
 .left-panel{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;}
-
 /* INPUT */
 .input-section{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface);}
 .input-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:7px;font-weight:600;}
@@ -124,7 +114,6 @@ textarea::placeholder{color:var(--text-dim);}
 @keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 .ai-resp{margin-top:7px;padding:8px 12px;background:rgba(201,168,76,.06);border-left:2px solid var(--gold);border-radius:0 var(--radius) var(--radius) 0;font-size:13px;color:var(--text-muted);line-height:1.6;display:none;}
 .ai-resp.visible{display:block;}
-
 /* TABS */
 .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surface);}
 .tab{padding:9px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
@@ -133,13 +122,11 @@ textarea::placeholder{color:var(--text-dim);}
 .tab-content{flex:1;overflow-y:auto;padding:11px 18px;display:none;}
 .tab-content.active{display:block;}
 .tab-content::-webkit-scrollbar{width:3px}.tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-
 /* FILTERS */
 .filter-row{display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap;}
 .filter-btn{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
 .filter-btn.sf.active{border-color:var(--purple);color:var(--purple);background:rgba(155,111,168,.1);}
-
 /* TASKS */
 .task-item{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;border-radius:8px;margin-bottom:3px;transition:background .15s;animation:si .25s ease;}
 @keyframes si{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
@@ -157,11 +144,9 @@ textarea::placeholder{color:var(--text-dim);}
 .task-item:hover .task-acts{opacity:1;}
 .tact{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-dim);padding:2px 3px;border-radius:4px;transition:color .2s;}
 .tact:hover{color:var(--red);}.tact.rb:hover{color:var(--gold);}
-
 /* SECTION DIV */
 .sdiv{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:12px 0 6px;font-weight:600;display:flex;align-items:center;gap:8px;}
 .sdiv::after{content:'';flex:1;height:1px;background:var(--border);}
-
 /* EVENTS */
 .event-card{border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:6px;position:relative;overflow:hidden;animation:si .25s ease;transition:background .15s;}
 .event-card:hover{background:var(--surface2);}
@@ -170,7 +155,6 @@ textarea::placeholder{color:var(--text-dim);}
 .ev-time{font-size:11px;color:var(--gold);font-weight:600;letter-spacing:.05em;margin-bottom:2px;}
 .event-card.gcal .ev-time{color:var(--green);}
 .ev-title{font-size:13px;color:var(--text);line-height:1.3;}
-
 /* WEEK */
 .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;}
 .week-day{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .2s;min-height:68px;}
@@ -181,7 +165,6 @@ textarea::placeholder{color:var(--text-dim);}
 .wd-dots{display:flex;justify-content:center;gap:2px;flex-wrap:wrap;}
 .wd-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0;}
 .wd-dot.g{background:var(--green);}.wd-dot.b{background:var(--blue);}
-
 /* NOTES */
 .note-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;animation:si .25s ease;position:relative;}
 .note-card:hover{border-color:var(--gold-dim);}
@@ -189,7 +172,6 @@ textarea::placeholder{color:var(--text-dim);}
 .note-meta{font-size:10px;color:var(--text-dim);margin-top:6px;}
 .note-del{position:absolute;top:8px;right:8px;opacity:0;transition:opacity .2s;background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:13px;}
 .note-card:hover .note-del{opacity:1;}
-
 /* RIGHT */
 .right-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--surface);}
 .panel-hdr{padding:12px 15px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);font-weight:600;display:flex;align-items:center;justify-content:space-between;}
@@ -207,7 +189,6 @@ textarea::placeholder{color:var(--text-dim);}
 .conn-btn:hover{background:rgba(201,168,76,.1);}
 .rep-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:8px;}
 .rep-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
-
 /* MODAL */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:20px;}
 .modal-ov.open{display:flex;}
@@ -219,7 +200,6 @@ textarea::placeholder{color:var(--text-dim);}
 .rep-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:5px;}
 .close-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:14px;transition:all .2s;}
 .close-btn:hover{color:var(--text);}
-
 /* NOTIF */
 .notif{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);z-index:900;transform:translateY(70px);opacity:0;transition:all .3s ease;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.3);}
 .notif.show{transform:translateY(0);opacity:1;}
@@ -233,26 +213,24 @@ textarea::placeholder{color:var(--text-dim);}
 .fb-status{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;margin-left:8px;}
 .fb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);}
 .fb-dot.on{background:var(--green);}
-
 @media(max-width:680px){.main{grid-template-columns:1fr;max-height:none;overflow:visible;}.right-panel{display:none;}body{overflow-y:auto;}}
 </style>
 </head>
 <body>
 <div class="loading-bar" id="loadingBar"></div>
-
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-logo">✦</div>
   <div class="login-title">Assistente Pessoal</div>
   <div class="login-sub">Tiago &amp; Monique — Quem está usando?</div>
   <div class="login-cards">
-    <div class="login-card" onclick="quickLogin(&#39;tiago&#39;)">
+    <div class="login-card" onclick="handleProfileClick(&#39;tiago&#39;)">
       <div class="login-avatar" id="lavT"><img id="limgT" src="file:///Users/tiagocamargos/Downloads/index_1.html" alt=""><span id="lemoT">T</span></div>
-      <div class="login-name">Tiago</div><div class="login-hint">Entrar com Google</div>
+      <div class="login-name">Tiago</div><div class="login-hint" id="lhintT">Entrar com Google</div>
     </div>
-    <div class="login-card" onclick="quickLogin(&#39;monique&#39;)">
+    <div class="login-card" onclick="handleProfileClick(&#39;monique&#39;)">
       <div class="login-avatar" id="lavM"><img id="limgM" src="file:///Users/tiagocamargos/Downloads/index_1.html" alt=""><span id="lemoM">M</span></div>
-      <div class="login-name">Monique</div><div class="login-hint">Entrar com Google</div>
+      <div class="login-name">Monique</div><div class="login-hint" id="lhintM">Entrar com Google</div>
     </div>
   </div>
   <div class="login-divider">ou</div>
@@ -261,7 +239,15 @@ textarea::placeholder{color:var(--text-dim);}
     Entrar com Google
   </button>
 </div>
-
+<!-- PIN QUICK ACCESS -->
+<div class="login-screen hidden" id="pinScreen">
+  <div class="login-logo">🔒</div>
+  <div class="login-title" id="pinTitle">Bem-vindo(a)</div>
+  <div class="login-sub" id="pinSub">Digite seu PIN de acesso</div>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pinInput" onkeydown="handlePinKey(event)" style="width:160px;text-align:center;font-size:26px;letter-spacing:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;margin-bottom:18px;outline:none;" placeholder="••••">
+  <button class="google-btn" onclick="submitPin()" style="margin-bottom:10px;justify-content:center;">Entrar</button>
+  <button class="close-btn" style="max-width:240px;background:transparent;" onclick="showLoginScreen()">Usar login do Google</button>
+</div>
 <!-- HEADER -->
 <header>
   <div class="logo"><div class="logo-icon">✦</div><span class="logo-text">Assistente</span>
@@ -277,7 +263,6 @@ textarea::placeholder{color:var(--text-dim);}
     <button class="icon-btn" onclick="openReport()" title="Relatório">📊</button>
   </div>
 </header>
-
 <!-- MAIN -->
 <div class="main">
   <div class="left-panel">
@@ -321,7 +306,6 @@ textarea::placeholder{color:var(--text-dim);}
       <div id="noteList"></div>
     </div>
   </div>
-
   <!-- RIGHT -->
   <div class="right-panel">
     <div class="panel-hdr">
@@ -346,7 +330,6 @@ textarea::placeholder{color:var(--text-dim);}
     </div>
   </div>
 </div>
-
 <!-- REPORT MODAL -->
 <div class="modal-ov" id="reportModal">
   <div class="modal-box">
@@ -355,23 +338,64 @@ textarea::placeholder{color:var(--text-dim);}
     <button class="close-btn" onclick="document.getElementById(&#39;reportModal&#39;).classList.remove(&#39;open&#39;)">Fechar</button>
   </div>
 </div>
-
+<!-- EDIT TASK MODAL -->
+<div class="modal-ov" id="editTaskModal">
+  <div class="modal-box">
+    <h2>✏️ Editar tarefa</h2>
+    <div class="rep-sec">
+      <h3>Texto</h3>
+      <textarea id="editTaskText" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;resize:vertical;"></textarea>
+    </div>
+    <div class="rep-sec">
+      <h3>Data</h3>
+      <input type="date" id="editTaskDate" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+    </div>
+    <div class="rep-sec">
+      <h3>Urgência</h3>
+      <select id="editTaskUrgency" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="normal">Normal</option>
+        <option value="urgent">🔴 Urgente</option>
+      </select>
+    </div>
+    <div class="rep-sec">
+      <label class="share-toggle" onclick="toggleEditShare()">
+        <div class="tog-track" id="editShareTrk"><div class="tog-knob"></div></div>
+        <span class="share-lbl" id="editShareLbl">Apenas para mim</span>
+      </label>
+    </div>
+    <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveEditTask()">Salvar alterações</button>
+    <button class="close-btn" onclick="closeEditTask()">Cancelar</button>
+  </div>
+</div>
+<!-- PIN SETUP MODAL -->
+<div class="modal-ov" id="pinSetupModal">
+  <div class="modal-box">
+    <h2>🔒 Criar PIN de acesso rápido</h2>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;">Assim você entra rápido neste aparelho sem repetir o login do Google toda vez. É uma trava local deste navegador — não substitui a segurança da sua conta Google.</p>
+    <div class="rep-sec">
+      <h3>Novo PIN (4 a 6 números)</h3>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="newPin1" style="width:100%;text-align:center;font-size:20px;letter-spacing:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;">
+    </div>
+    <div class="rep-sec">
+      <h3>Confirme o PIN</h3>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="newPin2" style="width:100%;text-align:center;font-size:20px;letter-spacing:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;">
+    </div>
+    <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="confirmPinSetup()">Salvar PIN</button>
+    <button class="close-btn" onclick="skipPinSetup()">Agora não</button>
+  </div>
+</div>
 <div class="notif info" id="notif">Aguardando login Google…</div>
-
 <script>
 const CLIENT_ID='150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com';
 const SCOPES='https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const USERS={tiago:{name:'Tiago',emoji:'T',color:'#c9a84c'},monique:{name:'Monique',emoji:'M',color:'#9b6fa8'}};
-
 // STATE
 let cu=null,gToken=null,gProfile=null;
 let tasks=[],gcalEvs=[],notes=[];
 let filter='all',shareMode=false,isDark=true,selectedDay=null;
 let fbUnsubTasks=null,fbUnsubNotes=null;
-
 // ── FIREBASE PERSISTENCE (cloud) ─────────────────
 function fbPath(col,id){return`${col}/${id}`;}
-
 async function saveTask(task){
   if(!window.fbSave)return;
   const col=task.shared?'shared_tasks':`tasks_${cu}`;
@@ -394,12 +418,10 @@ async function savePrefs(){
   if(!window.fbSave||!cu)return;
   await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null});
 }
-
 function startListeners(){
   // Unsubscribe previous
   if(fbUnsubTasks)fbUnsubTasks();
   if(fbUnsubNotes)fbUnsubNotes();
-
   // Listen own tasks
   fbUnsubTasks=window.fbListenCol(`tasks_${cu}`,myTasks=>{
     // Listen shared tasks too — merge
@@ -410,16 +432,99 @@ function startListeners(){
       document.getElementById('fbLbl').textContent='';
     });
   });
-
   fbUnsubNotes=window.fbListenCol(`notes_${cu}`,n=>{
     notes=n.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
     renderNotes();
   });
 }
-
+// ── PIN (local quick-access lock) ────────────────
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function hasPin(uid){return!!localStorage.getItem(`pin_${uid}`);}
+function handleProfileClick(uid){
+  if(hasPin(uid)){openPinScreen(uid);}
+  else{quickLogin(uid);}
+}
+let pendingPinUser=null;
+function openPinScreen(uid){
+  pendingPinUser=uid;
+  document.getElementById('pinTitle').textContent=`Olá, ${USERS[uid].name}`;
+  document.getElementById('pinInput').value='';
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('pinScreen').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('pinInput').focus(),100);
+}
+function showLoginScreen(){
+  document.getElementById('pinScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+function handlePinKey(e){if(e.key==='Enter')submitPin();}
+async function submitPin(){
+  const val=document.getElementById('pinInput').value.trim();
+  if(!/^\d{4,6}$/.test(val)){notify('O PIN deve ter de 4 a 6 números.','error');return;}
+  const hash=await sha256(val);
+  const stored=localStorage.getItem(`pin_${pendingPinUser}`);
+  if(hash!==stored){notify('PIN incorreto.','error');document.getElementById('pinInput').value='';return;}
+  cu=pendingPinUser;
+  loadStoredGoogle(cu);
+  document.getElementById('pinScreen').classList.add('hidden');
+  await enterApp();
+  updateChip();
+  notify(`✓ Bem-vindo(a), ${USERS[cu].name}!`,'success');
+  if(gToken){renderCalBriefing();fetchCal();}else{renderCalBriefing();}
+}
+let pendingPinSetupUser=null;
+function offerPinSetup(uid){
+  if(hasPin(uid))return;
+  pendingPinSetupUser=uid;
+  document.getElementById('newPin1').value='';
+  document.getElementById('newPin2').value='';
+  document.getElementById('pinSetupModal').classList.add('open');
+}
+async function confirmPinSetup(){
+  const p1=document.getElementById('newPin1').value.trim();
+  const p2=document.getElementById('newPin2').value.trim();
+  if(!/^\d{4,6}$/.test(p1)){notify('O PIN deve ter de 4 a 6 números.','error');return;}
+  if(p1!==p2){notify('Os PINs não coincidem.','error');return;}
+  const hash=await sha256(p1);
+  localStorage.setItem(`pin_${pendingPinSetupUser}`,hash);
+  document.getElementById('pinSetupModal').classList.remove('open');
+  notify('🔒 PIN criado! Da próxima vez, use-o para entrar rápido.','success');
+}
+function skipPinSetup(){document.getElementById('pinSetupModal').classList.remove('open');}
+// ── GOOGLE TOKEN PERSISTENCE (avoid re-login) ────
+function persistGoogle(uid){
+  try{
+    if(gToken){
+      localStorage.setItem(`gtoken_${uid}`,gToken);
+      localStorage.setItem(`gtoken_expiry_${uid}`,String(gTokenExpiry));
+      if(gProfile)localStorage.setItem(`gprofile_${uid}`,JSON.stringify(gProfile));
+    }
+  }catch(e){}
+}
+function loadStoredGoogle(uid){
+  try{
+    const tok=localStorage.getItem(`gtoken_${uid}`);
+    const exp=parseInt(localStorage.getItem(`gtoken_expiry_${uid}`)||'0',10);
+    if(tok&&exp>Date.now()){
+      gToken=tok;gTokenExpiry=exp;
+      const prof=localStorage.getItem(`gprofile_${uid}`);
+      if(prof)try{gProfile=JSON.parse(prof);}catch(e){}
+      return true;
+    }
+  }catch(e){}
+  gToken=null;
+  return false;
+}
+function clearStoredGoogle(uid){
+  localStorage.removeItem(`gtoken_${uid}`);
+  localStorage.removeItem(`gtoken_expiry_${uid}`);
+  localStorage.removeItem(`gprofile_${uid}`);
+}
 // ── AUTH ─────────────────────────────────────────
 function quickLogin(uid){cu=uid;startGoogleAuth();}
-
 function startGoogleAuth(){
   const redirect='https://tiagocamargos1.github.io/Assistente';
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
@@ -439,7 +544,6 @@ function startGoogleAuth(){
     }catch(e){}
   },500);
 }
-
 async function onToken(tk){
   gToken=tk;
   // Store token expiry
@@ -456,9 +560,10 @@ async function onToken(tk){
     fetchCal();
     showPushBanner();
     savePrefs();
+    persistGoogle(cu);
+    if(!hasPin(cu))offerPinSetup(cu);
   }catch(e){notify('Erro ao autenticar.','error');}
 }
-
 let gTokenExpiry=0;
 async function getValidToken(){
   if(gToken&&Date.now()<gTokenExpiry)return gToken;
@@ -475,7 +580,6 @@ async function getValidToken(){
     if(!gToken){notify('Sessão expirada. Faça login novamente.','error');resolve(null);}
   });
 }
-
 async function enterApp(){
   if(!cu)cu='tiago';
   document.getElementById('loginScreen').classList.add('hidden');
@@ -492,17 +596,17 @@ async function enterApp(){
   }catch(e){}
   initWeek();
 }
-
 function logout(){
   if(!confirm('Sair?'))return;
   if(fbUnsubTasks)fbUnsubTasks();
   if(fbUnsubNotes)fbUnsubNotes();
+  if(cu)clearStoredGoogle(cu);
   gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];
+  document.getElementById('pinScreen').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('fbDot').classList.remove('on');
   notify('Até logo!','info');
 }
-
 function updateChip(){
   const u=USERS[cu]||USERS.tiago;
   const av=document.getElementById('chipAv');
@@ -510,7 +614,6 @@ function updateChip(){
   else{av.textContent=u.emoji;av.style.background=u.color;}
   document.getElementById('chipName').textContent=u.name;
 }
-
 // ── PUSH ─────────────────────────────────────────
 function showPushBanner(){
   if(!('Notification' in window)||Notification.permission!=='default')return;
@@ -525,7 +628,6 @@ function reqPush(){
 function sendPush(title,body){
   if(Notification.permission==='granted')new Notification(`🔔 ${title}`,{body});
 }
-
 // ── GOOGLE CALENDAR ──────────────────────────────
 async function fetchCal(){
   const tk=await getValidToken();
@@ -547,7 +649,6 @@ async function fetchCal(){
     else notify('Erro ao buscar agenda.','error');
   }
 }
-
 async function createCalEv(title,dateStr,timeStr,desc=''){
   const tk=await getValidToken();
   if(!tk){notify('Conecte o Google Calendar para criar eventos.','info');return false;}
@@ -577,7 +678,6 @@ async function createCalEv(title,dateStr,timeStr,desc=''){
 }
 function addH(t){const[h,m]=t.split(':').map(Number);return`${String((h+1)%24).padStart(2,'0')}:${String(m).padStart(2,'0')}`;}
 function syncUI(on){document.getElementById('syncDot').classList.toggle('off',!on);document.getElementById('syncLbl').textContent=on?'sincronizado':'offline';}
-
 // ── WEEK ─────────────────────────────────────────
 async function initWeek(){
   const today=new Date();
@@ -617,7 +717,6 @@ function renderWeekDay(ds){
     ...tks.map(t=>`<div class="event-card"><div class="ev-time" style="color:var(--blue)">Tarefa</div><div class="ev-title">${esc(t.text)}</div></div>`)
   ].join('');
 }
-
 // ── AI ───────────────────────────────────────────
 async function processInput(){
   const inp=document.getElementById('userInput').value.trim();
@@ -626,13 +725,10 @@ async function processInput(){
   document.getElementById('thinking').classList.add('visible');
   document.getElementById('thinkMsg').textContent='Processando…';
   document.getElementById('aiResp').classList.remove('visible');
-
   const today=new Date();
   const todayStr=today.toISOString().split('T')[0];
-
   try{
     const parsed = parseInput(inp, today);
-
     if(parsed.type==='event'){
       document.getElementById('thinkMsg').textContent='Criando no Google Calendar…';
       const ok=await createCalEv(parsed.title,parsed.date,parsed.time,parsed.description||'');
@@ -668,14 +764,12 @@ async function processInput(){
 function parseInput(inp, today){
   const low=inp.toLowerCase().trim();
   const todayStr=today.toISOString().split('T')[0];
-
   // ── Detect type ──
   const isNote=/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
   const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
     || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
   const isUrgent=/\b(urgente|urgentemente|hoje|agora|já|imediato)\b/i.test(low);
-
   // ── Extract time ──
   let time=null;
   const timeMatch=inp.match(/\b(\d{1,2})[h:](\d{2})?\s*(am|pm)?/i)
@@ -688,12 +782,10 @@ function parseInput(inp, today){
     if(timeMatch[timeMatch.length-1]?.toLowerCase()==='am'&&h===12)h=0;
     time=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
   }
-
   // ── Extract date ──
   let date=null;
   const dow={segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,sábado:6,sabado:6,domingo:0};
   const months={janeiro:1,fevereiro:2,março:3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
-
   if(/\bamanhã\b|\bamanha\b/i.test(low)){
     const d=new Date(today);d.setDate(d.getDate()+1);date=d.toISOString().split('T')[0];
   } else if(/\bhoje\b/i.test(low)){
@@ -725,7 +817,6 @@ function parseInput(inp, today){
       date=`${today.getFullYear()}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     }
   }
-
   // ── Clean title ──
   let title=inp
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
@@ -734,7 +825,6 @@ function parseInput(inp, today){
     .replace(/\b(amanhã|amanha|hoje|semana que vem|semana próxima|próxima semana|segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)\b/gi,'')
     .replace(/\s{2,}/g,' ').trim();
   if(!title)title=inp.trim();
-
   // ── Response ──
   const dateLabel=date?` para ${fd(date)}`:'';
   const timeLabel=time?` às ${time}`:'';
@@ -742,7 +832,6 @@ function parseInput(inp, today){
   if(isNote)response=`Nota salva! ✏️`;
   else if(isEvent)response=`Compromisso "${title}" agendado${dateLabel}${timeLabel}. ✅`;
   else response=`Tarefa "${title}" adicionada${dateLabel}. ✅`;
-
   return{
     type: isNote?'note': isEvent?'event':'task',
     title,
@@ -753,11 +842,9 @@ function parseInput(inp, today){
     response
   };
 }
-
 // ── VOICE INPUT ──────────────────────────────────
 let recognition=null;
 let isListening=false;
-
 function toggleMic(){
   if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){
     notify('Reconhecimento de voz não suportado neste navegador.','error');
@@ -766,14 +853,12 @@ function toggleMic(){
   if(isListening){stopMic();return;}
   startMic();
 }
-
 function startMic(){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   recognition=new SpeechRecognition();
   recognition.lang='pt-PT'; // Portuguese Portugal (works for BR too)
   recognition.continuous=false;
   recognition.interimResults=true;
-
   recognition.onstart=()=>{
     isListening=true;
     document.getElementById('micBtn').classList.add('listening');
@@ -782,7 +867,6 @@ function startMic(){
     document.getElementById('thinking').classList.add('visible');
     document.getElementById('aiResp').classList.remove('visible');
   };
-
   recognition.onresult=(e)=>{
     let transcript='';
     for(let i=e.resultIndex;i<e.results.length;i++){
@@ -795,18 +879,15 @@ function startMic(){
       setTimeout(()=>processInput(),400);
     }
   };
-
   recognition.onerror=(e)=>{
     stopMic();
     if(e.error==='not-allowed')notify('Permita o acesso ao microfone nas configurações.','error');
     else if(e.error==='no-speech')notify('Nenhuma fala detectada. Tente novamente.','info');
     else notify(`Erro de voz: ${e.error}`,'error');
   };
-
   recognition.onend=()=>{stopMic();};
   recognition.start();
 }
-
 function stopMic(){
   isListening=false;
   if(recognition)try{recognition.stop();}catch(e){}
@@ -814,7 +895,6 @@ function stopMic(){
   document.getElementById('micBtn').textContent='🎤';
   document.getElementById('thinking').classList.remove('visible');
 }
-
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();processInput();}}
 function toggleShare(){
   shareMode=!shareMode;
@@ -822,7 +902,6 @@ function toggleShare(){
   const other=cu==='tiago'?'Monique':'Tiago';
   document.getElementById('shareLbl').innerHTML=shareMode?`👫 Compartilhar com <strong>${other}</strong>`:'Apenas para mim';
 }
-
 // ── TASKS ────────────────────────────────────────
 async function toggleTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
@@ -838,7 +917,54 @@ async function deleteTask(id){
   if(t.shared&&t.owner!==cu){notify('Só quem criou pode excluir.','error');return;}
   await removeTask(String(id),t.shared);
 }
-
+// ── EDIT TASK ──────────────────────────────────
+let editingTaskId=null,editingTaskShared=false;
+function openEditTask(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t)return;
+  if(t.shared&&t.owner!==cu){notify('Só quem criou pode editar.','error');return;}
+  editingTaskId=id;
+  editingTaskShared=!!t.shared;
+  document.getElementById('editTaskText').value=t.text||'';
+  document.getElementById('editTaskDate').value=t.date||'';
+  document.getElementById('editTaskUrgency').value=t.urgency||'normal';
+  document.getElementById('editShareTrk').classList.toggle('on',editingTaskShared);
+  updateEditShareLbl();
+  document.getElementById('editTaskModal').classList.add('open');
+}
+function closeEditTask(){
+  document.getElementById('editTaskModal').classList.remove('open');
+  editingTaskId=null;
+}
+function toggleEditShare(){
+  editingTaskShared=!editingTaskShared;
+  document.getElementById('editShareTrk').classList.toggle('on',editingTaskShared);
+  updateEditShareLbl();
+}
+function updateEditShareLbl(){
+  const other=cu==='tiago'?'Monique':'Tiago';
+  document.getElementById('editShareLbl').innerHTML=editingTaskShared?`👫 Compartilhar com <strong>${other}</strong>`:'Apenas para mim';
+}
+async function saveEditTask(){
+  const t=tasks.find(t=>String(t.id)===String(editingTaskId));
+  if(!t)return;
+  const newText=document.getElementById('editTaskText').value.trim();
+  if(!newText){notify('O texto não pode ficar vazio.','error');return;}
+  const newDate=document.getElementById('editTaskDate').value||null;
+  const newUrgency=document.getElementById('editTaskUrgency').value;
+  const wasShared=!!t.shared;
+  const nowShared=editingTaskShared;
+  if(wasShared!==nowShared){
+    await removeTask(String(t.id),wasShared);
+    t.shared=nowShared;
+  }
+  t.text=newText;
+  t.date=newDate;
+  t.urgency=newUrgency;
+  await saveTask(t);
+  notify('✏️ Tarefa atualizada!','success');
+  closeEditTask();
+}
 function renderTasks(){
   const el=document.getElementById('taskList');
   let f=tasks;
@@ -873,6 +999,7 @@ function taskHTML(t){
     </div>
     <div class="task-acts">
       <button class="tact rb" onclick="scheduleReminder('${esc(t.text||'')}')">🔔</button>
+      ${canDel?`<button class="tact" onclick="openEditTask('${tid}')" title="Editar">✏️</button>`:''}
       ${canDel?`<button class="tact" onclick="deleteTask('${tid}')">✕</button>`:''}
     </div>
   </div>`;
@@ -881,7 +1008,6 @@ function scheduleReminder(text){
   if(Notification.permission==='granted'){new Notification('🔔 Lembrete — Assistente',{body:text});notify('Lembrete enviado!','success');}
   else notify('Ative as notificações primeiro.','info');
 }
-
 // ── NOTES ────────────────────────────────────────
 async function deleteNote(id){await removeNote(String(id));}
 function renderNotes(){
@@ -894,7 +1020,6 @@ function renderNotes(){
       <button class="note-del" onclick="deleteNote('${String(n.id)}')">✕</button>
     </div>`).join('');
 }
-
 // ── BRIEFING ─────────────────────────────────────
 function renderCalBriefing(){
   const today=new Date().toISOString().split('T')[0];
@@ -916,7 +1041,6 @@ function updateStats(){
   document.getElementById('stShared').textContent=tasks.filter(t=>t.shared).length;
   document.getElementById('bdgT').textContent=tasks.filter(t=>!t.done).length;
 }
-
 // ── REPORT ───────────────────────────────────────
 function openReport(){
   const total=tasks.length,done=tasks.filter(t=>t.done).length,shared=tasks.filter(t=>t.shared).length,shDone=tasks.filter(t=>t.shared&&t.done).length,pct=total?Math.round(done/total*100):0,spct=shared?Math.round(shDone/shared*100):0;
@@ -941,11 +1065,9 @@ function openReport(){
     </div>`;
   document.getElementById('reportModal').classList.add('open');
 }
-
 // ── THEME ────────────────────────────────────────
 function toggleTheme(){applyTheme(!isDark);savePrefs();}
 function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
-
 // ── UI ───────────────────────────────────────────
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(tab==='tasks'&&i===0)||(tab==='week'&&i===1)||(tab==='notes'&&i===2)));
@@ -955,7 +1077,6 @@ function switchTab(tab){
 }
 function setFilter(f,btn){filter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTasks();}
 async function refreshAll(){await fetchCal();renderWeek();updateStats();notify('Atualizado!','info');}
-
 let nt;
 function notify(msg,type='info'){
   const el=document.getElementById('notif');el.textContent=msg;el.className=`notif ${type} show`;
@@ -968,11 +1089,9 @@ function updateDate(){
   const n=new Date(),days=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],months=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   document.getElementById('headerDate').innerHTML=`${days[n.getDay()]}, ${n.getDate()} ${months[n.getMonth()]} · ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
 }
-
 // ── INIT ─────────────────────────────────────────
 updateDate();
 setInterval(updateDate,60000);
-
 // Handle OAuth redirect (token in URL hash)
 if(window.location.hash.includes('access_token')){
   const p=new URLSearchParams(window.location.hash.substring(1));
@@ -980,6 +1099,4 @@ if(window.location.hash.includes('access_token')){
   if(tk){history.replaceState(null,'',window.location.pathname);cu='tiago';onToken(tk);}
 }
 </script>
-
-
 </body></html>
