@@ -1,11 +1,12 @@
 {
-    "name": "assistente-briefing-sender",
-    "private": true,
-    "version": "1.0.0",
-    "description": "Sends the daily briefing push notification for the Assistente Pessoal app.",
-    "main": "send-daily-briefing.js",
-    "dependencies": {
-          "firebase-admin": "^12.1.0",
-          "web-push": "^3.6.7"
-    }
+  "name": "assistente-briefing-sender",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sends the daily briefing push notification for the Assistente Pessoal app.",
+  "main": "send-daily-briefing.js",
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "google-auth-library": "^9.11.0",
+    "web-push": "^3.6.7"
+  }
 }
