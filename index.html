@@ -760,25 +760,23 @@ function initLoginScreen(){
   if(sub)sub.textContent=hasCards?'Quem está usando, ou entre com outra conta':'Entre com sua conta Google para começar';
 }
 // ── AUTH ─────────────────────────────────────────
-function quickLogin(uid){cu=uid;startGoogleAuth();}
+// Uses a full top-level redirect to Google's OAuth screen, not a popup.
+// A popup + polling popup.location.hash used to work, but modern browsers
+// (and Google's own Cross-Origin-Opener-Policy headers on accounts.google.com)
+// increasingly sever the opener/popup relationship for security, silently
+// breaking that pattern (the popup closes, but the opener can never read its
+// URL, so no error and no login — exactly the "loops back to login" bug this
+// replaces). A real page redirect has no such restriction and also behaves
+// consistently inside an installed PWA, where popups are unreliable anyway.
+function quickLogin(uid){
+  cu=uid;
+  try{localStorage.setItem('pendingLoginUid',uid);}catch(e){}
+  startGoogleAuth();
+}
 function startGoogleAuth(){
   const redirect='https://tiagocamargos1.github.io/Assistente';
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
-  const w=500,h=600,l=window.screenX+(window.outerWidth-w)/2,t=window.screenY+(window.outerHeight-h)/2;
-  const popup=window.open(url,'gauth',`width=${w},height=${h},left=${l},top=${t}`);
-  notify('Aguardando login Google…','info');
-  const poll=setInterval(()=>{
-    try{
-      if(!popup||popup.closed){clearInterval(poll);return;}
-      const hash=popup.location.hash;
-      if(hash&&hash.includes('access_token')){
-        clearInterval(poll);popup.close();
-        const p=new URLSearchParams(hash.substring(1));
-        const tk=p.get('access_token');
-        if(tk)onToken(tk);
-      }
-    }catch(e){}
-  },500);
+  window.location.href=url;
 }
 async function onToken(tk){
   gToken=tk;
@@ -1514,13 +1512,24 @@ function focusCaptureIfQuick(){
 updateDate();
 setInterval(updateDate,60000);
 initLoginScreen();
-// Handle OAuth redirect (token in URL hash). Note: cu is intentionally left
-// as-is (null on a fresh load) so onToken() resolves the real identity from
-// the Google profile instead of assuming any particular person.
+// Handle the OAuth redirect back from Google (token in URL hash). The login
+// flow now does a full top-level redirect (see startGoogleAuth), so this is
+// the ONLY place a login ever actually completes — the page fully reloads
+// here after Google sends the user back.
 if(window.location.hash.includes('access_token')){
   const p=new URLSearchParams(window.location.hash.substring(1));
   const tk=p.get('access_token');
-  if(tk){history.replaceState(null,'',window.location.pathname);onToken(tk);}
+  if(tk){
+    history.replaceState(null,'',window.location.pathname);
+    // If the person tapped a specific card (Tiago/Monique/a known dynamic
+    // profile) before being sent to Google, honor that identity. Otherwise
+    // leave cu as null so onToken() resolves it fresh from the Google
+    // profile (email match, or a brand-new dynamic user).
+    let pendingUid=null;
+    try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
+    if(pendingUid)cu=pendingUid;
+    onToken(tk);
+  }
 }
 </script>
 </body></html>
