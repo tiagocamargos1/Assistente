@@ -5,8 +5,7 @@
   "description": "Sends the daily briefing push notification for the Assistente Pessoal app.",
   "main": "send-daily-briefing.js",
   "dependencies": {
-    "firebase-admin": "^12.1.0",
-    "google-auth-library": "^9.11.0",
+    "@google-cloud/firestore": "^7.9.0",
     "web-push": "^3.6.7"
   }
 }

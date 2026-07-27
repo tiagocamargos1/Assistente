@@ -11,24 +11,25 @@
  * It relies on Workload Identity Federation — the workflow's
  * "google-github-actions/auth" step exchanges GitHub's OIDC token for a
  * short-lived Google credential scoped to the github-actions-briefing
- * service account. Nothing secret is stored in this repo.
+ * service account and writes it to a file referenced by
+ * GOOGLE_APPLICATION_CREDENTIALS. Nothing secret is stored in this repo.
  *
- * Note: firebase-admin's own applicationDefault() helper does not know how
- * to read WIF-style "external_account" credential files (it only handles
- * plain service-account/authorized-user JSON and throws
- * "Invalid contents in the credentials file" otherwise). So instead we use
- * google-auth-library's GoogleAuth directly - which DOES support
- * external_account/WIF - to fetch access tokens, and hand firebase-admin a
- * small custom Credential object that wraps it.
+ * Note: we talk to Firestore via the plain @google-cloud/firestore client
+ * (not firebase-admin). firebase-admin's own credential loader only
+ * understands service-account/authorized-user JSON and rejects WIF-style
+ * "external_account" credential files ("Invalid contents in the
+ * credentials file" / "invalid-credential"). @google-cloud/firestore uses
+ * google-auth-library directly under the hood, which DOES support
+ * external_account/WIF out of the box via Application Default Credentials
+ * - so no extra wiring is needed here.
  *
  * Required environment variables (set as GitHub Actions secrets):
  *   VAPID_PUBLIC_KEY          Web Push public key (also embedded in index.html)
  *   VAPID_PRIVATE_KEY         Web Push private key (keep secret!)
  *   VAPID_SUBJECT             mailto: address used to identify the sender
  */
-const admin = require('firebase-admin');
+const { Firestore } = require('@google-cloud/firestore');
 const webpush = require('web-push');
-const { GoogleAuth } = require('google-auth-library');
 
 const FIREBASE_PROJECT_ID = 'assistente-ee1f4';
 
@@ -45,19 +46,7 @@ const vapidPublic = required('VAPID_PUBLIC_KEY');
 const vapidPrivate = required('VAPID_PRIVATE_KEY');
 const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:tiagocamargos@tocsmartgroup.com';
 
-const googleAuth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
-
-admin.initializeApp({
-  credential: {
-    getAccessToken: async () => {
-      const client = await googleAuth.getClient();
-      const res = await client.getAccessToken();
-      return { access_token: res.token, expires_in: 3599 };
-    }
-  },
-  projectId: FIREBASE_PROJECT_ID
-});
-const db = admin.firestore();
+const db = new Firestore({ projectId: FIREBASE_PROJECT_ID });
 
 webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
 
