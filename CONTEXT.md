@@ -397,8 +397,70 @@ resolver isso primeiro.
     mesmo que a área tenha sido desligada ou até excluída depois (nesse
     caso o dropdown ainda mostra aquela opção pontualmente, só pra não
     apagar o dado sem querer).
+29. **Levantamento de custo pra virar app instalável de verdade (App
+    Store + Google Play) — discussão feita, trabalho técnico AINDA NÃO
+    iniciado.** O Tiago perguntou quanto custaria transformar o Assistente
+    num app instalável. Esclarecido: o app já é instalável de graça hoje
+    (PWA, "Adicionar à tela de início"); o que teria custo real é publicar
+    como app "de verdade" nas lojas. Levantado (pesquisa na web, dados de
+    2026):
+    - Apple Developer Program: US$ 99/ano — **o Tiago já tem essa
+      assinatura paga este ano**, custo zero adicional agora.
+    - Google Play Console: US$ 25, pagamento único, sem mensalidade — o
+      Tiago ainda **não confirmou** se já tem essa conta ou não (pergunta
+      feita mas não respondida por uma falha técnica na ferramenta de
+      pergunta — perguntar de novo na próxima sessão antes de prosseguir).
+    - Custo condicional (só se um dia quiser abrir o login pra qualquer
+      pessoa sem lista manual de testadores): verificação oficial do
+      Google pro escopo "restrito" do Calendário exige uma auditoria de
+      segurança anual (CASA), custando tipicamente US$ 500–4.500/ano.
+      **Não é necessário só pra publicar nas lojas** — dá pra manter o
+      OAuth em modo "Testando" e simplesmente cadastrar o e-mail do
+      revisor da Apple/Google (ou usar uma conta de teste já autorizada)
+      no campo "notas para o revisor" de cada loja, evitando esse custo
+      por enquanto.
+    - Sem custo, mas com trabalho: página de política de privacidade
+      (posso gerar e hospedar no próprio GitHub Pages) e prints/tela pra
+      ficha da loja.
+    - Compilação nativa: o Tiago **tem Mac** (usa Apple no escritório) —
+      então dá pra compilar/assinar o app iOS localmente com Xcode, sem
+      precisar de Mac na nuvem. Ele também já está testando os itens
+      Android com a Lucileia (colaboradora em Portugal), então o app já
+      roda bem como PWA em Android também.
+    - Abordagem técnica combinada, mas ainda não executada: empacotar o
+      código atual (index.html/manifest.json/sw.js/ícones) com
+      **Capacitor** (ferramenta gratuita e de código aberto) pra gerar os
+      projetos nativos iOS e Android em volta do PWA existente. Como a
+      publicação neste projeto é feita só via upload manual pelo
+      navegador no GitHub (sem git/API), e os projetos nativos gerados
+      pelo Capacitor têm centenas/milhares de arquivos — inviável de
+      publicar assim —, o plano é: eu preparo os arquivos de configuração
+      do Capacitor (`package.json`, `capacitor.config`) e publico só
+      esses (pequenos, texto puro) no repo; o Tiago roda localmente no
+      próprio Mac os comandos `npx cap add ios` e `npx cap add android`
+      (que geram as pastas nativas ali mesmo, sem precisar subir pro
+      GitHub), abrindo depois no Xcode/Android Studio pra compilar e
+      assinar.
+    - **Duas perguntas ainda em aberto, feitas mas sem resposta (falha
+      técnica), pra retomar na próxima sessão antes de começar a
+      configuração:** (1) qual bundle ID/identificador usar nas lojas
+      (sugestão dada: `com.tocsmartgroup.assistente`, seguindo o domínio
+      da empresa — não dá pra trocar depois sem recriar o app do zero em
+      cada loja); (2) se o Tiago já tem conta no Google Play Console ou
+      se ainda precisa criar e pagar o registro de US$ 25.
 
 ## Próximos passos (pendentes)
+
+- [ ] **PRÓXIMA SESSÃO — retomar direto daqui (item 29):** confirmar com
+      o Tiago (a) o bundle ID/identificador do app (sugestão:
+      `com.tocsmartgroup.assistente`) e (b) se ele já tem conta no Google
+      Play Console. Depois disso, preparar os arquivos de configuração do
+      Capacitor (`package.json`, `capacitor.config`) e publicá-los no
+      repo, e passar pro Tiago o passo a passo de comandos pra rodar
+      localmente no Mac dele (`npx cap add ios`, `npx cap add android`) e
+      abrir no Xcode/Android Studio. O Tiago sinalizou "Bora pra cima!?"
+      — ou seja, quer seguir com isso, só faltou eu conseguir captar as
+      duas respostas acima.
 
 - [ ] Testar ao vivo as áreas personalizadas (item 28): abrir 🏷️ Áreas,
       criar uma área nova (nome + emoji), marcar/desmarcar, salvar, e
