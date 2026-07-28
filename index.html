@@ -1571,6 +1571,11 @@ if('serviceWorker' in navigator){
   });
 }
 const quickCapture=new URLSearchParams(window.location.search).get('quick')==='1';
+// Triggered by the "Nova tarefa por voz" home-screen icon shortcut
+// (manifest.json → shortcuts → ?mic=1). Lets a task get created with the
+// microphone starting on its own — no native app/OS widget involved, just
+// the existing quick-capture flow plus an auto-tap of the mic button.
+const quickCaptureVoice=new URLSearchParams(window.location.search).get('mic')==='1';
 document.addEventListener('keydown',(e)=>{
   const tag=(e.target&&e.target.tagName||'').toLowerCase();
   const typing=tag==='input'||tag==='textarea'||tag==='select'||(e.target&&e.target.isContentEditable);
@@ -1586,6 +1591,14 @@ function focusCaptureIfQuick(){
   setTimeout(()=>{
     const inp=document.getElementById('userInput');
     if(inp){inp.focus();inp.scrollIntoView({block:'center'});}
+    if(quickCaptureVoice){
+      // If the mic can't actually start without a fresh tap (some browsers
+      // require a real user gesture per page load for getUserMedia, and the
+      // tap that opened this shortcut doesn't carry over into the new page),
+      // toggleMic()'s own error handling covers it — worst case the person
+      // just taps the already-focused/highlighted mic button once themselves.
+      toggleMic();
+    }
   },200);
 }
 // ── INIT ─────────────────────────────────────────
