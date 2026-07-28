@@ -299,7 +299,26 @@ resolver isso primeiro.
     assim mesmo — um toque a mais em "Permitir" ainda é mais rápido que
     abrir o app manualmente e navegar até o botão 🎤.
 
+24. **PIN com auto-submit.** O Tiago pediu para não precisar mais tocar em
+    "Entrar" (ou dar Enter) depois de digitar o PIN. Adicionado
+    `checkPinAutoSubmit()`, chamado a cada tecla digitada no campo de PIN
+    (`oninput`): a cada dígito, calcula o hash SHA-256 do valor atual (a
+    partir de 4 dígitos) e compara com o hash salvo (`pin_${uid}` no
+    `localStorage`); se bater, chama `submitPin()` sozinho, sem esperar
+    Enter/clique. Uma flag (`pinAutoSubmitting`) evita disparo duplicado
+    caso o usuário continue digitando ou aperte Enter logo em seguida. Não
+    mexeu em `submitPin()` em si (continua validando o hash de novo e
+    tratando a sessão do Firebase Auth normalmente) — só adiciona um
+    gatilho automático mais cedo. Testado localmente (sintaxe validada) e
+    publicado no GitHub.
+
 ## Próximos passos (pendentes)
+
+- [ ] Testar ao vivo o auto-submit do PIN (item 24): digitar um PIN
+      correto e confirmar que entra sozinho no app sem tocar em "Entrar";
+      confirmar também que um PIN de 4 dígitos que é prefixo de um PIN de
+      6 dígitos salvo não dispara entrada errada antes de completar o PIN
+      certo.
 
 (nenhum pendente relacionado ao atalho de voz — funcionalidade concluída
 e limitações conhecidas aceitas pelo Tiago, ver item 23)
