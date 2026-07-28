@@ -680,7 +680,15 @@ async function submitPin(){
   await enterApp();
   updateChip();
   notify(`✓ Bem-vindo(a), ${USERS[cu].name}!`,'success');
-  if(gToken){renderCalBriefing();fetchCal();}else{renderCalBriefing();}
+  // Always call renderCalBriefing()+fetchCal() here, even if the locally
+  // stored Google token already looks expired — fetchCal() calls
+  // getValidToken(), which now actually attempts a silent renewal before
+  // giving up (see getValidToken). Skipping this when gToken was falsy
+  // used to mean the silent-renew path was never even tried after PIN
+  // login, forcing a manual "Conectar Google" every time the token aged
+  // out (~1h), even when the browser still had an active Google session.
+  renderCalBriefing();
+  fetchCal();
 }
 let pendingPinSetupUser=null;
 function offerPinSetup(uid){
@@ -896,19 +904,47 @@ async function onToken(tk){
   }
 }
 let gTokenExpiry=0;
+// Silent renewal via hidden iframe: this used to be a no-op (it resolved
+// immediately with the OLD token/null and never actually captured the new
+// one, since the token that comes back lives inside the iframe's own,
+// separate page load — it never made it back to this page). Fixed by
+// having that hidden copy of the page detect it's running inside this
+// iframe (see INIT below) and relay the token back via postMessage.
+// Works when the browser still has an active Google session for this
+// account and doesn't block third-party iframe storage — true on
+// Chrome/desktop/Android in most cases. Safari/iOS applies Intelligent
+// Tracking Prevention, which can block this silently — in that case it
+// just times out below and falls back to asking to reconnect manually.
 async function getValidToken(){
   if(gToken&&Date.now()<gTokenExpiry)return gToken;
-  // Token expired — re-auth silently
   return new Promise(resolve=>{
-    const redirect='https://tiagocamargos1.github.io/Assistente';
-    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none`;
+    let done=false;
     const iframe=document.createElement('iframe');
     iframe.style.display='none';
+    function finish(tk){
+      if(done)return;
+      done=true;
+      window.removeEventListener('message',onMsg);
+      if(iframe.parentNode)iframe.parentNode.removeChild(iframe);
+      if(tk){
+        gToken=tk;
+        gTokenExpiry=Date.now()+(3500*1000);
+        if(cu)persistGoogle(cu);
+      }else{
+        notify('Sessão do Google expirada. Toque em "Conectar Google" para ver a agenda.','info');
+      }
+      resolve(gToken);
+    }
+    function onMsg(ev){
+      if(ev.origin!==window.location.origin)return;
+      if(ev.data&&ev.data.type==='silentGoogleToken')finish(ev.data.token||null);
+    }
+    window.addEventListener('message',onMsg);
+    const redirect='https://tiagocamargos1.github.io/Assistente';
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none`;
     iframe.src=url;
     document.body.appendChild(iframe);
-    setTimeout(()=>{document.body.removeChild(iframe);resolve(gToken);},3000);
-    // Fallback: ask user to re-login if needed
-    if(!gToken){notify('Sessão expirada. Faça login novamente.','error');resolve(null);}
+    setTimeout(()=>finish(null),4000);
   });
 }
 async function enterApp(){
@@ -1627,25 +1663,36 @@ initLoginScreen();
 // flow now does a full top-level redirect (see startGoogleAuth), so this is
 // the ONLY place a login ever actually completes — the page fully reloads
 // here after Google sends the user back.
-dbg(`page load — hash has token: ${window.location.hash.includes('access_token')} — standalone=${window.navigator.standalone===true}`);
-if(window.location.hash.includes('access_token')){
+if(window.self!==window.top && (window.location.hash.includes('access_token')||window.location.hash.includes('error'))){
+  // This load of the page is the hidden iframe created by getValidToken()
+  // to silently renew an expired Google token. Just relay the result back
+  // to the real (parent) page via postMessage and stop here — running the
+  // normal login flow (Firebase sign-in, resolving identity, etc.) again
+  // inside this throwaway iframe would be wasted work and could race with
+  // the real page's own state.
   const p=new URLSearchParams(window.location.hash.substring(1));
-  const tk=p.get('access_token');
-  dbg(`hash parsed — access_token present: ${!!tk}`);
-  if(tk){
-    history.replaceState(null,'',window.location.pathname);
-    // If the person tapped a specific card (Tiago/Monique/a known dynamic
-    // profile) before being sent to Google, honor that identity. Otherwise
-    // leave cu as null so onToken() resolves it fresh from the Google
-    // profile (email match, or a brand-new dynamic user).
-    let pendingUid=null;
-    try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
-    if(pendingUid)cu=pendingUid;
-    onToken(tk);
+  try{window.parent.postMessage({type:'silentGoogleToken',token:p.get('access_token')||null},window.location.origin);}catch(e){}
+}else{
+  dbg(`page load — hash has token: ${window.location.hash.includes('access_token')} — standalone=${window.navigator.standalone===true}`);
+  if(window.location.hash.includes('access_token')){
+    const p=new URLSearchParams(window.location.hash.substring(1));
+    const tk=p.get('access_token');
+    dbg(`hash parsed — access_token present: ${!!tk}`);
+    if(tk){
+      history.replaceState(null,'',window.location.pathname);
+      // If the person tapped a specific card (Tiago/Monique/a known dynamic
+      // profile) before being sent to Google, honor that identity. Otherwise
+      // leave cu as null so onToken() resolves it fresh from the Google
+      // profile (email match, or a brand-new dynamic user).
+      let pendingUid=null;
+      try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
+      if(pendingUid)cu=pendingUid;
+      onToken(tk);
+    }
+  }else if(window.location.hash.includes('error')){
+    dbg(`page load — Google returned an OAuth error in hash: ${window.location.hash}`);
   }
-}else if(window.location.hash.includes('error')){
-  dbg(`page load — Google returned an OAuth error in hash: ${window.location.hash}`);
+  renderLoginDebug();
 }
-renderLoginDebug();
 </script>
 </body></html>
