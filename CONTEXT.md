@@ -221,12 +221,50 @@ resolver isso primeiro.
     técnico (com timestamps) visível diretamente na tela de login, sem
     precisar de console/DevTools. Isso deve acelerar bastante qualquer
     bug de autenticação que apareça depois.
+21. **Descoberto de onde vem o Client ID OAuth do app, e por que a Annie
+    tomou "Acesso bloqueado".** O Client ID usado no app
+    (`150189154211-...`) pertence a um projeto Google Cloud chamado
+    **"Assistente TOC"** (ID `assistente-toc`, número `150189154211`) —
+    um projeto DIFERENTE do projeto Firebase "Assistente"
+    (`assistente-ee1f4`, número `611661253806`) que usamos para tudo mais
+    (Firestore, Auth, Actions/WIF). Ou seja: hoje o login do app depende
+    de DOIS projetos Google Cloud distintos ao mesmo tempo — vale lembrar
+    disso em qualquer configuração futura relacionada a login/OAuth. A
+    tela de permissão OAuth desse projeto "Assistente TOC" está em modo
+    **"Testando"** (não verificada pelo Google), o que significa que só
+    e-mails cadastrados manualmente como "usuários de teste" conseguem
+    fazer login — qualquer outra pessoa recebe a tela "Acesso bloqueado
+    (Erro 403: access_denied)". Era exatamente o caso da Annie
+    (`nieelines1992@gmail.com`), que não estava nessa lista. Corrigido
+    adicionando o e-mail dela em Google Cloud Console → projeto
+    "Assistente TOC" → Google Auth Platform → Público-alvo → "Usuários de
+    teste" → "Add users". Lista atual de testadores autorizados:
+    moniqueabril@gmail.com, moniquegcamargos@gmail.com,
+    nieelines1992@gmail.com (Annie), tiagocamargos@tocsmartgroup.com,
+    tiolicam@gmail.com (limite: 100 usuários de teste). **Importante para
+    o futuro**: qualquer pessoa nova que for testar o app precisa ser
+    adicionada manualmente nessa lista antes de tentar o login, ou vai
+    tomar "Acesso bloqueado" — isso não é um bug, é o comportamento
+    esperado de um app OAuth ainda não verificado pelo Google. Para abrir
+    o login para qualquer pessoa sem essa etapa manual, seria necessário
+    completar a verificação oficial do Google para o projeto "Assistente
+    TOC" (processo à parte: exige política de privacidade publicada,
+    domínio verificado, e possivelmente avaliação de segurança por causa
+    do escopo de Calendário, que é classificado como "restrito").
 
 ## Próximos passos (pendentes)
 
 - [x] ~~Confirmar que o loop de login está resolvido~~ — CONFIRMADO ao vivo
       (item 19): login completo com sucesso, sem loop, tanto no teste
-      técnico quanto era esperado agora também no navegador/app do Tiago.
+      técnico quanto no navegador/app do Tiago.
+- [ ] Ao convidar qualquer pessoa nova para testar o app, lembrar de
+      primeiro adicionar o e-mail dela em Google Cloud Console → projeto
+      "Assistente TOC" → Google Auth Platform → Público-alvo → "Usuários
+      de teste" (ver item 21) — senão ela toma "Acesso bloqueado".
+- [ ] Decidir, quando fizer sentido (ex: se o plano for abrir o app para
+      muita gente/vender de verdade), se vale a pena passar pela
+      verificação oficial do Google para o projeto "Assistente TOC", para
+      eliminar a necessidade de cadastrar cada testador manualmente.
 - [ ] Ativar de fato as notificações push: alguém (Tiago/Monique) precisa
       abrir o app e clicar em "Ativar" no banner que aparece após o login.
       Sem isso não existe subscription salva e o job não tem para quem
