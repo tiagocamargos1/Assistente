@@ -347,6 +347,14 @@ resolver isso primeiro.
     segurança — avaliado com o Tiago e adiado por ora (ver próximos
     passos) por causa do esforço/infra extra.
 
+26. Adicionado e-mail de nova testadora (Lucileia, colaboradora de
+    Portugal) à lista de "Usuários de teste" do OAuth consent screen do
+    projeto Google Cloud "Assistente TOC" (mesmo processo do item 21):
+    `membro1@example.com`. Lista atual (6/100): membro2@example.com,
+    membro3@example.com, membro4@example.com,
+    tiagocamargos@tocsmartgroup.com, pessoal@example.com,
+    membro1@example.com.
+
 ## Próximos passos (pendentes)
 
 - [ ] Testar ao vivo a correção da renovação silenciosa do token do
