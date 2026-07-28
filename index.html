@@ -285,7 +285,7 @@ textarea::placeholder{color:var(--text-dim);}
   <div class="login-logo">🔒</div>
   <div class="login-title" id="pinTitle">Bem-vindo(a)</div>
   <div class="login-sub" id="pinSub">Digite seu PIN de acesso</div>
-  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pinInput" onkeydown="handlePinKey(event)" style="width:160px;text-align:center;font-size:26px;letter-spacing:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;margin-bottom:18px;outline:none;" placeholder="••••">
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" id="pinInput" onkeydown="handlePinKey(event)" oninput="checkPinAutoSubmit()" style="width:160px;text-align:center;font-size:26px;letter-spacing:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;margin-bottom:18px;outline:none;" placeholder="••••">
   <button class="google-btn" onclick="submitPin()" style="margin-bottom:10px;justify-content:center;">Entrar</button>
   <button class="close-btn" style="max-width:240px;background:transparent;" onclick="showLoginScreen()">Usar login do Google</button>
 </div>
@@ -625,8 +625,10 @@ function handleProfileClick(uid){
   else{quickLogin(uid);}
 }
 let pendingPinUser=null;
+let pinAutoSubmitting=false;
 function openPinScreen(uid){
   pendingPinUser=uid;
+  pinAutoSubmitting=false;
   document.getElementById('pinTitle').textContent=`Olá, ${USERS[uid].name}`;
   document.getElementById('pinInput').value='';
   document.getElementById('loginScreen').classList.add('hidden');
@@ -638,6 +640,22 @@ function showLoginScreen(){
   document.getElementById('loginScreen').classList.remove('hidden');
 }
 function handlePinKey(e){if(e.key==='Enter')submitPin();}
+// PINs podem ter de 4 a 6 dígitos (cada pessoa escolhe o tamanho ao criar
+// o dela), então não dá pra "auto-entrar" só quando o campo enche. Em vez
+// disso, a cada dígito digitado (a partir do 4º) já comparamos com o hash
+// salvo — assim que bater, entra sozinho, sem precisar tocar em "Entrar"
+// nem digitar dígitos a mais.
+async function checkPinAutoSubmit(){
+  if(pinAutoSubmitting)return;
+  const val=document.getElementById('pinInput').value.trim();
+  if(val.length<4)return;
+  const hash=await sha256(val);
+  const stored=localStorage.getItem(`pin_${pendingPinUser}`);
+  if(hash===stored){
+    pinAutoSubmitting=true;
+    await submitPin();
+  }
+}
 async function submitPin(){
   const val=document.getElementById('pinInput').value.trim();
   if(!/^\d{4,6}$/.test(val)){notify('O PIN deve ter de 4 a 6 números.','error');return;}
