@@ -300,6 +300,7 @@ textarea::placeholder{color:var(--text-dim);}
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
     </div>
+    <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
     <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
     <button class="icon-btn" onclick="openReport()" title="Relatório">📊</button>
@@ -321,14 +322,7 @@ textarea::placeholder{color:var(--text-dim);}
           <span class="share-lbl" id="shareLbl">Apenas para mim</span>
         </label>
       </div>
-      <div class="filter-row" id="areaRow" style="margin-top:7px;">
-        <button class="filter-btn active" data-area="" onclick="setArea('',this)">✦ Geral</button>
-        <button class="filter-btn" data-area="deus" onclick="setArea('deus',this)">🙏 Deus</button>
-        <button class="filter-btn" data-area="pessoal" onclick="setArea('pessoal',this)">👤 Pessoal</button>
-        <button class="filter-btn" data-area="familia" onclick="setArea('familia',this)">👨‍👩‍👧 Família</button>
-        <button class="filter-btn" data-area="financas" onclick="setArea('financas',this)">💰 Finanças</button>
-        <button class="filter-btn" data-area="negocios" onclick="setArea('negocios',this)">💼 Negócios</button>
-      </div>
+      <div class="filter-row" id="areaRow" style="margin-top:7px;"></div>
       <div class="thinking" id="thinking"><div class="thinking-dots"><span></span><span></span><span></span></div><span id="thinkMsg">Processando…</span></div>
       <div class="ai-resp" id="aiResp"></div>
     </div>
@@ -346,14 +340,7 @@ textarea::placeholder{color:var(--text-dim);}
         <button class="filter-btn" onclick="setFilter(&#39;urgent&#39;,this)">🔴 Urgente</button>
         <button class="filter-btn" onclick="setFilter(&#39;done&#39;,this)">✓ Feitas</button>
       </div>
-      <div class="filter-row" id="areaFilterRow">
-        <button class="filter-btn active" onclick="setAreaFilter(&#39;all&#39;,this)">Todas áreas</button>
-        <button class="filter-btn" onclick="setAreaFilter(&#39;deus&#39;,this)">🙏 Deus</button>
-        <button class="filter-btn" onclick="setAreaFilter(&#39;pessoal&#39;,this)">👤 Pessoal</button>
-        <button class="filter-btn" onclick="setAreaFilter(&#39;familia&#39;,this)">👨‍👩‍👧 Família</button>
-        <button class="filter-btn" onclick="setAreaFilter(&#39;financas&#39;,this)">💰 Finanças</button>
-        <button class="filter-btn" onclick="setAreaFilter(&#39;negocios&#39;,this)">💼 Negócios</button>
-      </div>
+      <div class="filter-row" id="areaFilterRow"></div>
       <div id="taskList"></div>
     </div>
     <div class="tab-content" id="tab-week">
@@ -426,11 +413,6 @@ textarea::placeholder{color:var(--text-dim);}
       <h3>Área</h3>
       <select id="editTaskArea" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
         <option value="">✦ Geral</option>
-        <option value="deus">🙏 Deus</option>
-        <option value="pessoal">👤 Pessoal</option>
-        <option value="familia">👨‍👩‍👧 Família</option>
-        <option value="financas">💰 Finanças</option>
-        <option value="negocios">💼 Negócios</option>
       </select>
     </div>
     <div class="rep-sec" id="editShareWrap">
@@ -491,6 +473,24 @@ textarea::placeholder{color:var(--text-dim);}
     <button class="close-btn" onclick="skipPinSetup()">Agora não</button>
   </div>
 </div>
+<!-- AREA SETTINGS MODAL -->
+<div class="modal-ov" id="areaSettingsModal">
+  <div class="modal-box">
+    <h2>🏷️ Áreas visíveis</h2>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;">Escolha quais áreas você quer usar para organizar tarefas, eventos e notas. As desmarcadas somem dos filtros e do campo "Nova demanda" — nada que já foi criado com elas é apagado.</p>
+    <div class="rep-sec">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_deus" style="width:15px;height:15px;">🙏 Deus</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_pessoal" style="width:15px;height:15px;">👤 Pessoal</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_familia" style="width:15px;height:15px;">👨‍👩‍👧 Família</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_financas" style="width:15px;height:15px;">💰 Finanças</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_negocios" style="width:15px;height:15px;">💼 Negócios</label>
+      </div>
+    </div>
+    <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveAreaSettings()">Salvar</button>
+    <button class="close-btn" onclick="closeAreaSettings()">Cancelar</button>
+  </div>
+</div>
 <div class="notif info" id="notif">Aguardando login Google…</div>
 <script>
 const CLIENT_ID='150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com';
@@ -540,6 +540,13 @@ let tasks=[],gcalEvs=[],notes=[];
 let filter='all',shareMode=false,isDark=true,selectedDay=null;
 const AREAS={deus:{label:'Deus',emoji:'🙏'},pessoal:{label:'Pessoal',emoji:'👤'},familia:{label:'Família',emoji:'👨‍👩‍👧'},financas:{label:'Finanças',emoji:'💰'},negocios:{label:'Negócios',emoji:'💼'}};
 let currentArea='',areaFilter='all';
+// Which of the 5 default areas this person actually wants to see. Used to
+// be one-size-fits-all (all 5 hardcoded in the HTML for everyone), which
+// doesn't make sense for someone who, say, doesn't want "Deus" or isn't
+// married and doesn't want "Família". Defaults to all 5 (so nothing
+// changes for Tiago/Monique unless they open "🏷️ Áreas" and turn some
+// off) and is saved per-person in Firestore (prefs/{uid}.enabledAreas).
+let enabledAreas=Object.keys(AREAS);
 function setArea(area,btn){
   currentArea=area;
   document.querySelectorAll('#areaRow .filter-btn').forEach(b=>b.classList.remove('active'));
@@ -554,6 +561,67 @@ function setAreaFilter(area,btn){
 function areaTag(area){
   const a=AREAS[area];
   return a?`<span class="ttag" style="background:rgba(255,255,255,.08);color:var(--text-muted)">${a.emoji} ${a.label}</span>`:'';
+}
+// ── AREA VISIBILITY (per-user optional areas) ─────
+function renderAreaRow(){
+  const row=document.getElementById('areaRow');
+  if(!row)return;
+  if(currentArea&&!enabledAreas.includes(currentArea))currentArea='';
+  let html=`<button class="filter-btn${currentArea===''?' active':''}" data-area="" onclick="setArea('',this)">✦ Geral</button>`;
+  Object.keys(AREAS).forEach(key=>{
+    if(!enabledAreas.includes(key))return;
+    const a=AREAS[key];
+    html+=`<button class="filter-btn${currentArea===key?' active':''}" data-area="${key}" onclick="setArea('${key}',this)">${a.emoji} ${a.label}</button>`;
+  });
+  row.innerHTML=html;
+}
+function renderAreaFilterRow(){
+  const row=document.getElementById('areaFilterRow');
+  if(!row)return;
+  if(areaFilter!=='all'&&!enabledAreas.includes(areaFilter))areaFilter='all';
+  let html=`<button class="filter-btn${areaFilter==='all'?' active':''}" onclick="setAreaFilter('all',this)">Todas áreas</button>`;
+  Object.keys(AREAS).forEach(key=>{
+    if(!enabledAreas.includes(key))return;
+    const a=AREAS[key];
+    html+=`<button class="filter-btn${areaFilter===key?' active':''}" onclick="setAreaFilter('${key}',this)">${a.emoji} ${a.label}</button>`;
+  });
+  row.innerHTML=html;
+  renderTasks();
+}
+function applyAreaVisibility(){
+  renderAreaRow();
+  renderAreaFilterRow();
+}
+// Builds the <select> options for the edit-task modal. Always includes the
+// task's CURRENT area even if it has since been turned off in settings, so
+// editing an older task never silently wipes/changes its area.
+function populateEditTaskAreaOptions(currentValue){
+  const sel=document.getElementById('editTaskArea');
+  if(!sel)return;
+  let html='<option value="">✦ Geral</option>';
+  Object.keys(AREAS).forEach(key=>{
+    if(!enabledAreas.includes(key)&&key!==currentValue)return;
+    const a=AREAS[key];
+    html+=`<option value="${key}">${a.emoji} ${a.label}</option>`;
+  });
+  sel.innerHTML=html;
+}
+function openAreaSettings(){
+  Object.keys(AREAS).forEach(key=>{
+    const cb=document.getElementById('areaChk_'+key);
+    if(cb)cb.checked=enabledAreas.includes(key);
+  });
+  document.getElementById('areaSettingsModal').classList.add('open');
+}
+function closeAreaSettings(){
+  document.getElementById('areaSettingsModal').classList.remove('open');
+}
+async function saveAreaSettings(){
+  enabledAreas=Object.keys(AREAS).filter(key=>document.getElementById('areaChk_'+key)?.checked);
+  applyAreaVisibility();
+  document.getElementById('areaSettingsModal').classList.remove('open');
+  await savePrefs();
+  notify('✓ Áreas atualizadas!','success');
 }
 let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null;
 let routines=[];
@@ -579,7 +647,7 @@ async function removeNote(id){
 }
 async function savePrefs(){
   if(!window.fbSave||!cu)return;
-  await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null});
+  await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null,enabledAreas});
 }
 function startListeners(){
   // Unsubscribe previous
@@ -973,7 +1041,11 @@ async function enterApp(){
   try{
     const prefs=await window.fbGet(`prefs/${cu}`);
     if(prefs?.theme)applyTheme(prefs.theme==='dark');
-  }catch(e){}
+    enabledAreas=(prefs&&Array.isArray(prefs.enabledAreas)&&prefs.enabledAreas.length)?prefs.enabledAreas.filter(a=>AREAS[a]):Object.keys(AREAS);
+  }catch(e){
+    enabledAreas=Object.keys(AREAS);
+  }
+  applyAreaVisibility();
   initWeek();
   applyFamilyUI();
   focusCaptureIfQuick();
@@ -1344,6 +1416,7 @@ function openEditTask(id){
   document.getElementById('editTaskText').value=t.text||'';
   document.getElementById('editTaskDate').value=t.date||'';
   document.getElementById('editTaskUrgency').value=t.urgency||'normal';
+  populateEditTaskAreaOptions(t.area||'');
   document.getElementById('editTaskArea').value=t.area||'';
   document.getElementById('editShareTrk').classList.toggle('on',editingTaskShared);
   updateEditShareLbl();
