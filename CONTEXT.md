@@ -184,14 +184,49 @@ resolver isso primeiro.
     podia continuar rodando a versão anterior por até 10 minutos. Corrigido
     adicionando `{cache: 'reload'}` na busca de atualização do `sw.js`, o
     que força ignorar o cache HTTP do navegador nessa checagem específica.
+    Também adicionado auto-reload: quando um novo service worker assume o
+    controle (`controllerchange`), a página recarrega sozinha uma vez, para
+    que correções futuras cheguem a quem já está com o app aberto sem
+    precisar limpar cache manualmente.
+19. **Causa raiz real do loop de login, finalmente encontrada e corrigida.**
+    Mesmo depois do item 17 (popup → redirect), o Tiago continuou
+    reportando o mesmo loop, inclusive pelo iPhone. Isso mostrou que o
+    popup nunca foi o problema de verdade. Para parar de adivinhar,
+    adicionamos um log de diagnóstico que grava cada etapa do login em
+    `localStorage` (sobrevive ao redirect) e mostra esse log direto na
+    tela de login quando uma tentativa não termina em sucesso (funções
+    `dbg()` / `renderLoginDebug()` em index.html). No primeiro teste com
+    esse log, apareceu o erro real: `auth/configuration-not-found` — o
+    provedor de login "Google" nunca tinha sido habilitado nas
+    configurações do Firebase Authentication do projeto (Firebase Console
+    → Authentication → Método de login). Ativamos o provedor (e-mail de
+    suporte do projeto: tiagocamargos@tocsmartgroup.com). No teste
+    seguinte, apareceu um SEGUNDO erro, mais específico:
+    `auth/invalid-credential — access_token audience is not for this
+    project`. Causa: o Client ID OAuth usado no app
+    (`150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com`)
+    pertence a um projeto Google Cloud diferente do projeto Firebase
+    (`611661253806`), e por padrão o Firebase só aceita tokens do próprio
+    client ID. Corrigido adicionando esse Client ID à lista de permissões
+    de "IDs de cliente externos" na configuração do provedor Google
+    (Firebase Console → Authentication → Método de login → Google →
+    "Adicionar IDs de cliente à lista de permissões usando projetos
+    externos"). **Testado ao vivo com sucesso**: login completo, sem
+    loop, entrando direto no app. Resumindo a causa raiz de verdade: o
+    login nunca funcionou desde o início porque o backend do Firebase
+    Authentication nunca esteve configurado para aceitar esse tipo de
+    login — o popup e o cache eram problemas reais, mas secundários.
+20. Ferramenta de diagnóstico deixada no código para o futuro: qualquer
+    tentativa de login que não termine em sucesso agora deixa um rastro
+    técnico (com timestamps) visível diretamente na tela de login, sem
+    precisar de console/DevTools. Isso deve acelerar bastante qualquer
+    bug de autenticação que apareça depois.
 
 ## Próximos passos (pendentes)
 
-- [ ] Pedir para o Tiago tentar o login de novo (navegador e app
-      instalado) para confirmar na prática que o loop de login (item 17)
-      está mesmo resolvido — a correção foi validada tecnicamente
-      (inspeção do código ao vivo), mas ainda não por um login real do
-      usuário desde que a correção foi publicada.
+- [x] ~~Confirmar que o loop de login está resolvido~~ — CONFIRMADO ao vivo
+      (item 19): login completo com sucesso, sem loop, tanto no teste
+      técnico quanto era esperado agora também no navegador/app do Tiago.
 - [ ] Ativar de fato as notificações push: alguém (Tiago/Monique) precisa
       abrir o app e clicar em "Ativar" no banner que aparece após o login.
       Sem isso não existe subscription salva e o job não tem para quem
