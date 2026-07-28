@@ -261,32 +261,48 @@ resolver isso primeiro.
     todas as visões (Todas/Minhas/Compartilhadas/Urgente) e só aparecem
     no filtro "✓ Feitas" — antes ficavam misturadas (com risco), deixando
     a lista principal poluída.
-23. **Atalho "Nova tarefa por voz" no ícone do app.** O Tiago pediu algo
-    perto de um "widget" para criar tarefa/evento por voz sem abrir o
-    app manualmente. Como o Assistente é um PWA (não um app nativo), um
-    widget real de tela inicial (tipo o de Lembretes do iPhone) ou
+23. **Atalho "Nova tarefa por voz" — tentativa 1 (manifest shortcuts) e
+    correção para o caminho que realmente funciona no iPhone.** O Tiago
+    pediu algo perto de um "widget" para criar tarefa por voz sem abrir
+    o app manualmente. Como o Assistente é um PWA (não um app nativo),
+    um widget real de tela inicial (tipo o de Lembretes do iPhone) ou
     integração direta e silenciosa com a Siri exigiriam um app nativo
-    (Swift) — fora do escopo atual, projeto bem maior. Solução
-    implementada dentro do que a tecnologia web permite: adicionados
-    "shortcuts" no `manifest.json` (pressionar e segurar o ícone do app
-    na tela inicial mostra "🎤 Nova tarefa por voz" e "➕ Nova tarefa"),
-    e o atalho de voz abre `?quick=1&mic=1`, que além de focar o campo de
-    texto (como o `?quick=1` já fazia) agora também aciona o microfone
-    sozinho (reaproveita `toggleMic()`, a mesma função do botão 🎤 que já
-    existe dentro do app). Resultado: pressionar e segurar o ícone → tocar
-    no atalho → o app abre já ouvindo, sem precisar tocar em mais nada
-    dentro dele. Não testado ainda ao vivo pelo Tiago — vale confirmar se
-    o microfone realmente inicia sozinho nesse fluxo (alguns navegadores
-    exigem um toque novo dentro da página para liberar o microfone,
-    mesmo depois de já ter sido autorizado antes; se isso acontecer, o
-    botão 🎤 já estará em foco/destaque, bastando um único toque a mais).
+    (Swift) — fora do escopo atual.
+    Primeira tentativa: adicionado `shortcuts` no `manifest.json`
+    (pressionar e segurar o ícone do app mostraria "🎤 Nova tarefa por
+    voz" / "➕ Nova tarefa"). **Não funcionou** — confirmado por teste
+    real do Tiago e por pesquisa: o **iOS/Safari não implementa o campo
+    `shortcuts` da Web App Manifest spec** (suportado só em
+    Android/Chrome e desktop). Pressionar e segurar o ícone no iPhone
+    nunca mostra nada disso — limitação da Apple, não bug nosso. O
+    código ficou no `manifest.json` (inofensivo, sem efeito no iPhone,
+    passaria a funcionar se um dia o app for usado no Android).
+    Caminho que realmente funciona no iPhone: um **Atalho da Apple**
+    (app Atalhos, nativo do iOS) com uma única ação **"Abrir URLs"**
+    apontando para `https://tiagocamargos1.github.io/Assistente/?quick=1&mic=1`,
+    salvo na tela de início (e opcionalmente com frase de ativação da
+    Siri, ex: "nova tarefa"). Isso sim abre o app já com o campo de
+    texto em foco e tenta ligar o microfone sozinho (usa `toggleMic()`,
+    a mesma função do botão 🎤 já existente). Guiado passo a passo pelo
+    chat, incluindo a correção de um erro comum ao criar o Atalho: por
+    padrão o Atalhos as vezes cria uma ação "Obter Conteúdo do URL" (só
+    busca a página em segundo plano, não abre nada visível) em vez de
+    "Abrir URLs" — atenção a isso se recriar o atalho no futuro.
+    **Limitação final confirmada e aceita**: ao abrir a página através
+    do app Atalhos (em vez de abrir direto pelo ícone normal do app), o
+    iOS pede permissão de microfone TODA VEZ, mesmo já tendo permitido
+    antes — isso é uma limitação documentada do próprio iOS (o
+    mapeamento de permissões entre o app Atalhos e o conteúdo web não é
+    persistente, ao contrário de abrir o app diretamente, onde a
+    permissão é pedida só uma vez e fica salva). Não há correção
+    possível do lado do código do Assistente. Decisão do Tiago: manter
+    assim mesmo — um toque a mais em "Permitir" ainda é mais rápido que
+    abrir o app manualmente e navegar até o botão 🎤.
 
 ## Próximos passos (pendentes)
 
-- [ ] Confirmar com o Tiago se o atalho "🎤 Nova tarefa por voz" (item 23)
-      realmente inicia o microfone sozinho ao abrir pelo ícone, ou se o
-      navegador exige um toque extra no botão 🎤 — ajustar a mensagem/UX
-      conforme o resultado real.
+(nenhum pendente relacionado ao atalho de voz — funcionalidade concluída
+e limitações conhecidas aceitas pelo Tiago, ver item 23)
 
 - [x] ~~Confirmar que o loop de login está resolvido~~ — CONFIRMADO ao vivo
       (item 19): login completo com sucesso, sem loop, tanto no teste
