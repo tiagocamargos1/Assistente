@@ -375,8 +375,37 @@ resolver isso primeiro.
     experiência mudada sem pedir — a pessoa nova é quem decide desligar o
     que não faz sentido pra ela, indo em 🏷️ Áreas.
 
+28. **Áreas personalizadas.** Logo depois do item 27, o Tiago pediu um
+    passo a mais: além de ligar/desligar as 5 áreas padrão, cada pessoa
+    poder **criar as próprias áreas** (nome + emoji), pra cobrir qualquer
+    necessidade pessoal que as 5 padrão não cubram (ex: "Estudos",
+    "Ministério de louvor"). Implementado dentro do mesmo modal "🏷️
+    Áreas": uma seção "Áreas personalizadas" com a lista das áreas já
+    criadas (cada uma com checkbox pra ligar/desligar e um 🗑️ pra
+    excluir) e um mini-formulário pra adicionar uma nova (campo de emoji
+    + campo de nome + botão "+"). As mudanças (adicionar, excluir, marcar
+    ligado, marcar desligado) só valem de verdade depois de tocar em
+    "Salvar" — "Cancelar" descarta tudo o que foi mexido na sessão do
+    modal. Estrutura de dados: `prefs/{uid}.customAreas` guarda a lista
+    `[{key, label, emoji}]` de cada pessoa; `enabledAreas` (já existente
+    do item 27) passou a poder conter tanto chaves padrão quanto chaves
+    de áreas personalizadas (`custom_<timestamp+random>`). Uma função
+    única `areaDef(key)` resolve o nome/emoji tanto pras 5 padrão quanto
+    pras personalizadas, usada em todo lugar que mostra uma área (tag da
+    tarefa, filtro rápido, filtro da lista, dropdown de editar tarefa) —
+    editar uma tarefa antiga sempre mostra a área dela corretamente,
+    mesmo que a área tenha sido desligada ou até excluída depois (nesse
+    caso o dropdown ainda mostra aquela opção pontualmente, só pra não
+    apagar o dado sem querer).
+
 ## Próximos passos (pendentes)
 
+- [ ] Testar ao vivo as áreas personalizadas (item 28): abrir 🏷️ Áreas,
+      criar uma área nova (nome + emoji), marcar/desmarcar, salvar, e
+      conferir que ela aparece certinho no campo "Nova demanda" e no
+      filtro da lista de tarefas; testar também excluir uma área
+      personalizada e confirmar que tarefas antigas com ela continuam
+      aparecendo/editáveis normalmente.
 - [ ] Testar ao vivo a nova configuração de áreas (item 27): abrir 🏷️
       Áreas no cabeçalho, desmarcar alguma área (ex: Deus ou Família),
       salvar, e confirmar que ela some do campo "Nova demanda" e do
