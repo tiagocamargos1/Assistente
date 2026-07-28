@@ -355,7 +355,34 @@ resolver isso primeiro.
     tiagocamargos@tocsmartgroup.com, tiolicam@gmail.com,
     lucyleiaoliveira@gmail.com.
 
+27. **As 5 áreas padrão (Deus, Pessoal, Família, Finanças, Negócios)
+    viraram opcionais por pessoa.** O Tiago apontou um problema real de
+    produto: eram fixas e obrigatórias pra todo mundo — um ateu ou alguém
+    solteiro que fosse testar o app não teria como tirar "Deus" ou
+    "Família" da frente. Decisão tomada com o Tiago: manter as 5 áreas
+    como estão (nada de área customizada por enquanto), mas cada pessoa
+    pode ligar/desligar quais quer ver, a qualquer momento, através de um
+    novo ícone no cabeçalho (🏷️ "Áreas"). Implementado: estado
+    `enabledAreas` por usuário, salvo em `prefs/{uid}.enabledAreas`
+    (Firestore); os botões de área no campo "Nova demanda" e no filtro da
+    lista de tarefas agora são gerados dinamicamente a partir dessa lista,
+    em vez de fixos no HTML; o dropdown de área no modal de editar tarefa
+    também é gerado dinamicamente, mas sempre inclui a área atual da
+    tarefa mesmo que ela tenha sido desligada depois (pra nunca mudar o
+    dado de uma tarefa antiga sem querer). Padrão pra quem já usa o app
+    (Tiago, Monique) e pra qualquer conta sem essa preferência salva
+    ainda: as 5 áreas continuam todas ligadas, ou seja, ninguém teve a
+    experiência mudada sem pedir — a pessoa nova é quem decide desligar o
+    que não faz sentido pra ela, indo em 🏷️ Áreas.
+
 ## Próximos passos (pendentes)
+
+- [ ] Testar ao vivo a nova configuração de áreas (item 27): abrir 🏷️
+      Áreas no cabeçalho, desmarcar alguma área (ex: Deus ou Família),
+      salvar, e confirmar que ela some do campo "Nova demanda" e do
+      filtro da lista de tarefas, mas tarefas antigas com aquela área
+      continuam aparecendo normalmente e continuam editáveis sem perder o
+      valor da área.
 
 - [ ] Testar ao vivo a correção da renovação silenciosa do token do
       Google (item 25): deixar o token expirar (ou simular) e ver se a
