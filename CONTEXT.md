@@ -251,8 +251,42 @@ resolver isso primeiro.
     TOC" (processo à parte: exige política de privacidade publicada,
     domínio verificado, e possivelmente avaliação de segurança por causa
     do escopo de Calendário, que é classificado como "restrito").
+22. Corrigido bug real na lista de tarefas: o painel não tinha scroll
+    interno (faltava `min-height:0` numa cadeia de containers flex/grid —
+    bug clássico de CSS onde o conteúdo excedente é cortado em vez de
+    rolável), então com muitas tarefas só as primeiras ~18 apareciam e o
+    resto ficava inacessível. Corrigido em `.main`, `.left-panel`,
+    `.tab-content` e `.right-panel`/`.briefing`. Também mudado o
+    comportamento da lista: tarefas marcadas como feitas agora somem de
+    todas as visões (Todas/Minhas/Compartilhadas/Urgente) e só aparecem
+    no filtro "✓ Feitas" — antes ficavam misturadas (com risco), deixando
+    a lista principal poluída.
+23. **Atalho "Nova tarefa por voz" no ícone do app.** O Tiago pediu algo
+    perto de um "widget" para criar tarefa/evento por voz sem abrir o
+    app manualmente. Como o Assistente é um PWA (não um app nativo), um
+    widget real de tela inicial (tipo o de Lembretes do iPhone) ou
+    integração direta e silenciosa com a Siri exigiriam um app nativo
+    (Swift) — fora do escopo atual, projeto bem maior. Solução
+    implementada dentro do que a tecnologia web permite: adicionados
+    "shortcuts" no `manifest.json` (pressionar e segurar o ícone do app
+    na tela inicial mostra "🎤 Nova tarefa por voz" e "➕ Nova tarefa"),
+    e o atalho de voz abre `?quick=1&mic=1`, que além de focar o campo de
+    texto (como o `?quick=1` já fazia) agora também aciona o microfone
+    sozinho (reaproveita `toggleMic()`, a mesma função do botão 🎤 que já
+    existe dentro do app). Resultado: pressionar e segurar o ícone → tocar
+    no atalho → o app abre já ouvindo, sem precisar tocar em mais nada
+    dentro dele. Não testado ainda ao vivo pelo Tiago — vale confirmar se
+    o microfone realmente inicia sozinho nesse fluxo (alguns navegadores
+    exigem um toque novo dentro da página para liberar o microfone,
+    mesmo depois de já ter sido autorizado antes; se isso acontecer, o
+    botão 🎤 já estará em foco/destaque, bastando um único toque a mais).
 
 ## Próximos passos (pendentes)
+
+- [ ] Confirmar com o Tiago se o atalho "🎤 Nova tarefa por voz" (item 23)
+      realmente inicia o microfone sozinho ao abrir pelo ícone, ou se o
+      navegador exige um toque extra no botão 🎤 — ajustar a mensagem/UX
+      conforme o resultado real.
 
 - [x] ~~Confirmar que o loop de login está resolvido~~ — CONFIRMADO ao vivo
       (item 19): login completo com sucesso, sem loop, tanto no teste
