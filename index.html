@@ -476,8 +476,8 @@ textarea::placeholder{color:var(--text-dim);}
 <!-- AREA SETTINGS MODAL -->
 <div class="modal-ov" id="areaSettingsModal">
   <div class="modal-box">
-    <h2>🏷️ Áreas visíveis</h2>
-    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;">Escolha quais áreas você quer usar para organizar tarefas, eventos e notas. As desmarcadas somem dos filtros e do campo "Nova demanda" — nada que já foi criado com elas é apagado.</p>
+    <h2>🏷️ Áreas</h2>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;">Escolha quais áreas você quer usar para organizar tarefas, eventos e notas, e crie as suas próprias abaixo. As desmarcadas somem dos filtros e do campo "Nova demanda" — nada que já foi criado com elas é apagado.</p>
     <div class="rep-sec">
       <div style="display:flex;flex-direction:column;gap:10px;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_deus" style="width:15px;height:15px;">🙏 Deus</label>
@@ -485,6 +485,15 @@ textarea::placeholder{color:var(--text-dim);}
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_familia" style="width:15px;height:15px;">👨‍👩‍👧 Família</label>
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_financas" style="width:15px;height:15px;">💰 Finanças</label>
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);"><input type="checkbox" id="areaChk_negocios" style="width:15px;height:15px;">💼 Negócios</label>
+      </div>
+    </div>
+    <div class="rep-sec">
+      <h3>Áreas personalizadas</h3>
+      <div id="customAreaList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="newAreaEmoji" maxlength="4" placeholder="🔖" style="width:44px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px;padding:8px 4px;">
+        <input type="text" id="newAreaLabel" maxlength="24" placeholder="Nome da nova área (ex: Estudos)" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <button type="button" onclick="addCustomAreaDraft()" style="background:var(--gold);color:var(--bg);border:none;border-radius:8px;padding:0 16px;font-size:15px;font-weight:600;cursor:pointer;">+</button>
       </div>
     </div>
     <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveAreaSettings()">Salvar</button>
@@ -547,6 +556,20 @@ let currentArea='',areaFilter='all';
 // changes for Tiago/Monique unless they open "🏷️ Áreas" and turn some
 // off) and is saved per-person in Firestore (prefs/{uid}.enabledAreas).
 let enabledAreas=Object.keys(AREAS);
+// Custom areas each person can create on top of the 5 defaults (e.g.
+// "Estudos", "Ministério de louvor"), so filters actually match each
+// individual's real life instead of only the 5 built-in ones. Persisted
+// per-person in Firestore (prefs/{uid}.customAreas), each entry
+// {key,label,emoji}. draftCustomAreas/draftChecked are only used while the
+// "🏷️ Áreas" modal is open, so Cancelar can discard unsaved edits.
+let customAreas=[];
+let draftCustomAreas=[];
+let draftChecked={};
+function areaDef(key){
+  if(AREAS[key])return AREAS[key];
+  const c=customAreas.find(c=>c.key===key);
+  return c?{label:c.label,emoji:c.emoji||'🔖'}:null;
+}
 function setArea(area,btn){
   currentArea=area;
   document.querySelectorAll('#areaRow .filter-btn').forEach(b=>b.classList.remove('active'));
@@ -559,19 +582,21 @@ function setAreaFilter(area,btn){
   renderTasks();
 }
 function areaTag(area){
-  const a=AREAS[area];
-  return a?`<span class="ttag" style="background:rgba(255,255,255,.08);color:var(--text-muted)">${a.emoji} ${a.label}</span>`:'';
+  const a=areaDef(area);
+  return a?`<span class="ttag" style="background:rgba(255,255,255,.08);color:var(--text-muted)">${esc(a.emoji)} ${esc(a.label)}</span>`:'';
 }
-// ── AREA VISIBILITY (per-user optional areas) ─────
+// ── AREA VISIBILITY (per-user optional + custom areas) ────
+function allAreaKeys(){return[...Object.keys(AREAS),...customAreas.map(c=>c.key)];}
 function renderAreaRow(){
   const row=document.getElementById('areaRow');
   if(!row)return;
   if(currentArea&&!enabledAreas.includes(currentArea))currentArea='';
   let html=`<button class="filter-btn${currentArea===''?' active':''}" data-area="" onclick="setArea('',this)">✦ Geral</button>`;
-  Object.keys(AREAS).forEach(key=>{
+  allAreaKeys().forEach(key=>{
     if(!enabledAreas.includes(key))return;
-    const a=AREAS[key];
-    html+=`<button class="filter-btn${currentArea===key?' active':''}" data-area="${key}" onclick="setArea('${key}',this)">${a.emoji} ${a.label}</button>`;
+    const a=areaDef(key);
+    if(!a)return;
+    html+=`<button class="filter-btn${currentArea===key?' active':''}" data-area="${key}" onclick="setArea('${key}',this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
   });
   row.innerHTML=html;
 }
@@ -580,10 +605,11 @@ function renderAreaFilterRow(){
   if(!row)return;
   if(areaFilter!=='all'&&!enabledAreas.includes(areaFilter))areaFilter='all';
   let html=`<button class="filter-btn${areaFilter==='all'?' active':''}" onclick="setAreaFilter('all',this)">Todas áreas</button>`;
-  Object.keys(AREAS).forEach(key=>{
+  allAreaKeys().forEach(key=>{
     if(!enabledAreas.includes(key))return;
-    const a=AREAS[key];
-    html+=`<button class="filter-btn${areaFilter===key?' active':''}" onclick="setAreaFilter('${key}',this)">${a.emoji} ${a.label}</button>`;
+    const a=areaDef(key);
+    if(!a)return;
+    html+=`<button class="filter-btn${areaFilter===key?' active':''}" onclick="setAreaFilter('${key}',this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
   });
   row.innerHTML=html;
   renderTasks();
@@ -593,31 +619,97 @@ function applyAreaVisibility(){
   renderAreaFilterRow();
 }
 // Builds the <select> options for the edit-task modal. Always includes the
-// task's CURRENT area even if it has since been turned off in settings, so
-// editing an older task never silently wipes/changes its area.
+// task's CURRENT area even if it has since been turned off (or its custom
+// area deleted) in settings, so editing an older task never silently
+// wipes/changes its area.
 function populateEditTaskAreaOptions(currentValue){
   const sel=document.getElementById('editTaskArea');
   if(!sel)return;
   let html='<option value="">✦ Geral</option>';
-  Object.keys(AREAS).forEach(key=>{
+  const keys=allAreaKeys();
+  if(currentValue&&!keys.includes(currentValue))keys.push(currentValue);
+  keys.forEach(key=>{
     if(!enabledAreas.includes(key)&&key!==currentValue)return;
-    const a=AREAS[key];
-    html+=`<option value="${key}">${a.emoji} ${a.label}</option>`;
+    const a=areaDef(key);
+    if(!a)return;
+    html+=`<option value="${key}">${esc(a.emoji)} ${esc(a.label)}</option>`;
   });
   sel.innerHTML=html;
+}
+// Preserves checkbox states across a custom-area-list rebuild (adding or
+// deleting a row replaces the whole list's innerHTML, which would
+// otherwise reset every checkbox back to its "default" checked state).
+function syncDraftChecked(){
+  Object.keys(AREAS).forEach(key=>{
+    const cb=document.getElementById('areaChk_'+key);
+    if(cb)draftChecked[key]=cb.checked;
+  });
+  draftCustomAreas.forEach(c=>{
+    const cb=document.getElementById('areaChk_'+c.key);
+    if(cb)draftChecked[c.key]=cb.checked;
+  });
+}
+function renderCustomAreaList(){
+  const wrap=document.getElementById('customAreaList');
+  if(!wrap)return;
+  if(!draftCustomAreas.length){
+    wrap.innerHTML='<div style="font-size:12px;color:var(--text-dim);">Nenhuma área personalizada ainda.</div>';
+    return;
+  }
+  wrap.innerHTML=draftCustomAreas.map(c=>{
+    const checked=draftChecked[c.key]!==false;
+    return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);">`
+      +`<input type="checkbox" id="areaChk_${c.key}" ${checked?'checked':''} style="width:15px;height:15px;">`
+      +`<span style="flex:1;">${esc(c.emoji||'🔖')} ${esc(c.label)}</span>`
+      +`<button type="button" onclick="deleteCustomAreaDraft('${c.key}')" title="Excluir" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;padding:2px 4px;">🗑️</button>`
+      +`</label>`;
+  }).join('');
+}
+function addCustomAreaDraft(){
+  const labelInp=document.getElementById('newAreaLabel');
+  const emojiInp=document.getElementById('newAreaEmoji');
+  const label=(labelInp?.value||'').trim();
+  if(!label){notify('Dê um nome pra área nova.','error');return;}
+  if(label.length>24){notify('Nome muito longo (máx. 24 caracteres).','error');return;}
+  const emoji=(emojiInp?.value||'').trim()||'🔖';
+  syncDraftChecked();
+  const key='custom_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  draftCustomAreas.push({key,label,emoji});
+  draftChecked[key]=true;
+  labelInp.value='';
+  emojiInp.value='';
+  renderCustomAreaList();
+}
+function deleteCustomAreaDraft(key){
+  syncDraftChecked();
+  draftCustomAreas=draftCustomAreas.filter(c=>c.key!==key);
+  delete draftChecked[key];
+  renderCustomAreaList();
 }
 function openAreaSettings(){
   Object.keys(AREAS).forEach(key=>{
     const cb=document.getElementById('areaChk_'+key);
     if(cb)cb.checked=enabledAreas.includes(key);
   });
+  draftCustomAreas=customAreas.map(c=>({...c}));
+  draftChecked={};
+  Object.keys(AREAS).forEach(key=>{draftChecked[key]=enabledAreas.includes(key);});
+  draftCustomAreas.forEach(c=>{draftChecked[c.key]=enabledAreas.includes(c.key);});
+  const labelInp=document.getElementById('newAreaLabel');
+  const emojiInp=document.getElementById('newAreaEmoji');
+  if(labelInp)labelInp.value='';
+  if(emojiInp)emojiInp.value='';
+  renderCustomAreaList();
   document.getElementById('areaSettingsModal').classList.add('open');
 }
 function closeAreaSettings(){
   document.getElementById('areaSettingsModal').classList.remove('open');
 }
 async function saveAreaSettings(){
-  enabledAreas=Object.keys(AREAS).filter(key=>document.getElementById('areaChk_'+key)?.checked);
+  const defaultKeys=Object.keys(AREAS).filter(key=>document.getElementById('areaChk_'+key)?.checked);
+  const customKeys=draftCustomAreas.map(c=>c.key).filter(key=>document.getElementById('areaChk_'+key)?.checked);
+  enabledAreas=[...defaultKeys,...customKeys];
+  customAreas=draftCustomAreas.map(c=>({...c}));
   applyAreaVisibility();
   document.getElementById('areaSettingsModal').classList.remove('open');
   await savePrefs();
@@ -647,7 +739,7 @@ async function removeNote(id){
 }
 async function savePrefs(){
   if(!window.fbSave||!cu)return;
-  await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null,enabledAreas});
+  await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null,enabledAreas,customAreas});
 }
 function startListeners(){
   // Unsubscribe previous
@@ -1041,8 +1133,11 @@ async function enterApp(){
   try{
     const prefs=await window.fbGet(`prefs/${cu}`);
     if(prefs?.theme)applyTheme(prefs.theme==='dark');
-    enabledAreas=(prefs&&Array.isArray(prefs.enabledAreas)&&prefs.enabledAreas.length)?prefs.enabledAreas.filter(a=>AREAS[a]):Object.keys(AREAS);
+    customAreas=Array.isArray(prefs?.customAreas)?prefs.customAreas.filter(c=>c&&c.key&&c.label):[];
+    const knownKeys=[...Object.keys(AREAS),...customAreas.map(c=>c.key)];
+    enabledAreas=(prefs&&Array.isArray(prefs.enabledAreas)&&prefs.enabledAreas.length)?prefs.enabledAreas.filter(a=>knownKeys.includes(a)):Object.keys(AREAS);
   }catch(e){
+    customAreas=[];
     enabledAreas=Object.keys(AREAS);
   }
   applyAreaVisibility();
