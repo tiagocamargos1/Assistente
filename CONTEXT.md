@@ -312,8 +312,55 @@ resolver isso primeiro.
     gatilho automático mais cedo. Testado localmente (sintaxe validada) e
     publicado no GitHub.
 
+25. **Corrigida a renovação silenciosa do token do Google Calendar (causa
+    real de precisar reconectar ao Google toda vez, mesmo já tendo PIN).**
+    O Tiago relatou: depois de sair e voltar (PIN), tinha que reconectar
+    ao Google de novo pra ver a agenda. Causa raiz: o app usa OAuth
+    "implícito" do Google (`response_type=token`), cujo token de acesso à
+    agenda expira sozinho em ~58 minutos e não tem refresh token (isso é
+    uma limitação desse tipo de fluxo, não um bug em si). Já existia uma
+    tentativa de renovação silenciosa via iframe escondido
+    (`getValidToken()`), mas ela **nunca funcionou de verdade**: o token
+    novo era gerado dentro do próprio iframe (uma página/contexto JS
+    totalmente separado), e nunca era repassado de volta pra página
+    principal — a função só esperava alguns segundos e devolvia o token
+    antigo (ou `null`), e pior, um bug de sequência fazia ela mostrar
+    "Sessão expirada" e desistir *imediatamente*, sem sequer esperar o
+    iframe carregar. Corrigido em duas partes: (1) a cópia da página que
+    carrega dentro do iframe agora detecta que está rodando dentro dele
+    (`window.self!==window.top`) e, ao invés de rodar o login inteiro de
+    novo, só repassa o token pra página principal via `postMessage`; (2)
+    `getValidToken()` agora escuta essa mensagem e atualiza o token de
+    verdade. Também corrigido `submitPin()`, que só chamava `fetchCal()`
+    (e portanto só tentava a renovação) quando já havia um token válido
+    guardado — ou seja, quando o token tinha expirado, nem tentava
+    renovar, já mostrava direto "Conecte o Google". Agora sempre tenta.
+    **Limitação que continua existindo, avisada ao Tiago antes de
+    implementar**: esse tipo de renovação silenciosa depende do navegador
+    ainda ter uma sessão ativa do Google e permitir esse iframe de
+    terceiros — funciona bem no Chrome/Android/desktop, mas no
+    Safari/iPhone a Apple bloqueia esse tipo de coisa por padrão (ITP —
+    Intelligent Tracking Prevention), então mesmo com a correção pode
+    ainda pedir reconexão de vez em quando nesse aparelho. Solução
+    definitiva (sem essa limitação) exigiria trocar para OAuth com
+    "refresh token" de verdade + um pequeno backend para guardá-lo com
+    segurança — avaliado com o Tiago e adiado por ora (ver próximos
+    passos) por causa do esforço/infra extra.
+
 ## Próximos passos (pendentes)
 
+- [ ] Testar ao vivo a correção da renovação silenciosa do token do
+      Google (item 25): deixar o token expirar (ou simular) e ver se a
+      agenda carrega sozinha ao entrar pelo PIN, sem precisar tocar em
+      "Conectar Google" — testar tanto no navegador/desktop quanto no
+      iPhone (esperado: funciona melhor no Chrome/desktop; no iPhone pode
+      ainda pedir reconexão às vezes, por limitação do próprio Safari).
+- [ ] Se a reconexão no iPhone continuar incomodando mesmo após o item 25,
+      considerar a solução definitiva: trocar o login do Google Calendar
+      para OAuth com refresh token + um pequeno backend (ex: Firebase
+      Cloud Functions) pra manter a conexão de verdade sem depender de
+      truques de navegador. Mais trabalho de configuração, mas resolve de
+      vez, inclusive no iPhone.
 - [ ] Testar ao vivo o auto-submit do PIN (item 24): digitar um PIN
       correto e confirmar que entra sozinho no app sem tocar em "Entrar";
       confirmar também que um PIN de 4 dígitos que é prefixo de um PIN de
