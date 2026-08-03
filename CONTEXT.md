@@ -449,18 +449,56 @@ resolver isso primeiro.
       cada loja); (2) se o Tiago já tem conta no Google Play Console ou
       se ainda precisa criar e pagar o registro de US$ 25.
 
+30. **Empacotamento nativo (Capacitor) — configuração publicada,
+    execução real ainda pendente no Mac do Tiago.** Respostas do Tiago às
+    duas perguntas do item 29: bundle ID confirmado como
+    `com.tocsmartgroup.assistente`; ele ainda **não tem** conta no Google
+    Play Console e quer criá-la — mas criação de conta + pagamento é uma
+    ação proibida pra mim mesmo com autorização explícita (regra de
+    segurança: nunca criar contas nem inserir dados de pagamento em nome
+    do usuário), então isso fica para o próprio Tiago fazer em
+    https://play.google.com/console/signup (taxa única de US$ 25).
+    Enquanto isso, publiquei no repositório tudo que não depende dessa
+    conta: `package.json` (dependências `@capacitor/core`,
+    `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`, todas na
+    major mais atual, 8.x, confirmada por pesquisa), `capacitor.config.json`
+    (appId `com.tocsmartgroup.assistente`, appName "Assistente Pessoal",
+    webDir `www`), a pasta `www/` (cópia de `index.html`,
+    `manifest.json`, `sw.js`, `icon-192.png`, `icon-512.png` — o
+    Capacitor espera os assets web numa pasta própria, não na raiz do
+    repo) e `GUIA-APP-NATIVO.md`, um guia passo a passo em português com
+    os comandos exatos pro Tiago rodar no próprio Mac (`git clone`,
+    `npm install`, `npx cap add ios`, `npx cap add android`, `npx cap open
+    ios`/`android`, e um script `npm run cap:sync` pra manter a pasta
+    `www/` atualizada sempre que eu publicar mudanças em
+    `index.html`/`manifest.json`/`sw.js`/ícones no futuro). O guia também
+    documenta, pro Tiago, como evitar o custo do CASA (deixar o OAuth em
+    modo "Testando" e informar uma conta de teste já autorizada nas notas
+    pro revisor da loja) e reforça a regra de nunca pedir senha/API
+    key/segredo direto — essas credenciais (Apple ID no Xcode, conta
+    Google no Android Studio/Play Console) só o próprio Tiago deve digitar.
+    **Nada disso foi testado ainda** — os comandos `npx cap add ios`/
+    `android` nunca rodaram de fato, porque isso só é possível no Mac do
+    Tiago (o `cap add ios` exige Xcode/CocoaPods, que não existem neste
+    ambiente sandbox Linux).
+
 ## Próximos passos (pendentes)
 
-- [ ] **PRÓXIMA SESSÃO — retomar direto daqui (item 29):** confirmar com
-      o Tiago (a) o bundle ID/identificador do app (sugestão:
-      `com.tocsmartgroup.assistente`) e (b) se ele já tem conta no Google
-      Play Console. Depois disso, preparar os arquivos de configuração do
-      Capacitor (`package.json`, `capacitor.config`) e publicá-los no
-      repo, e passar pro Tiago o passo a passo de comandos pra rodar
-      localmente no Mac dele (`npx cap add ios`, `npx cap add android`) e
-      abrir no Xcode/Android Studio. O Tiago sinalizou "Bora pra cima!?"
-      — ou seja, quer seguir com isso, só faltou eu conseguir captar as
-      duas respostas acima.
+- [ ] O Tiago precisa criar a conta no Google Play Console
+      (https://play.google.com/console/signup, taxa única de US$ 25) —
+      isso não pode ser feito por mim (regra de segurança: nunca criar
+      contas ou inserir pagamento em nome do usuário).
+- [ ] O Tiago precisa rodar, no próprio Mac, os passos do
+      `GUIA-APP-NATIVO.md` (item 30): clonar o repo, `npm install`,
+      `npx cap add ios`, `npx cap add android`, abrir no Xcode/Android
+      Studio e testar rodando num simulador/emulador ou aparelho físico.
+      Reportar de volta se algum passo falhar ou tiver dúvida.
+- [ ] Depois que o app rodar localmente pelo menos uma vez, ajudar com:
+      texto e ficha da loja (descrição, categoria), política de
+      privacidade publicada (posso gerar e hospedar no GitHub Pages),
+      prints de tela pra loja, e o processo de submissão em si (App Store
+      Connect / Play Console) — o Tiago quem precisa clicar em
+      "Enviar"/"Publicar", eu só preparo o material.
 
 - [ ] Testar ao vivo as áreas personalizadas (item 28): abrir 🏷️ Áreas,
       criar uma área nova (nome + emoji), marcar/desmarcar, salvar, e
