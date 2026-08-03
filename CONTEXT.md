@@ -482,6 +482,25 @@ resolver isso primeiro.
     Tiago (o `cap add ios` exige Xcode/CocoaPods, que não existem neste
     ambiente sandbox Linux).
 
+31. **Removido o painel visual de log de erro da tela de login.** O
+    Tiago reclamou que, sempre que abria o app, aparecia o log técnico da
+    última tentativa de login que não deu certo (ferramenta de
+    diagnóstico do item 20) — "fica feio". Causa: como esse log só é
+    limpo quando um login completo via Google termina com sucesso
+    (`clearLoginDebug()` dentro de `onToken()`), e o dia a dia normal é
+    logar via PIN (que nunca toca nesse log), qualquer tentativa antiga
+    que falhou ficava "presa" ali e reaparecia pra sempre na tela de
+    login. Corrigido removendo só a `<div id="loginDebugPanel">` do HTML
+    — como `renderLoginDebug()` já tinha um guard (`if(!panel)return;`),
+    isso foi suficiente pra parar de aparecer, sem precisar mexer em
+    nenhuma outra função. O registro em si (`dbg()` gravando em
+    `localStorage.loginDebugLog`) continua funcionando por baixo dos
+    panos, silenciosamente — não foi removido, só a exibição — então se
+    precisar diagnosticar login de novo no futuro, dá pra reativar
+    (recolocar a div) ou inspecionar `localStorage.getItem('loginDebugLog')`
+    direto pelo DevTools. Aplicado tanto no `index.html` da raiz quanto
+    na cópia em `www/index.html` (usada pelo empacotamento Capacitor).
+
 ## Próximos passos (pendentes)
 
 - [ ] O Tiago precisa criar a conta no Google Play Console
