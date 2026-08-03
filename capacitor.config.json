@@ -1,0 +1,8 @@
+{
+  "appId": "com.tocsmartgroup.assistente",
+  "appName": "Assistente Pessoal",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
