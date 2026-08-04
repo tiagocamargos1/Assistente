@@ -1143,6 +1143,11 @@ async function enterApp(){
   initWeek();
   applyFamilyUI();
   focusCaptureIfQuick();
+  if(pendingSiriTaskText){
+    const t=pendingSiriTaskText;
+    pendingSiriTaskText=null;
+    setTimeout(()=>runSiriTask(t),300);
+  }
 }
 function logout(){
   if(!confirm('Sair?'))return;
@@ -1797,6 +1802,32 @@ const quickCapture=new URLSearchParams(window.location.search).get('quick')==='1
 // microphone starting on its own — no native app/OS widget involved, just
 // the existing quick-capture flow plus an auto-tap of the mic button.
 const quickCaptureVoice=new URLSearchParams(window.location.search).get('mic')==='1';
+// ── SIRI / APP INTENTS (iOS nativo) ────────────────
+// O App Intent nativo "Nova tarefa" (Swift, ios/App/App/AddTaskIntent.swift)
+// abre o app através de uma URL própria (assistentepessoal://addtask?title=...).
+// O plugin App do Capacitor entrega essa URL aqui via 'appUrlOpen' — funciona
+// tanto com o app já aberto quanto recém-lançado pela Siri.
+let pendingSiriTaskText=null;
+function handleSiriUrl(rawUrl){
+  try{
+    const u=new URL(rawUrl);
+    const title=u.searchParams.get('title');
+    if(!title)return;
+    const text=decodeURIComponent(title);
+    if(cu){runSiriTask(text);}else{pendingSiriTaskText=text;}
+  }catch(e){}
+}
+function runSiriTask(text){
+  const inp=document.getElementById('userInput');
+  if(!inp)return;
+  inp.value=text;
+  processInput();
+}
+if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
+  window.Capacitor.Plugins.App.addListener('appUrlOpen',(data)=>{
+    if(data&&data.url)handleSiriUrl(data.url);
+  });
+}
 document.addEventListener('keydown',(e)=>{
   const tag=(e.target&&e.target.tagName||'').toLowerCase();
   const typing=tag==='input'||tag==='textarea'||tag==='select'||(e.target&&e.target.isContentEditable);
