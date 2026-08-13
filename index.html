@@ -424,6 +424,23 @@ textarea::placeholder{color:var(--text-dim);}
     <button class="close-btn" onclick="closeEditTask()">Cancelar</button>
   </div>
 </div>
+<!-- REMINDER MODAL -->
+<div class="modal-ov" id="reminderModal">
+  <div class="modal-box">
+    <h2>🔔 Lembrete</h2>
+    <div class="rep-sec">
+      <h3 id="reminderTaskLabel" style="font-weight:400;color:var(--text-dim);"></h3>
+    </div>
+    <div class="rep-sec">
+      <h3>Avisar em</h3>
+      <input type="datetime-local" id="reminderDateTime" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <p id="reminderHint" style="font-size:11px;color:var(--text-dim);margin-top:6px;"></p>
+    </div>
+    <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="confirmReminder()">Agendar lembrete</button>
+    <button class="close-btn" id="cancelReminderBtn" style="display:none;" onclick="cancelReminder()">Cancelar lembrete agendado</button>
+    <button class="close-btn" onclick="closeReminderModal()">Fechar</button>
+  </div>
+</div>
 <!-- NEW ROUTINE MODAL -->
 <div class="modal-ov" id="newRoutineModal">
   <div class="modal-box">
@@ -1494,6 +1511,7 @@ async function toggleTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
   if(!t)return;
   t.done=!t.done;t.doneBy=t.done?cu:null;t.doneAt=t.done?new Date().toISOString():null;
+  if(t.done&&t.reminderNotifId)await cancelReminderNotif(t.reminderNotifId);
   await saveTask(t);
   if(t.done&&t.shared)sendPush('Tarefa concluída',`${USERS[cu].name} concluiu: ${t.text}`);
   notify(t.done?'✓ Concluída!':'Reaberta',t.done?'success':'info');
@@ -1502,7 +1520,13 @@ async function deleteTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
   if(!t)return;
   if(t.shared&&t.owner!==cu){notify('Só quem criou pode excluir.','error');return;}
+  if(t.reminderNotifId)await cancelReminderNotif(t.reminderNotifId);
   await removeTask(String(id),t.shared);
+}
+async function cancelReminderNotif(notifId){
+  const plugin=localNotifPlugin();
+  if(!plugin)return;
+  await plugin.cancel({notifications:[{id:notifId}]}).catch(()=>{});
 }
 // ── EDIT TASK ──────────────────────────────────
 let editingTaskId=null,editingTaskShared=false;
@@ -1591,6 +1615,7 @@ function taskHTML(t){
       <div class="task-text">${esc(t.text||'')}</div>
       <div class="task-meta">
         ${t.date?`<span>📅 ${fd(t.date)}</span>`:''}
+        ${hasActiveReminder(t)?`<span class="ttag" style="color:var(--gold);border-color:var(--gold);">⏰ ${fdt(t.reminderAt)}</span>`:''}
         ${t.shared?`<span class="ttag ts">👫</span>`:''}
         ${t.urgency==='urgent'?`<span class="ttag tu">🔴</span>`:''}
         ${areaTag(t.area)}
@@ -1599,15 +1624,109 @@ function taskHTML(t){
       </div>
     </div>
     <div class="task-acts">
-      <button class="tact rb" onclick="scheduleReminder('${esc(t.text||'')}')">🔔</button>
+      <button class="tact rb" style="${hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}')" title="${hasActiveReminder(t)?'Lembrete agendado':'Agendar lembrete'}">${hasActiveReminder(t)?'⏰':'🔔'}</button>
       ${canDel?`<button class="tact" onclick="openEditTask('${tid}')" title="Editar">✏️</button>`:''}
       ${canDel?`<button class="tact" onclick="deleteTask('${tid}')">✕</button>`:''}
     </div>
   </div>`;
 }
-function scheduleReminder(text){
-  if(Notification.permission==='granted'){new Notification('🔔 Lembrete — Assistente',{body:text});notify('Lembrete enviado!','success');}
-  else notify('Ative as notificações primeiro.','info');
+// ── LEMBRETES COM ALARME (notificação local, iOS nativo) ────
+// Usa o plugin @capacitor/local-notifications: agenda uma notificação real
+// no sistema operacional para um horário futuro específico, com som — toca
+// mesmo com o app fechado, ao contrário da antiga Notification instantânea.
+// Só funciona dentro do app nativo (iOS); no navegador, avisamos a
+// limitação em vez de fingir que agendou algo que não vai disparar.
+function isNativeApp(){
+  return!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+}
+function localNotifPlugin(){
+  return(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications)||null;
+}
+function hasActiveReminder(t){
+  return!!(t.reminderAt&&new Date(t.reminderAt).getTime()>Date.now());
+}
+function fdt(iso){
+  const d=new Date(iso);
+  const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0');
+  const hh=String(d.getHours()).padStart(2,'0'),mi=String(d.getMinutes()).padStart(2,'0');
+  return`${dd}/${mm} ${hh}:${mi}`;
+}
+let reminderTaskId=null;
+function openReminderModal(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t)return;
+  reminderTaskId=id;
+  document.getElementById('reminderTaskLabel').textContent=t.text||'';
+  const dt=document.getElementById('reminderDateTime');
+  if(hasActiveReminder(t)){
+    dt.value=toLocalInputValue(new Date(t.reminderAt));
+    document.getElementById('cancelReminderBtn').style.display='';
+  }else{
+    const def=new Date(Date.now()+60*60*1000);
+    dt.value=toLocalInputValue(def);
+    document.getElementById('cancelReminderBtn').style.display='none';
+  }
+  document.getElementById('reminderHint').textContent=isNativeApp()?'':'Lembretes com alarme funcionam no app instalado no iPhone. No navegador, o lembrete não vai tocar sozinho.';
+  document.getElementById('reminderModal').classList.add('open');
+}
+function toLocalInputValue(d){
+  const pad=n=>String(n).padStart(2,'0');
+  return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function closeReminderModal(){
+  document.getElementById('reminderModal').classList.remove('open');
+  reminderTaskId=null;
+}
+async function confirmReminder(){
+  const t=tasks.find(t=>String(t.id)===String(reminderTaskId));
+  if(!t)return;
+  const val=document.getElementById('reminderDateTime').value;
+  if(!val){notify('Escolha data e hora do lembrete.','error');return;}
+  const when=new Date(val);
+  if(when.getTime()<=Date.now()){notify('Escolha um horário no futuro.','error');return;}
+  if(!isNativeApp()){
+    notify('Lembretes com alarme funcionam no app instalado no iPhone.','info');
+    return;
+  }
+  const plugin=localNotifPlugin();
+  if(!plugin){notify('Plugin de notificações locais indisponível.','error');return;}
+  try{
+    const perm=await plugin.checkPermissions();
+    if(perm.display!=='granted'){
+      const req=await plugin.requestPermissions();
+      if(req.display!=='granted'){notify('Permita notificações nos Ajustes para usar lembretes.','error');return;}
+    }
+    if(hasActiveReminder(t)&&t.reminderNotifId){
+      await plugin.cancel({notifications:[{id:t.reminderNotifId}]}).catch(()=>{});
+    }
+    const notifId=Math.floor(Date.now()%2147000000);
+    await plugin.schedule({notifications:[{
+      title:'🔔 Lembrete — Assistente',
+      body:t.text||'',
+      id:notifId,
+      schedule:{at:when,allowWhileIdle:true},
+      sound:'default'
+    }]});
+    t.reminderAt=when.toISOString();
+    t.reminderNotifId=notifId;
+    await saveTask(t);
+    notify(`Lembrete agendado para ${fdt(t.reminderAt)}!`,'success');
+    closeReminderModal();
+  }catch(e){
+    notify('Não foi possível agendar o lembrete.','error');
+  }
+}
+async function cancelReminder(){
+  const t=tasks.find(t=>String(t.id)===String(reminderTaskId));
+  if(!t)return;
+  const plugin=localNotifPlugin();
+  if(plugin&&t.reminderNotifId){
+    await plugin.cancel({notifications:[{id:t.reminderNotifId}]}).catch(()=>{});
+  }
+  t.reminderAt=null;t.reminderNotifId=null;
+  await saveTask(t);
+  notify('Lembrete cancelado.','info');
+  closeReminderModal();
 }
 // ── NOTES ────────────────────────────────────────
 async function deleteNote(id){await removeNote(String(id));}
