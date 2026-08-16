@@ -117,9 +117,9 @@ header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid va
 .logo-text{font-family:'DM Serif Display',serif;font-size:17px;color:var(--gold-light);}
 .header-right{display:flex;align-items:center;gap:8px;}
 .header-date{font-size:11px;color:var(--text-muted);text-align:right;line-height:1.6;}
-.user-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px 4px 5px;cursor:pointer;transition:all .2s;}
+.user-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 3px;cursor:pointer;transition:all .2s;margin-left:2px;}
 .user-chip:hover{border-color:var(--gold-dim);}
-.chip-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--bg);overflow:hidden;}
+.chip-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg);overflow:hidden;}
 .chip-av img{width:100%;height:100%;object-fit:cover;}
 .chip-name{font-size:12px;color:var(--text-muted);}
 .icon-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:5px;border-radius:6px;transition:color .2s;}
@@ -187,10 +187,16 @@ textarea::placeholder{color:var(--text-dim);}
 .task-meta{font-size:10px;color:var(--text-muted);margin-top:2px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
 .ttag{font-size:9px;padding:1px 6px;border-radius:20px;font-weight:500;}
 .tt{background:rgba(90,126,160,.2);color:var(--blue)}.tu{background:rgba(192,96,96,.2);color:var(--red)}.ts{background:rgba(155,111,168,.2);color:var(--purple)}.tg{background:rgba(90,158,111,.15);color:var(--green)}
-.task-acts{display:flex;gap:3px;opacity:0;transition:opacity .2s;flex-shrink:0;}
-.task-item:hover .task-acts{opacity:1;}
+.task-acts{display:flex;gap:3px;flex-shrink:0;position:relative;}
 .tact{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-dim);padding:2px 3px;border-radius:4px;transition:color .2s;}
 .tact:hover{color:var(--red);}.tact.rb:hover{color:var(--gold);}
+.tact-kebab{background:none;border:none;cursor:pointer;font-size:17px;line-height:1;color:var(--text-dim);padding:2px 7px;border-radius:6px;transition:all .2s;}
+.tact-kebab:hover{color:var(--text);background:var(--surface2);}
+.task-menu{display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:40;min-width:180px;overflow:hidden;}
+.task-menu.open{display:block;}
+.tmenu-item{padding:11px 14px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .15s;}
+.tmenu-item:hover{background:var(--surface2);}
+.tmenu-item.danger{color:var(--red);}
 /* SECTION DIV */
 .sdiv{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:12px 0 6px;font-weight:600;display:flex;align-items:center;gap:8px;}
 .sdiv::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -353,14 +359,13 @@ textarea::placeholder{color:var(--text-dim);}
   </div>
   <div class="header-right">
     <div class="header-date" id="headerDate">Ter, 26 mai · 23:48</div>
+    <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
+    <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
     <div class="user-chip" onclick="logout()" title="Sair">
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
     </div>
-    <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
-    <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
-    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
-    <button class="icon-btn" onclick="openReport()" title="Relatório">📊</button>
   </div>
 </header>
 <!-- MAIN -->
@@ -395,6 +400,7 @@ textarea::placeholder{color:var(--text-dim);}
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
       <div class="mais-item" onclick="switchTab(&#39;routines&#39;);closeMaisMenu()">🔁 Rotinas</div>
+      <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
     </div>
     <div class="tab-content active" id="tab-hoje">
       <div id="hojeContent"></div>
@@ -1325,7 +1331,7 @@ function logout(){
 function updateChip(){
   const u=USERS[cu]||USERS.tiago;
   const av=document.getElementById('chipAv');
-  if(gProfile?.picture){av.innerHTML=`<img src="${gProfile.picture}" style="width:22px;height:22px;border-radius:50%;">`;}
+  if(gProfile?.picture){av.innerHTML=`<img src="${gProfile.picture}" style="width:28px;height:28px;border-radius:50%;">`;}
   else{av.textContent=u.emoji;av.style.background=u.color;}
   document.getElementById('chipName').textContent=u.name;
 }
@@ -1816,10 +1822,13 @@ function taskHTML(t){
       </div>
     </div>
     <div class="task-acts">
-      ${!t.done?`<button class="tact" onclick="toggleInProgress('${tid}')" title="${status==='andamento'?'Pausar':'Iniciar'}">${status==='andamento'?'⏸':'▶'}</button>`:''}
-      <button class="tact rb" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}')" title="${hasActiveReminder(t)?'Lembrete agendado':'Agendar lembrete'}">${hasActiveReminder(t)?'⏰':'🔔'}</button>
-      ${canDel?`<button class="tact" onclick="openEditTask('${tid}')" title="Editar">✏️</button>`:''}
-      ${canDel?`<button class="tact" onclick="deleteTask('${tid}')">✕</button>`:''}
+      <button class="tact-kebab" onclick="toggleTaskMenu(event)">⋮</button>
+      <div class="task-menu">
+        ${!t.done?`<div class="tmenu-item" onclick="toggleInProgress('${tid}');closeAllTaskMenus()">${status==='andamento'?'⏸ Pausar':'▶ Iniciar'}</div>`:''}
+        <div class="tmenu-item" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}');closeAllTaskMenus()">${hasActiveReminder(t)?'⏰ Lembrete agendado':'🔔 Agendar lembrete'}</div>
+        ${canDel?`<div class="tmenu-item" onclick="openEditTask('${tid}');closeAllTaskMenus()">✏️ Editar</div>`:''}
+        ${canDel?`<div class="tmenu-item danger" onclick="deleteTask('${tid}');closeAllTaskMenus()">✕ Excluir</div>`:''}
+      </div>
     </div>
   </div>`;
 }
@@ -2201,7 +2210,18 @@ document.addEventListener('click',(e)=>{
   const menu=document.getElementById('maisMenu');
   const btn=document.getElementById('tabMais');
   if(menu&&menu.classList.contains('open')&&!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))closeMaisMenu();
+  if(!e.target.closest('.task-acts'))closeAllTaskMenus();
 });
+function toggleTaskMenu(e){
+  e.stopPropagation();
+  const menu=e.currentTarget.nextElementSibling;
+  const wasOpen=menu&&menu.classList.contains('open');
+  closeAllTaskMenus();
+  if(menu&&!wasOpen)menu.classList.add('open');
+}
+function closeAllTaskMenus(){
+  document.querySelectorAll('.task-menu.open').forEach(m=>m.classList.remove('open'));
+}
 // ── HOJE (tela de entrada) ────────────────────────
 // Reorganiza tarefas (com Projetos, prioridade em 4 níveis e status "Em
 // andamento") numa visão de resumo do dia. Reaproveita taskHTML() pros
