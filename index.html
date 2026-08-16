@@ -179,6 +179,8 @@ textarea::placeholder{color:var(--text-dim);}
 .task-check{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:10px;}
 .task-check:hover{border-color:var(--gold);}
 .task-item.done .task-check{background:var(--green);border-color:var(--green);color:white;}
+.task-item.inprog{background:rgba(90,126,160,.07);border-radius:8px;}
+.task-item.inprog .task-check{border-color:var(--blue);}
 .task-body{flex:1;min-width:0;}
 .task-text{font-size:13px;color:var(--text);line-height:1.4;}
 .task-item.done .task-text{color:var(--text-dim);text-decoration:line-through;}
@@ -230,8 +232,30 @@ textarea::placeholder{color:var(--text-dim);}
 .hoje-greet{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);}
 .hoje-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;}
 .hoje-filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
-.hoje-filter-menu{display:none;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
-.hoje-filter-menu.open{display:flex;}
+/* FILTROS (bottom sheet) */
+.fsheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;align-items:flex-end;justify-content:center;}
+.fsheet-ov.open{display:flex;}
+.fsheet{background:var(--surface);width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:10px 18px 22px;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(30px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.fsheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:4px auto 14px;}
+.fsheet-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.fsheet-hdr h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);}
+.fsheet-close{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fsec{margin-bottom:18px;}
+.fsec-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;font-weight:600;}
+.fseg{display:flex;gap:8px;flex-wrap:wrap;}
+.fseg-btn{flex:1;min-width:90px;text-align:center;padding:10px 8px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.fseg-btn.sel{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1);}
+.fcard{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.fopt{display:flex;align-items:center;gap:10px;padding:12px 14px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.fopt:last-child{border-bottom:none;}
+.fopt-ic{width:18px;text-align:center;flex-shrink:0;}
+.fopt-lbl{flex:1;}
+.fopt-check{width:18px;height:18px;border-radius:50%;background:var(--gold);color:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;visibility:hidden;}
+.fopt.sel .fopt-check{visibility:visible;}
+.fsheet-foot{display:flex;gap:10px;margin-top:6px;}
+.fclear-btn{flex:1;background:transparent;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.fapply-btn{flex:2;background:var(--gold);color:var(--bg);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
 .hoje-sub{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
 .hchips-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
 .hchip{flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;min-width:78px;}
@@ -446,10 +470,20 @@ textarea::placeholder{color:var(--text-dim);}
       <input type="date" id="editTaskDate" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
     </div>
     <div class="rep-sec">
-      <h3>Urgência</h3>
-      <select id="editTaskUrgency" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
-        <option value="normal">Normal</option>
-        <option value="urgent">🔴 Urgente</option>
+      <h3>Status</h3>
+      <select id="editTaskStatus" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="pendente">○ Pendente</option>
+        <option value="andamento">◐ Em andamento</option>
+        <option value="concluida">✓ Concluída</option>
+      </select>
+    </div>
+    <div class="rep-sec">
+      <h3>Prioridade</h3>
+      <select id="editTaskPriority" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="urgente">🚩 Urgente</option>
+        <option value="alta">🚩 Alta</option>
+        <option value="media">🚩 Média</option>
+        <option value="baixa">🚩 Baixa</option>
       </select>
     </div>
     <div class="rep-sec">
@@ -458,14 +492,37 @@ textarea::placeholder{color:var(--text-dim);}
         <option value="">✦ Geral</option>
       </select>
     </div>
+    <div class="rep-sec">
+      <h3>Projeto</h3>
+      <select id="editTaskProject" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="">Sem projeto</option>
+      </select>
+    </div>
     <div class="rep-sec" id="editShareWrap">
       <label class="share-toggle" onclick="toggleEditShare()">
         <div class="tog-track" id="editShareTrk"><div class="tog-knob"></div></div>
         <span class="share-lbl" id="editShareLbl">Apenas para mim</span>
       </label>
     </div>
+    <div class="rep-sec" id="editAssignWrap" style="display:none;">
+      <h3>Atribuir a</h3>
+      <select id="editTaskAssignee" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="">Ninguém em especial</option>
+      </select>
+    </div>
     <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveEditTask()">Salvar alterações</button>
     <button class="close-btn" onclick="closeEditTask()">Cancelar</button>
+  </div>
+</div>
+<!-- FILTROS (bottom sheet) -->
+<div class="fsheet-ov" id="fsheetOv" onclick="if(event.target===this)closeFiltersModal()">
+  <div class="fsheet">
+    <div class="fsheet-handle"></div>
+    <div class="fsheet-hdr">
+      <h2>Filtros</h2>
+      <button class="fsheet-close" onclick="closeFiltersModal()">✕</button>
+    </div>
+    <div id="fsheetBody"></div>
   </div>
 </div>
 <!-- REMINDER MODAL -->
@@ -609,7 +666,14 @@ let tasks=[],gcalEvs=[],notes=[];
 let filter='all',shareMode=false,isDark=true,selectedDay=null;
 const AREAS={deus:{label:'Deus',emoji:'🙏'},pessoal:{label:'Pessoal',emoji:'👤'},familia:{label:'Família',emoji:'👨‍👩‍👧'},financas:{label:'Finanças',emoji:'💰'},negocios:{label:'Negócios',emoji:'💼'}};
 let currentArea='',areaFilter='all';
-let hojeAreaFilter='all',hojeFilterOpen=false;
+const PRIORITIES={urgente:{label:'Urgente',emoji:'🚩',color:'var(--red)'},alta:{label:'Alta',emoji:'🚩',color:'#e08a3c'},media:{label:'Média',emoji:'🚩',color:'#d6c24c'},baixa:{label:'Baixa',emoji:'🚩',color:'var(--green)'}};
+function priorityDef(p){return PRIORITIES[p]||PRIORITIES.media;}
+// Prioridade é o novo campo "de verdade" (4 níveis); urgency (antigo,
+// binário) continua sendo salvo em paralelo só pra nada mais no app quebrar
+// — sempre derivado de priority a partir daqui pra frente.
+function taskPriority(t){return t.priority||(t.urgency==='urgent'?'urgente':'media');}
+function taskStatus(t){return t.done?'concluida':(t.inProgress?'andamento':'pendente');}
+function partnerKey(){return cu==='tiago'?'monique':cu==='monique'?'tiago':null;}
 // Which of the 5 default areas this person actually wants to see. Used to
 // be one-size-fits-all (all 5 hardcoded in the HTML for everyone), which
 // doesn't make sense for someone who, say, doesn't want "Deus" or isn't
@@ -697,6 +761,24 @@ function populateEditTaskAreaOptions(currentValue){
   });
   sel.innerHTML=html;
 }
+function populateEditTaskProjectOptions(currentValue){
+  const sel=document.getElementById('editTaskProject');
+  if(!sel)return;
+  let html='<option value="">Sem projeto</option>';
+  projects.forEach(p=>{html+=`<option value="${p.id}">${esc(p.emoji||'📁')} ${esc(p.name)}</option>`;});
+  sel.innerHTML=html;
+  sel.value=currentValue||'';
+}
+function populateEditTaskAssigneeOptions(currentValue){
+  const sel=document.getElementById('editTaskAssignee');
+  if(!sel)return;
+  const pk=partnerKey();
+  let html='<option value="">Ninguém em especial</option>';
+  if(pk)html+=`<option value="${pk}">${esc(USERS[pk].name)}</option>`;
+  html+=`<option value="${cu}">${esc(USERS[cu]?.name||'Eu')}</option>`;
+  sel.innerHTML=html;
+  sel.value=currentValue||'';
+}
 // Preserves checkbox states across a custom-area-list rebuild (adding or
 // deleting a row replaces the whole list's innerHTML, which would
 // otherwise reset every checkbox back to its "default" checked state).
@@ -776,8 +858,9 @@ async function saveAreaSettings(){
   await savePrefs();
   notify('✓ Áreas atualizadas!','success');
 }
-let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null;
+let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null,fbUnsubProjects=null;
 let routines=[];
+let projects=[];
 // ── FIREBASE PERSISTENCE (cloud) ─────────────────
 function fbPath(col,id){return`${col}/${id}`;}
 async function saveTask(task){
@@ -798,6 +881,14 @@ async function removeNote(id){
   if(!window.fbSave)return;
   await window.fbDelete(`users/${cu}/notes/${id}`);
 }
+async function saveProject(p){
+  if(!window.fbSave)return;
+  await window.fbSave(`users/${cu}/projects/${p.id}`,p);
+}
+async function removeProject(id){
+  if(!window.fbSave)return;
+  await window.fbDelete(`users/${cu}/projects/${id}`);
+}
 async function savePrefs(){
   if(!window.fbSave||!cu)return;
   await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null,enabledAreas,customAreas});
@@ -807,6 +898,7 @@ function startListeners(){
   if(fbUnsubTasks)fbUnsubTasks();
   if(fbUnsubNotes)fbUnsubNotes();
   if(fbUnsubRoutines)fbUnsubRoutines();
+  if(fbUnsubProjects)fbUnsubProjects();
   if(isFamily(cu)){
     // Tiago/Monique: merge personal + household shared tasks
     fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,myTasks=>{
@@ -833,6 +925,11 @@ function startListeners(){
   fbUnsubRoutines=window.fbListenCol(`users/${cu}/routines`,r=>{
     routines=r;
     renderRoutines();
+  });
+  fbUnsubProjects=window.fbListenCol(`users/${cu}/projects`,p=>{
+    projects=p.sort((a,b)=>((a.createdAt||'')<(b.createdAt||''))?-1:1);
+    if(document.getElementById('fsheetOv')?.classList.contains('open'))renderFiltersSheet();
+    renderTasks();
   });
 }
 // ── PIN (local quick-access lock) ────────────────
@@ -1216,6 +1313,7 @@ function logout(){
   if(fbUnsubTasks)fbUnsubTasks();
   if(fbUnsubNotes)fbUnsubNotes();
   if(fbUnsubRoutines)fbUnsubRoutines();
+  if(fbUnsubProjects)fbUnsubProjects();
   if(cu)clearStoredGoogle(cu);
   if(window.fbSignOut)window.fbSignOut();
   gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];
@@ -1386,7 +1484,7 @@ async function processInput(){
       }
       switchTab('week');setTimeout(renderWeek,500);
     }else if(parsed.type==='task'){
-      const task={id:Date.now().toString(),text:parsed.title,description:parsed.description,urgency:parsed.urgency||'normal',date:parsed.date,done:false,shared:shareMode,owner:cu,area:currentArea||null,createdAt:new Date().toISOString()};
+      const task={id:Date.now().toString(),text:parsed.title,description:parsed.description,urgency:parsed.urgency||'normal',priority:parsed.priority||'media',inProgress:false,date:parsed.date,done:false,shared:shareMode,owner:cu,assignedTo:null,projectId:null,area:currentArea||null,createdAt:new Date().toISOString()};
       await saveTask(task);
       notify(shareMode?'👫 Tarefa compartilhada!':'✅ Tarefa adicionada!','success');
       switchTab('tasks');
@@ -1418,6 +1516,8 @@ function parseInput(inp, today){
     || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
   const isUrgent=/\b(urgente|urgentemente|hoje|agora|já|imediato)\b/i.test(low);
+  const isAltaPrio=/\balta prioridade|prioridade alta\b/i.test(low);
+  const isBaixaPrio=/\bbaixa prioridade|prioridade baixa\b/i.test(low);
   // ── Extract time ──
   let time=null;
   const timeMatch=inp.match(/\b(\d{1,2})[h:](\d{2})?\s*(am|pm)?/i)
@@ -1485,6 +1585,7 @@ function parseInput(inp, today){
     title,
     description:null,
     urgency: isUrgent?'urgent':'normal',
+    priority: isUrgent?'urgente':isAltaPrio?'alta':isBaixaPrio?'baixa':'media',
     date,
     time,
     response
@@ -1566,10 +1667,17 @@ async function toggleTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
   if(!t)return;
   t.done=!t.done;t.doneBy=t.done?cu:null;t.doneAt=t.done?new Date().toISOString():null;
-  if(t.done)await cancelReminderNotif(t);
+  if(t.done){t.inProgress=false;await cancelReminderNotif(t);}
   await saveTask(t);
   if(t.done&&t.shared)sendPush('Tarefa concluída',`${USERS[cu].name} concluiu: ${t.text}`);
   notify(t.done?'✓ Concluída!':'Reaberta',t.done?'success':'info');
+}
+async function toggleInProgress(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t||t.done)return;
+  t.inProgress=!t.inProgress;
+  await saveTask(t);
+  notify(t.inProgress?'▶ Em andamento':'Voltou pra pendente','info');
 }
 async function deleteTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
@@ -1597,12 +1705,16 @@ function openEditTask(id){
   editingTaskShared=!!t.shared;
   document.getElementById('editTaskText').value=t.text||'';
   document.getElementById('editTaskDate').value=t.date||'';
-  document.getElementById('editTaskUrgency').value=t.urgency||'normal';
+  document.getElementById('editTaskStatus').value=taskStatus(t);
+  document.getElementById('editTaskPriority').value=taskPriority(t);
   populateEditTaskAreaOptions(t.area||'');
   document.getElementById('editTaskArea').value=t.area||'';
+  populateEditTaskProjectOptions(t.projectId||'');
+  populateEditTaskAssigneeOptions(t.assignedTo||'');
   document.getElementById('editShareTrk').classList.toggle('on',editingTaskShared);
   updateEditShareLbl();
   document.getElementById('editShareWrap').style.display=isFamily(cu)?'':'none';
+  document.getElementById('editAssignWrap').style.display=(isFamily(cu)&&editingTaskShared)?'':'none';
   document.getElementById('editTaskModal').classList.add('open');
 }
 function closeEditTask(){
@@ -1614,6 +1726,7 @@ function toggleEditShare(){
   editingTaskShared=!editingTaskShared;
   document.getElementById('editShareTrk').classList.toggle('on',editingTaskShared);
   updateEditShareLbl();
+  document.getElementById('editAssignWrap').style.display=editingTaskShared?'':'none';
 }
 function updateEditShareLbl(){
   const other=partnerName();
@@ -1625,8 +1738,11 @@ async function saveEditTask(){
   const newText=document.getElementById('editTaskText').value.trim();
   if(!newText){notify('O texto não pode ficar vazio.','error');return;}
   const newDate=document.getElementById('editTaskDate').value||null;
-  const newUrgency=document.getElementById('editTaskUrgency').value;
+  const newStatus=document.getElementById('editTaskStatus').value;
+  const newPriority=document.getElementById('editTaskPriority').value;
   const newArea=document.getElementById('editTaskArea').value||null;
+  const newProject=document.getElementById('editTaskProject').value||null;
+  const newAssignee=document.getElementById('editTaskAssignee').value||null;
   const wasShared=!!t.shared;
   const nowShared=editingTaskShared;
   if(wasShared!==nowShared){
@@ -1635,8 +1751,15 @@ async function saveEditTask(){
   }
   t.text=newText;
   t.date=newDate;
-  t.urgency=newUrgency;
+  t.priority=newPriority;
+  t.urgency=newPriority==='urgente'?'urgent':'normal';
+  t.done=newStatus==='concluida';
+  t.inProgress=newStatus==='andamento';
+  t.doneBy=t.done?(t.doneBy||cu):null;
+  t.doneAt=t.done?(t.doneAt||new Date().toISOString()):null;
   t.area=newArea;
+  t.projectId=newProject;
+  t.assignedTo=nowShared?newAssignee:null;
   await saveTask(t);
   notify('✏️ Tarefa atualizada!','success');
   closeEditTask();
@@ -1646,15 +1769,17 @@ function renderTasks(){
   let f=tasks;
   if(filter==='mine')f=tasks.filter(t=>!t.shared&&t.owner===cu);
   if(filter==='shared')f=tasks.filter(t=>t.shared);
-  if(filter==='urgent')f=tasks.filter(t=>t.urgency==='urgent'&&!t.done);
+  if(filter==='urgent')f=tasks.filter(t=>taskPriority(t)==='urgente'&&!t.done);
   if(filter==='done')f=tasks.filter(t=>t.done);
   // Every view except "Feitas" hides completed tasks — once marked done, a
   // task moves out of the working list entirely instead of lingering
   // (struck-through) among the pending ones. Keeps the main panel focused
   // on what's still left to do; finished items are still fully available,
-  // just under the dedicated "✓ Feitas" filter.
-  else f=f.filter(t=>!t.done);
+  // just under the dedicated "✓ Feitas" filter. Skipped when the advanced
+  // Status filter (Filtros sheet) is driving visibility instead.
+  else if(advFilters.status==='all')f=f.filter(t=>!t.done);
   if(areaFilter!=='all')f=f.filter(t=>(t.area||'')===areaFilter);
+  f=f.filter(taskMatchesAdvFilters);
   if(!f.length){el.innerHTML=`<div class="empty-state"><div class="icon">✦</div>Nenhuma tarefa aqui</div>`;return;}
   const shared=f.filter(t=>t.shared),mine=f.filter(t=>!t.shared);
   let html='';
@@ -1668,7 +1793,12 @@ function taskHTML(t){
   const canDel=!t.shared||t.owner===cu;
   const other=t.owner&&t.owner!==cu?USERS[t.owner]?.name:null;
   const tid=String(t.id).replace(/'/g,'');
-  return`<div class="task-item${t.done?' done':''}">
+  const prio=taskPriority(t);
+  const pDef=priorityDef(prio);
+  const status=taskStatus(t);
+  const proj=t.projectId?projects.find(p=>p.id===t.projectId):null;
+  const assignee=t.shared&&t.assignedTo?USERS[t.assignedTo]?.name:null;
+  return`<div class="task-item${t.done?' done':''}${status==='andamento'?' inprog':''}">
     <div class="task-check" onclick="toggleTask('${tid}')">${t.done?'✓':''}</div>
     <div class="task-body">
       <div class="task-text">${esc(t.text||'')}</div>
@@ -1676,13 +1806,17 @@ function taskHTML(t){
         ${t.date?`<span>📅 ${fd(t.date)}</span>`:''}
         ${reminderBadgeHTML(t)}
         ${t.shared?`<span class="ttag ts">👫</span>`:''}
-        ${t.urgency==='urgent'?`<span class="ttag tu">🔴</span>`:''}
+        ${prio!=='media'?`<span class="ttag" style="color:${pDef.color};background:transparent;border:1px solid ${pDef.color};">${pDef.emoji} ${pDef.label}</span>`:''}
+        ${status==='andamento'?`<span class="ttag" style="color:var(--blue);background:rgba(90,126,160,.15);">◐ Em andamento</span>`:''}
+        ${proj?`<span class="ttag" style="color:var(--text-muted);background:rgba(255,255,255,.06);">📁 ${esc(proj.name)}</span>`:''}
         ${areaTag(t.area)}
         ${other?`<span style="font-size:10px;color:var(--text-dim)">por ${other}</span>`:''}
+        ${assignee?`<span style="font-size:10px;color:var(--gold-dim)">→ ${esc(assignee)}</span>`:''}
         ${t.done&&t.doneBy?`<span style="font-size:10px;color:var(--green)">✓ ${USERS[t.doneBy]?.name||t.doneBy}</span>`:''}
       </div>
     </div>
     <div class="task-acts">
+      ${!t.done?`<button class="tact" onclick="toggleInProgress('${tid}')" title="${status==='andamento'?'Pausar':'Iniciar'}">${status==='andamento'?'⏸':'▶'}</button>`:''}
       <button class="tact rb" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}')" title="${hasActiveReminder(t)?'Lembrete agendado':'Agendar lembrete'}">${hasActiveReminder(t)?'⏰':'🔔'}</button>
       ${canDel?`<button class="tact" onclick="openEditTask('${tid}')" title="Editar">✏️</button>`:''}
       ${canDel?`<button class="tact" onclick="deleteTask('${tid}')">✕</button>`:''}
@@ -2067,17 +2201,12 @@ document.addEventListener('click',(e)=>{
   const menu=document.getElementById('maisMenu');
   const btn=document.getElementById('tabMais');
   if(menu&&menu.classList.contains('open')&&!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))closeMaisMenu();
-  const hMenu=document.getElementById('hojeFilterMenu');
-  if(hojeFilterOpen&&hMenu&&!hMenu.contains(e.target)&&!e.target.closest('.hoje-filter-btn')){
-    hojeFilterOpen=false;renderHoje();
-  }
 });
 // ── HOJE (tela de entrada) ────────────────────────
-// Reorganiza dados que já existem (tarefas, áreas, urgência) numa visão de
-// resumo do dia — não cria nenhum conceito novo (sem Projetos, sem
-// prioridade em 4 níveis, sem status "Em andamento"). Reaproveita taskHTML()
-// pros cards, então check/editar/excluir/lembrete funcionam igual à aba
-// Tarefas, sem duplicar lógica.
+// Reorganiza tarefas (com Projetos, prioridade em 4 níveis e status "Em
+// andamento") numa visão de resumo do dia. Reaproveita taskHTML() pros
+// cards, então check/editar/excluir/lembrete funcionam igual à aba Tarefas,
+// sem duplicar lógica.
 function todayStr(){
   const n=new Date();
   return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
@@ -2088,38 +2217,146 @@ function greetName(){
   const name=USERS[cu]&&USERS[cu].name;
   return name?`${greet}, ${name}`:greet;
 }
-function hojeFilterLabel(){
-  if(hojeAreaFilter==='all')return 'Filtros';
-  if(hojeAreaFilter==='')return '✦ Geral';
-  const a=areaDef(hojeAreaFilter);
-  return a?`${a.emoji} ${a.label}`:'Filtros';
+// ── FILTROS AVANÇADOS (Tarefas/Projetos, Visão, Status, Prioridade, Área/Projeto, Data) ──
+function defaultAdvFilters(){return{type:'tasks',visao:'all',status:'all',priority:'all',area:'all',project:'all',date:'all'};}
+let advFilters=defaultAdvFilters();
+let draftFilters=defaultAdvFilters();
+let newProjectDraftOpen=false;
+function advFiltersActive(){
+  const d=defaultAdvFilters();
+  return Object.keys(d).some(k=>k!=='type'&&advFilters[k]!==d[k]);
 }
-function hojeFilterChipsHTML(){
-  let html=`<button class="filter-btn${hojeAreaFilter===''?' active':''}" onclick="setHojeAreaFilter('',this)">✦ Geral</button>`;
-  allAreaKeys().forEach(key=>{
-    if(!enabledAreas.includes(key))return;
-    const a=areaDef(key);
-    if(!a)return;
-    html+=`<button class="filter-btn${hojeAreaFilter===key?' active':''}" onclick="setHojeAreaFilter('${key}',this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
-  });
-  return html;
+function taskMatchesAdvFilters(t){
+  if(advFilters.visao==='mine'&&!(!t.shared&&t.owner===cu))return false;
+  if(advFilters.visao==='assigned'&&!(t.shared&&t.assignedTo===cu))return false;
+  const st=taskStatus(t);
+  if(advFilters.status!=='all'&&st!==advFilters.status)return false;
+  if(advFilters.priority!=='all'&&taskPriority(t)!==advFilters.priority)return false;
+  if(advFilters.type==='tasks'){
+    if(advFilters.area!=='all'&&(t.area||'')!==advFilters.area)return false;
+  }else{
+    if(advFilters.project==='none'&&t.projectId)return false;
+    if(advFilters.project!=='all'&&advFilters.project!=='none'&&t.projectId!==advFilters.project)return false;
+  }
+  if(advFilters.date==='today'&&t.date!==todayStr())return false;
+  return true;
 }
-function toggleHojeFilterMenu(){
-  hojeFilterOpen=!hojeFilterOpen;
-  renderHoje();
+function openFiltersModal(){
+  draftFilters={...advFilters};
+  newProjectDraftOpen=false;
+  document.getElementById('fsheetOv').classList.add('open');
+  renderFiltersSheet();
 }
-function setHojeAreaFilter(area){
-  hojeAreaFilter=(hojeAreaFilter===area)?'all':area;
-  hojeFilterOpen=false;
-  renderHoje();
+function closeFiltersModal(){
+  document.getElementById('fsheetOv').classList.remove('open');
+}
+function setDraftFilter(key,val){
+  draftFilters[key]=val;
+  if(key==='type'){draftFilters.area='all';draftFilters.project='all';}
+  renderFiltersSheet();
+}
+function applyFilters(){
+  advFilters={...draftFilters};
+  closeFiltersModal();
+  renderTasks();renderHoje();
+}
+function clearFilters(){
+  draftFilters=defaultAdvFilters();
+  renderFiltersSheet();
+}
+function toggleNewProjectDraft(){newProjectDraftOpen=!newProjectDraftOpen;renderFiltersSheet();}
+async function confirmNewProject(){
+  const inp=document.getElementById('newProjectNameInput');
+  const name=inp?inp.value.trim():'';
+  if(!name){notify('Digite um nome pro projeto.','error');return;}
+  const p={id:Date.now().toString(),name,emoji:'📁',createdAt:new Date().toISOString()};
+  projects=[...projects,p];
+  await saveProject(p);
+  newProjectDraftOpen=false;
+  notify('📁 Projeto criado!','success');
+  renderFiltersSheet();
+}
+async function deleteProjectPrompt(id,name){
+  if(!confirm(`Excluir o projeto "${name}"? As tarefas dele voltam a ficar sem projeto.`))return;
+  projects=projects.filter(p=>p.id!==id);
+  await removeProject(id);
+  if(draftFilters.project===id)draftFilters.project='all';
+  if(advFilters.project===id)advFilters.project='all';
+  notify('Projeto excluído.','info');
+  renderFiltersSheet();
+  renderTasks();
+}
+function fOptRow(sel,ic,lbl,onclick,icColor){
+  return `<div class="fopt${sel?' sel':''}" onclick="${onclick}"><span class="fopt-ic"${icColor?` style="color:${icColor}"`:''}>${ic}</span><span class="fopt-lbl">${lbl}</span><span class="fopt-check">${sel?'✓':''}</span></div>`;
+}
+function renderFiltersSheet(){
+  const el=document.getElementById('fsheetBody');
+  if(!el)return;
+  const df=draftFilters;
+  const showAssigned=isFamily(cu);
+  const visaoBtns=`
+    <button class="fseg-btn${df.visao==='all'?' sel':''}" onclick="setDraftFilter('visao','all')">Todas</button>
+    <button class="fseg-btn${df.visao==='mine'?' sel':''}" onclick="setDraftFilter('visao','mine')">Minhas</button>
+    ${showAssigned?`<button class="fseg-btn${df.visao==='assigned'?' sel':''}" onclick="setDraftFilter('visao','assigned')">Atribuídas a mim</button>`:''}`;
+  const statusRows=[['all','📚','Todas'],['pendente','○','Pendentes'],['andamento','◐','Em andamento'],['concluida','✓','Concluídas']]
+    .map(([v,ic,lbl])=>fOptRow(df.status===v,ic,lbl,`setDraftFilter('status','${v}')`)).join('');
+  const prioRows=[['all','🏳️','Todas',''],['urgente','🚩','Urgente','var(--red)'],['alta','🚩','Alta','#e08a3c'],['media','🚩','Média','#d6c24c'],['baixa','🚩','Baixa','var(--green)']]
+    .map(([v,ic,lbl,c])=>fOptRow(df.priority===v,ic,lbl,`setDraftFilter('priority','${v}')`,c)).join('');
+  let catTitle,catRows;
+  if(df.type==='tasks'){
+    catTitle='Área / Categoria';
+    catRows=fOptRow(df.area==='all','▦','Todas áreas',`setDraftFilter('area','all')`);
+    catRows+=fOptRow(df.area==='','✦','Geral',`setDraftFilter('area','')`);
+    allAreaKeys().forEach(key=>{
+      if(!enabledAreas.includes(key))return;
+      const a=areaDef(key);if(!a)return;
+      catRows+=fOptRow(df.area===key,a.emoji,esc(a.label),`setDraftFilter('area','${key}')`);
+    });
+  }else{
+    catTitle='Projeto';
+    catRows=fOptRow(df.project==='all','▦','Todos os projetos',`setDraftFilter('project','all')`);
+    catRows+=fOptRow(df.project==='none','✦','Sem projeto',`setDraftFilter('project','none')`);
+    projects.forEach(p=>{
+      catRows+=`<div class="fopt${df.project===p.id?' sel':''}">
+        <span class="fopt-ic" onclick="setDraftFilter('project','${p.id}')">${p.emoji||'📁'}</span>
+        <span class="fopt-lbl" onclick="setDraftFilter('project','${p.id}')">${esc(p.name)}</span>
+        <span class="fopt-check" onclick="setDraftFilter('project','${p.id}')">${df.project===p.id?'✓':''}</span>
+        <button class="tact" style="margin-left:6px;" onclick="event.stopPropagation();deleteProjectPrompt('${p.id}','${esc(p.name).replace(/'/g,'')}')" title="Excluir">✕</button>
+      </div>`;
+    });
+    catRows+=newProjectDraftOpen
+      ?`<div class="fopt" style="gap:8px;">
+          <input id="newProjectNameInput" type="text" placeholder="Nome do projeto" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 9px;">
+          <button class="tact" style="color:var(--gold);" onclick="confirmNewProject()">✓</button>
+        </div>`
+      :`<div class="fopt" onclick="toggleNewProjectDraft()"><span class="fopt-ic">＋</span><span class="fopt-lbl" style="color:var(--gold);">Novo projeto</span></div>`;
+  }
+  const dateRows=[['all','📅','Qualquer data'],['today','📌','Hoje']]
+    .map(([v,ic,lbl])=>fOptRow(df.date===v,ic,lbl,`setDraftFilter('date','${v}')`)).join('');
+  el.innerHTML=`
+    <div class="fsec">
+      <div class="fsec-title">Tipo de filtro</div>
+      <div class="fseg">
+        <button class="fseg-btn${df.type==='tasks'?' sel':''}" onclick="setDraftFilter('type','tasks')">📋 Tarefas</button>
+        <button class="fseg-btn${df.type==='projects'?' sel':''}" onclick="setDraftFilter('type','projects')">📁 Projetos</button>
+      </div>
+    </div>
+    <div class="fsec"><div class="fsec-title">Visão</div><div class="fseg">${visaoBtns}</div></div>
+    <div class="fsec"><div class="fsec-title">Status</div><div class="fcard">${statusRows}</div></div>
+    <div class="fsec"><div class="fsec-title">Prioridade</div><div class="fcard">${prioRows}</div></div>
+    <div class="fsec"><div class="fsec-title">${catTitle}</div><div class="fcard">${catRows}</div></div>
+    <div class="fsec"><div class="fsec-title">Data</div><div class="fcard">${dateRows}</div></div>
+    <div class="fsheet-foot">
+      <button class="fclear-btn" onclick="clearFilters()">Limpar filtros</button>
+      <button class="fapply-btn" onclick="applyFilters()">▽ Aplicar filtros</button>
+    </div>`;
 }
 function renderHoje(){
   const el=document.getElementById('hojeContent');
   if(!el||!cu)return;
   const today=todayStr();
-  const matchesHojeFilter=t=>hojeAreaFilter==='all'||(t.area||'')===hojeAreaFilter;
-  const todayTasks=tasks.filter(t=>!t.done&&t.date===today&&matchesHojeFilter(t)).sort((a,b)=>(b.urgency==='urgent')-(a.urgency==='urgent'));
-  const upcoming=tasks.filter(t=>!t.done&&t.date&&t.date>today&&matchesHojeFilter(t)).sort((a,b)=>a.date<b.date?-1:1).slice(0,4);
+  const todayTasks=tasks.filter(t=>!t.done&&t.date===today&&taskMatchesAdvFilters(t)).sort((a,b)=>(b.urgency==='urgent')-(a.urgency==='urgent'));
+  const upcoming=tasks.filter(t=>!t.done&&t.date&&t.date>today&&taskMatchesAdvFilters(t)).sort((a,b)=>a.date<b.date?-1:1).slice(0,4);
   const urgentCount=tasks.filter(t=>!t.done&&t.urgency==='urgent').length;
   const doneToday=tasks.filter(t=>t.done&&t.doneAt&&t.doneAt.slice(0,10)===today).length;
   const overdue=tasks.filter(t=>!t.done&&t.date&&t.date<today).length;
@@ -2131,13 +2368,12 @@ function renderHoje(){
   el.innerHTML=`
     <div class="hoje-greet-row">
       <div class="hoje-greet">${esc(greetName())} 👋</div>
-      <button class="hoje-filter-btn${hojeAreaFilter!=='all'?' active':''}" onclick="toggleHojeFilterMenu()">🔽 ${esc(hojeFilterLabel())}</button>
+      <button class="hoje-filter-btn${advFiltersActive()?' active':''}" onclick="openFiltersModal()">🔽 Filtros</button>
     </div>
-    <div class="hoje-filter-menu${hojeFilterOpen?' open':''}" id="hojeFilterMenu">${hojeFilterChipsHTML()}</div>
     <div class="hoje-sub">Você tem ${pendingToday} tarefa${pendingToday===1?'':'s'} hoje.</div>
     <div class="hchips-row">${chipsHTML}</div>
     <div class="sdiv">📅 Hoje · ${fd(today)}</div>
-    ${todayTasks.length?todayTasks.map(taskHTML).join(''):`<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>${hojeAreaFilter==='all'?'Nada marcado pra hoje':'Nada nessa área hoje'}</div>`}
+    ${todayTasks.length?todayTasks.map(taskHTML).join(''):`<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>${advFiltersActive()?'Nada aqui pra esse filtro':'Nada marcado pra hoje'}</div>`}
     ${upcoming.length?`<div class="sdiv" style="margin-top:14px;">Próximos</div>${upcoming.map(taskHTML).join('')}`:''}
     <button class="filter-btn" style="margin-top:10px;" onclick="switchTab('tasks')">Ver todas as tarefas →</button>
     <div class="sdiv" style="margin-top:16px;">✨ Resumo do dia</div>
