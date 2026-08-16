@@ -111,7 +111,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .google-btn:hover{border-color:var(--gold-dim);color:var(--text);}
 .loading-bar{position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:9999;transition:width .3s ease;width:0;}
 /* HEADER */
-header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);}
+header{position:relative;z-index:10;padding:12px 18px;padding-top:max(12px, env(safe-area-inset-top));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);}
 .logo{display:flex;align-items:center;gap:9px;}
 .logo-icon{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
 .logo-text{font-family:'DM Serif Display',serif;font-size:17px;color:var(--gold-light);}
@@ -130,15 +130,15 @@ header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid va
 /* INPUT */
 .input-section{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface);}
 .input-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:7px;font-weight:600;}
-.input-row{display:flex;gap:2px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:26px;padding:5px 5px 5px 16px;transition:border-color .2s;}
+.input-row{display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:26px;padding:5px;transition:border-color .2s;}
 .input-row:focus-within{border-color:var(--gold-dim);}
-textarea{flex:1;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 4px;resize:none;height:40px;line-height:1.5;transition:border-color .2s;outline:none;}
-textarea::placeholder{color:var(--text-dim);}
-.send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:17px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+textarea{flex:1;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 4px;resize:none;height:48px;line-height:1.4;transition:border-color .2s;outline:none;}
+textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
+.send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:20px;font-weight:600;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .send-btn:hover{background:var(--gold-light);}.send-btn:active{transform:scale(.95);}.send-btn:disabled{opacity:.4;cursor:not-allowed;}
-.mic-btn{background:transparent;color:var(--text-muted);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:17px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.mic-btn:hover{color:var(--gold);background:rgba(201,168,76,.08);}
-.mic-btn.listening{background:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
+.mic-btn-lead{background:var(--gold);color:var(--bg);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:16px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.mic-btn-lead:hover{background:var(--gold-light);}
+.mic-btn-lead.listening{background:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
 @keyframes micPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(192,96,96,0.4);}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(192,96,96,0);}}
 .share-row{display:flex;align-items:center;gap:10px;margin-top:7px;}
 .share-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
@@ -316,6 +316,14 @@ textarea::placeholder{color:var(--text-dim);}
   .tab-mic-inline.listening{background:var(--red);animation:micPulse 1s ease-in-out infinite;}
   .tab-mais{display:flex;}
   .mais-menu{bottom:calc(78px + env(safe-area-inset-bottom));}
+  header{padding:10px 12px;padding-top:max(10px, env(safe-area-inset-top));gap:6px;flex-wrap:nowrap;}
+  .logo-text{display:none;}
+  .fb-status{display:none;}
+  .header-date{display:none;}
+  .header-right{gap:2px;}
+  .icon-btn{font-size:14px;padding:5px 4px;}
+  .user-chip{padding:2px;background:none;border:none;margin-left:2px;}
+  .chip-name{display:none;}
 }
 </style>
 </head>
@@ -372,11 +380,11 @@ textarea::placeholder{color:var(--text-dim);}
 <div class="main">
   <div class="left-panel">
     <div class="input-section">
-      <div class="input-label">✦ Nova demanda</div>
       <div class="input-row">
-        <textarea id="userInput" placeholder="Ex: &quot;Reunião sexta 15h&quot; · &quot;Pagar conta hoje&quot; · &quot;Nota: ideia de viagem&quot;" onkeydown="handleKey(event)"></textarea>
-        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Falar">🎤</button>
-        <button class="send-btn" id="sendBtn" onclick="processInput()">→</button>
+        <button class="mic-btn-lead" id="micBtn" onclick="toggleMic()" title="Falar">🎤</button>
+        <textarea id="userInput" placeholder="Falar tarefa...
+Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="processInput()">+</button>
       </div>
       <div class="share-row">
         <label class="share-toggle" onclick="toggleShare()">
@@ -384,7 +392,6 @@ textarea::placeholder{color:var(--text-dim);}
           <span class="share-lbl" id="shareLbl">Apenas para mim</span>
         </label>
       </div>
-      <div class="filter-row" id="areaRow" style="margin-top:7px;"></div>
       <div class="thinking" id="thinking"><div class="thinking-dots"><span></span><span></span><span></span></div><span id="thinkMsg">Processando…</span></div>
       <div class="ai-resp" id="aiResp"></div>
     </div>
