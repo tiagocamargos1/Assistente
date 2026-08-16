@@ -158,6 +158,12 @@ textarea::placeholder{color:var(--text-dim);}
 .tab{padding:9px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;background:var(--gold);color:var(--bg);border-radius:8px;font-size:9px;font-weight:700;margin-left:4px;padding:0 3px;}
+.tab-mic-inline{display:none;}
+.tab-mais{display:none;}
+.mais-menu{display:none;position:fixed;left:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.45);z-index:32;overflow:hidden;}
+.mais-menu.open{display:block;}
+.mais-item{padding:12px 14px;font-size:13px;color:var(--text);cursor:pointer;border-radius:10px;transition:background .15s;font-weight:500;}
+.mais-item:active,.mais-item:hover{background:var(--surface2);}
 .tab-content{flex:1;min-height:0;overflow-y:auto;padding:11px 18px;display:none;}
 .tab-content.active{display:block;}
 .tab-content::-webkit-scrollbar{width:3px}.tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -261,18 +267,20 @@ textarea::placeholder{color:var(--text-dim);}
 .fb-status{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;margin-left:8px;}
 .fb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);}
 .fb-dot.on{background:var(--green);}
-.fab-mic{display:none;position:fixed;left:50%;bottom:44px;transform:translateX(-50%);width:54px;height:54px;border-radius:50%;background:var(--gold);color:var(--bg);align-items:center;justify-content:center;font-size:21px;border:4px solid var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:31;cursor:pointer;transition:transform .15s;}
-.fab-mic:active{transform:translateX(-50%) scale(.93);}
-.fab-mic.listening{background:var(--red);animation:micPulse 1s ease-in-out infinite;}
 @media(max-width:680px){
   .main{grid-template-columns:1fr;max-height:none;overflow:visible;}
   .right-panel{display:none;}
   body{overflow-y:auto;}
-  .tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;border-bottom:none;border-top:1px solid var(--border);padding:4px 4px calc(4px + env(safe-area-inset-bottom));justify-content:space-around;}
-  .tab{flex:1;text-align:center;font-size:9px;padding:7px 2px;border-bottom:none;letter-spacing:.04em;}
-  .tab-badge{display:block;margin:2px auto 0;}
-  .tab-content{padding-bottom:76px;}
-  .fab-mic{display:flex;}
+  .tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.4);padding:6px 4px;justify-content:space-around;align-items:center;}
+  .tab{flex:1;text-align:center;font-size:9px;padding:7px 2px;border-bottom:none;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .tab.tab-more{display:none;}
+  .tab-badge{display:none;}
+  .tab-content{padding-bottom:96px;}
+  .tab-mic-inline{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--gold);color:var(--bg);border:3px solid var(--surface);font-size:19px;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;flex-shrink:0;transform:translateY(-8px);transition:transform .15s;}
+  .tab-mic-inline:active{transform:translateY(-8px) scale(.93);}
+  .tab-mic-inline.listening{background:var(--red);animation:micPulse 1s ease-in-out infinite;}
+  .tab-mais{display:flex;}
+  .mais-menu{bottom:calc(78px + env(safe-area-inset-bottom));}
 }
 </style>
 </head>
@@ -326,7 +334,6 @@ textarea::placeholder{color:var(--text-dim);}
     <button class="icon-btn" onclick="openReport()" title="Relatório">📊</button>
   </div>
 </header>
-<button class="fab-mic" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
 <!-- MAIN -->
 <div class="main">
   <div class="left-panel">
@@ -348,11 +355,17 @@ textarea::placeholder{color:var(--text-dim);}
       <div class="ai-resp" id="aiResp"></div>
     </div>
     <div class="tabs">
-      <div class="tab active" onclick="switchTab(&#39;hoje&#39;)">🏠 Hoje</div>
-      <div class="tab" onclick="switchTab(&#39;tasks&#39;)">📋 Tarefas <span class="tab-badge" id="bdgT">0</span></div>
-      <div class="tab" onclick="switchTab(&#39;week&#39;)">🗓️ Semana</div>
-      <div class="tab" onclick="switchTab(&#39;notes&#39;)">📝 Notas</div>
-      <div class="tab" onclick="switchTab(&#39;routines&#39;)">🔁 Rotinas</div>
+      <div class="tab active" data-tab="hoje" onclick="switchTab(&#39;hoje&#39;)">🏠 <span class="tab-lbl">Hoje</span></div>
+      <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)">📋 <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
+      <div class="tab tab-more" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
+      <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
+      <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
+      <div class="tab tab-more" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
+    </div>
+    <div class="mais-menu" id="maisMenu">
+      <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
+      <div class="mais-item" onclick="switchTab(&#39;routines&#39;);closeMaisMenu()">🔁 Rotinas</div>
     </div>
     <div class="tab-content active" id="tab-hoje">
       <div id="hojeContent"></div>
@@ -2026,15 +2039,30 @@ function openReport(){
 function toggleTheme(){applyTheme(!isDark);savePrefs();}
 function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
 // ── UI ───────────────────────────────────────────
-const TAB_ORDER=['hoje','tasks','week','notes','routines'];
 function switchTab(tab){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TAB_ORDER[i]===tab));
+  document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  const maisTab=document.getElementById('tabMais');
+  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   if(tab==='hoje')renderHoje();
   if(tab==='week')renderWeek();
   if(tab==='routines')renderRoutines();
 }
+function toggleMaisMenu(){
+  const m=document.getElementById('maisMenu');
+  if(m)m.classList.toggle('open');
+}
+function closeMaisMenu(){
+  const m=document.getElementById('maisMenu');
+  if(m)m.classList.remove('open');
+}
+document.addEventListener('click',(e)=>{
+  const menu=document.getElementById('maisMenu');
+  const btn=document.getElementById('tabMais');
+  if(!menu||!menu.classList.contains('open'))return;
+  if(!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))closeMaisMenu();
+});
 // ── HOJE (tela de entrada) ────────────────────────
 // Reorganiza dados que já existem (tarefas, áreas, urgência) numa visão de
 // resumo do dia — não cria nenhum conceito novo (sem Projetos, sem
