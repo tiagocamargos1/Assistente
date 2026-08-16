@@ -130,15 +130,15 @@ header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid va
 /* INPUT */
 .input-section{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface);}
 .input-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:7px;font-weight:600;}
-.input-row{display:flex;gap:7px;align-items:flex-end;}
-textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 13px;resize:none;height:52px;line-height:1.5;transition:border-color .2s;outline:none;}
-textarea:focus{border-color:var(--gold-dim);}
+.input-row{display:flex;gap:2px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:26px;padding:5px 5px 5px 16px;transition:border-color .2s;}
+.input-row:focus-within{border-color:var(--gold-dim);}
+textarea{flex:1;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 4px;resize:none;height:40px;line-height:1.5;transition:border-color .2s;outline:none;}
 textarea::placeholder{color:var(--text-dim);}
-.send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:var(--radius);width:46px;height:52px;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:17px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .send-btn:hover{background:var(--gold-light);}.send-btn:active{transform:scale(.95);}.send-btn:disabled{opacity:.4;cursor:not-allowed;}
-.mic-btn{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius);width:46px;height:52px;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.mic-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
-.mic-btn.listening{background:var(--red);border-color:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
+.mic-btn{background:transparent;color:var(--text-muted);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:17px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.mic-btn:hover{color:var(--gold);background:rgba(201,168,76,.08);}
+.mic-btn.listening{background:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
 @keyframes micPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(192,96,96,0.4);}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(192,96,96,0);}}
 .share-row{display:flex;align-items:center;gap:10px;margin-top:7px;}
 .share-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
@@ -162,8 +162,8 @@ textarea::placeholder{color:var(--text-dim);}
 .tab-content.active{display:block;}
 .tab-content::-webkit-scrollbar{width:3px}.tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 /* FILTERS */
-.filter-row{display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap;}
-.filter-btn{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.filter-row{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;}
+.filter-btn{font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
 .filter-btn.sf.active{border-color:var(--purple);color:var(--purple);background:rgba(155,111,168,.1);}
 /* TASKS */
@@ -220,6 +220,15 @@ textarea::placeholder{color:var(--text-dim);}
 .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
 .stat-num{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold);line-height:1;margin-bottom:2px;}
 .stat-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
+.hoje-greet{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);margin:14px 0 2px;}
+.hoje-sub{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
+.hchips-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
+.hchip{flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;min-width:78px;}
+.hchip.hu{border-color:rgba(192,96,96,.4);}
+.hchip-n{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold);line-height:1;}
+.hchip.hu .hchip-n{color:var(--red);}
+.hchip-l{font-size:10px;color:var(--text-muted);white-space:nowrap;}
+.hoje-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
 .sync-st{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;}
 .sdot{width:5px;height:5px;border-radius:50%;background:var(--green);}.sdot.off{background:var(--text-dim);}
 .conn-box{border:1px dashed var(--border);border-radius:10px;padding:12px;text-align:center;margin-bottom:8px;}
@@ -252,7 +261,19 @@ textarea::placeholder{color:var(--text-dim);}
 .fb-status{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;margin-left:8px;}
 .fb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);}
 .fb-dot.on{background:var(--green);}
-@media(max-width:680px){.main{grid-template-columns:1fr;max-height:none;overflow:visible;}.right-panel{display:none;}body{overflow-y:auto;}}
+.fab-mic{display:none;position:fixed;left:50%;bottom:44px;transform:translateX(-50%);width:54px;height:54px;border-radius:50%;background:var(--gold);color:var(--bg);align-items:center;justify-content:center;font-size:21px;border:4px solid var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:31;cursor:pointer;transition:transform .15s;}
+.fab-mic:active{transform:translateX(-50%) scale(.93);}
+.fab-mic.listening{background:var(--red);animation:micPulse 1s ease-in-out infinite;}
+@media(max-width:680px){
+  .main{grid-template-columns:1fr;max-height:none;overflow:visible;}
+  .right-panel{display:none;}
+  body{overflow-y:auto;}
+  .tabs{position:fixed;bottom:0;left:0;right:0;z-index:30;border-bottom:none;border-top:1px solid var(--border);padding:4px 4px calc(4px + env(safe-area-inset-bottom));justify-content:space-around;}
+  .tab{flex:1;text-align:center;font-size:9px;padding:7px 2px;border-bottom:none;letter-spacing:.04em;}
+  .tab-badge{display:block;margin:2px auto 0;}
+  .tab-content{padding-bottom:76px;}
+  .fab-mic{display:flex;}
+}
 </style>
 </head>
 <body>
@@ -305,6 +326,7 @@ textarea::placeholder{color:var(--text-dim);}
     <button class="icon-btn" onclick="openReport()" title="Relatório">📊</button>
   </div>
 </header>
+<button class="fab-mic" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
 <!-- MAIN -->
 <div class="main">
   <div class="left-panel">
@@ -326,12 +348,16 @@ textarea::placeholder{color:var(--text-dim);}
       <div class="ai-resp" id="aiResp"></div>
     </div>
     <div class="tabs">
-      <div class="tab active" onclick="switchTab(&#39;tasks&#39;)">📋 Tarefas <span class="tab-badge" id="bdgT">0</span></div>
+      <div class="tab active" onclick="switchTab(&#39;hoje&#39;)">🏠 Hoje</div>
+      <div class="tab" onclick="switchTab(&#39;tasks&#39;)">📋 Tarefas <span class="tab-badge" id="bdgT">0</span></div>
       <div class="tab" onclick="switchTab(&#39;week&#39;)">🗓️ Semana</div>
       <div class="tab" onclick="switchTab(&#39;notes&#39;)">📝 Notas</div>
       <div class="tab" onclick="switchTab(&#39;routines&#39;)">🔁 Rotinas</div>
     </div>
-    <div class="tab-content active" id="tab-tasks">
+    <div class="tab-content active" id="tab-hoje">
+      <div id="hojeContent"></div>
+    </div>
+    <div class="tab-content" id="tab-tasks">
       <div class="filter-row" id="statusFilterRow">
         <button class="filter-btn active" onclick="setFilter(&#39;all&#39;,this)">Todas</button>
         <button class="filter-btn" onclick="setFilter(&#39;mine&#39;,this)">Minhas</button>
@@ -767,7 +793,7 @@ function startListeners(){
     fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,myTasks=>{
       window.fbListenCol('shared_tasks',sharedTasks=>{
         tasks=[...myTasks,...sharedTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
-        renderTasks();updateStats();renderShared();
+        renderTasks();updateStats();renderShared();renderHoje();
         document.getElementById('fbDot').classList.add('on');
         document.getElementById('fbLbl').textContent='';
       });
@@ -776,7 +802,7 @@ function startListeners(){
     // Independent/solo accounts: fully private, never touch the family's shared_tasks
     fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,myTasks=>{
       tasks=[...myTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
-      renderTasks();updateStats();renderShared();
+      renderTasks();updateStats();renderShared();renderHoje();
       document.getElementById('fbDot').classList.add('on');
       document.getElementById('fbLbl').textContent='';
     });
@@ -1448,6 +1474,14 @@ function parseInput(inp, today){
 // ── VOICE INPUT ──────────────────────────────────
 let recognition=null;
 let isListening=false;
+// Botão flutuante de microfone (barra inferior mobile) — o campo "Nova
+// demanda" já fica sempre visível acima das abas, então só precisa focar
+// nele e ligar o mesmo mic que o botão de sempre usa.
+function focusAndMic(){
+  const inp=document.getElementById('userInput');
+  if(inp){inp.scrollIntoView({block:'center',behavior:'smooth'});inp.focus();}
+  toggleMic();
+}
 function toggleMic(){
   if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){
     notify('Reconhecimento de voz não suportado neste navegador.','error');
@@ -1466,6 +1500,7 @@ function startMic(){
     isListening=true;
     document.getElementById('micBtn').classList.add('listening');
     document.getElementById('micBtn').textContent='⏹';
+    const fab=document.getElementById('fabMic');if(fab)fab.classList.add('listening');
     document.getElementById('thinkMsg').textContent='Ouvindo… fale agora!';
     document.getElementById('thinking').classList.add('visible');
     document.getElementById('aiResp').classList.remove('visible');
@@ -1496,6 +1531,7 @@ function stopMic(){
   if(recognition)try{recognition.stop();}catch(e){}
   document.getElementById('micBtn').classList.remove('listening');
   document.getElementById('micBtn').textContent='🎤';
+  const fab=document.getElementById('fabMic');if(fab)fab.classList.remove('listening');
   document.getElementById('thinking').classList.remove('visible');
 }
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();processInput();}}
@@ -1511,7 +1547,7 @@ async function toggleTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
   if(!t)return;
   t.done=!t.done;t.doneBy=t.done?cu:null;t.doneAt=t.done?new Date().toISOString():null;
-  if(t.done&&t.reminderNotifId)await cancelReminderNotif(t.reminderNotifId);
+  if(t.done)await cancelReminderNotif(t);
   await saveTask(t);
   if(t.done&&t.shared)sendPush('Tarefa concluída',`${USERS[cu].name} concluiu: ${t.text}`);
   notify(t.done?'✓ Concluída!':'Reaberta',t.done?'success':'info');
@@ -1520,13 +1556,17 @@ async function deleteTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
   if(!t)return;
   if(t.shared&&t.owner!==cu){notify('Só quem criou pode excluir.','error');return;}
-  if(t.reminderNotifId)await cancelReminderNotif(t.reminderNotifId);
+  await cancelReminderNotif(t);
   await removeTask(String(id),t.shared);
 }
-async function cancelReminderNotif(notifId){
+// Cancela a série inteira de notificações de um lembrete (não só a
+// primeira) — usado ao concluir/excluir a tarefa ou reagendar.
+async function cancelReminderNotif(t){
   const plugin=localNotifPlugin();
   if(!plugin)return;
-  await plugin.cancel({notifications:[{id:notifId}]}).catch(()=>{});
+  const ids=(t.reminderNotifIds&&t.reminderNotifIds.length)?t.reminderNotifIds:(t.reminderNotifId?[t.reminderNotifId]:[]);
+  if(!ids.length)return;
+  await plugin.cancel({notifications:ids.map(id=>({id}))}).catch(()=>{});
 }
 // ── EDIT TASK ──────────────────────────────────
 let editingTaskId=null,editingTaskShared=false;
@@ -1615,7 +1655,7 @@ function taskHTML(t){
       <div class="task-text">${esc(t.text||'')}</div>
       <div class="task-meta">
         ${t.date?`<span>📅 ${fd(t.date)}</span>`:''}
-        ${hasActiveReminder(t)?`<span class="ttag" style="color:var(--gold);border-color:var(--gold);">⏰ ${fdt(t.reminderAt)}</span>`:''}
+        ${reminderBadgeHTML(t)}
         ${t.shared?`<span class="ttag ts">👫</span>`:''}
         ${t.urgency==='urgent'?`<span class="ttag tu">🔴</span>`:''}
         ${areaTag(t.area)}
@@ -1624,7 +1664,7 @@ function taskHTML(t){
       </div>
     </div>
     <div class="task-acts">
-      <button class="tact rb" style="${hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}')" title="${hasActiveReminder(t)?'Lembrete agendado':'Agendar lembrete'}">${hasActiveReminder(t)?'⏰':'🔔'}</button>
+      <button class="tact rb" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}')" title="${hasActiveReminder(t)?'Lembrete agendado':'Agendar lembrete'}">${hasActiveReminder(t)?'⏰':'🔔'}</button>
       ${canDel?`<button class="tact" onclick="openEditTask('${tid}')" title="Editar">✏️</button>`:''}
       ${canDel?`<button class="tact" onclick="deleteTask('${tid}')">✕</button>`:''}
     </div>
@@ -1642,8 +1682,97 @@ function isNativeApp(){
 function localNotifPlugin(){
   return(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications)||null;
 }
+// Botão de ação "Reagendar" na própria notificação (swipe/long-press),
+// igual ao app Lembretes nativo. foreground:true porque o handler que
+// reagenda (snoozeReminderByNotifId) roda em JS — precisa do app vivo
+// pra processar o toque na ação com confiabilidade no iOS.
+const REMINDER_ACTION_TYPE='REMINDER_ACTIONS';
+let reminderActionsRegistered=false;
+async function ensureReminderActionsRegistered(){
+  const plugin=localNotifPlugin();
+  if(!plugin||reminderActionsRegistered)return;
+  try{
+    await plugin.registerActionTypes({types:[{
+      id:REMINDER_ACTION_TYPE,
+      actions:[{id:'snooze',title:'Reagendar 1h',foreground:true}]
+    }]});
+    reminderActionsRegistered=true;
+  }catch(e){}
+}
+// Em vez de uma notificação só, agenda uma SÉRIE (a cada poucos minutos),
+// pra "insistir" como um alarme até a tarefa ser marcada como feita — a
+// própria conclusão da tarefa cancela o restante da série (ver toggleTask).
+const REMINDER_REPEAT_COUNT=6,REMINDER_REPEAT_MIN=5;
+// Agenda cada notificação da série com uma chamada separada (em vez de um
+// array só numa chamada). O plugin nativo (iOS) tem uma falha conhecida:
+// se UM item de um lote tiver o horário "no passado" (ex.: o 1º item caiu
+// bem em cima do horário atual por alguma folga de milissegundos), ele
+// rejeita a chamada inteira SEM parar o loop — os itens seguintes do MESMO
+// lote continuam sendo processados de forma inconsistente. Chamadas
+// separadas isolam cada notificação: se uma falhar, as outras 5 continuam
+// normalmente. Também garante uma folga mínima de 3s no horário de cada
+// uma, pra nunca cair "no passado" por uma questão de milissegundos.
+async function scheduleReminderSeries(plugin,text,when){
+  await ensureReminderActionsRegistered();
+  const ids=[];
+  const minAt=Date.now()+3000;
+  for(let i=0;i<REMINDER_REPEAT_COUNT;i++){
+    const at=new Date(Math.max(when.getTime()+i*REMINDER_REPEAT_MIN*60000,minAt+i*1000));
+    const id=Math.floor((Date.now()+i)%2147000000);
+    try{
+      await plugin.schedule({notifications:[{
+        title:'🔔 Lembrete — Assistente',
+        body:text||'',
+        id,
+        schedule:{at,allowWhileIdle:true},
+        sound:'default',
+        actionTypeId:REMINDER_ACTION_TYPE
+      }]});
+      ids.push(id);
+    }catch(e){}
+  }
+  return ids;
+}
+function findTaskByReminderNotifId(notifId){
+  return tasks.find(t=>String(t.reminderNotifId)===String(notifId)||(t.reminderNotifIds||[]).some(id=>String(id)===String(notifId)));
+}
+async function snoozeReminderByNotifId(oldNotifId){
+  const t=findTaskByReminderNotifId(oldNotifId);
+  if(!t)return;
+  const plugin=localNotifPlugin();
+  if(!plugin)return;
+  try{
+    await cancelReminderNotif(t);
+    const when=new Date(Date.now()+60*60*1000);
+    const ids=await scheduleReminderSeries(plugin,t.text,when);
+    t.reminderAt=when.toISOString();
+    t.reminderNotifId=ids[0];
+    t.reminderNotifIds=ids;
+    await saveTask(t);
+    notify(`Lembrete reagendado para ${fdt(t.reminderAt)}!`,'success');
+    renderTasks();
+  }catch(e){}
+}
+// Ativo enquanto houver um horário marcado e a tarefa não estiver feita —
+// inclui o período "atrasado" (passou da hora mas ninguém concluiu ainda),
+// pra manter o sino aceso e o selo vermelho contando até a conclusão real.
 function hasActiveReminder(t){
-  return!!(t.reminderAt&&new Date(t.reminderAt).getTime()>Date.now());
+  return!!(t.reminderAt&&!t.done);
+}
+function isReminderOverdue(t){
+  return hasActiveReminder(t)&&new Date(t.reminderAt).getTime()<=Date.now();
+}
+function overdueLabel(iso){
+  const mins=Math.max(0,Math.floor((Date.now()-new Date(iso).getTime())/60000));
+  if(mins<60)return`atrasado há ${mins}m`;
+  const h=Math.floor(mins/60),m=mins%60;
+  return`atrasado há ${h}h${m?` ${m}m`:''}`;
+}
+function reminderBadgeHTML(t){
+  if(!hasActiveReminder(t))return'';
+  const tid=String(t.id).replace(/'/g,'');
+  if(isReminderOverdue(t))return`<span class="ttag" id="rembadge-${tid}" style="color:var(--red);border-color:var(--red);background:rgba(192,96,96,.15);">🔴 ${overdueLabel(t.reminderAt)}</span>`;
+  return`<span class="ttag" style="color:var(--gold);border-color:var(--gold);">⏰ ${fdt(t.reminderAt)}</span>`;
 }
 function fdt(iso){
   const d=new Date(iso);
@@ -1651,6 +1780,22 @@ function fdt(iso){
   const hh=String(d.getHours()).padStart(2,'0'),mi=String(d.getMinutes()).padStart(2,'0');
   return`${dd}/${mm} ${hh}:${mi}`;
 }
+// Atualiza os selos "atrasado há Xm" a cada 30s. Pra selos que JÁ nasceram
+// atrasados (id no DOM), só troca o texto — mais leve. Mas se algum
+// lembrete AINDA gold (futuro) acabou de passar da hora nesse meio-tempo,
+// não existe id pra ele ainda (só é criado quando renderizado atrasado),
+// então nesse caso força um re-render completo da lista pra ele "virar"
+// vermelho de verdade, não só o texto.
+setInterval(()=>{
+  let needsFullRender=false;
+  tasks.forEach(t=>{
+    if(!isReminderOverdue(t))return;
+    const el=document.getElementById(`rembadge-${String(t.id).replace(/'/g,'')}`);
+    if(el)el.textContent=`🔴 ${overdueLabel(t.reminderAt)}`;
+    else needsFullRender=true;
+  });
+  if(needsFullRender){renderTasks();renderHoje();}
+},30000);
 let reminderTaskId=null;
 function openReminderModal(id){
   const t=tasks.find(t=>String(t.id)===String(id));
@@ -1696,22 +1841,34 @@ async function confirmReminder(){
       const req=await plugin.requestPermissions();
       if(req.display!=='granted'){notify('Permita notificações nos Ajustes para usar lembretes.','error');return;}
     }
-    if(hasActiveReminder(t)&&t.reminderNotifId){
-      await plugin.cancel({notifications:[{id:t.reminderNotifId}]}).catch(()=>{});
-    }
-    const notifId=Math.floor(Date.now()%2147000000);
-    await plugin.schedule({notifications:[{
-      title:'🔔 Lembrete — Assistente',
-      body:t.text||'',
-      id:notifId,
-      schedule:{at:when,allowWhileIdle:true},
-      sound:'default'
-    }]});
+    if(hasActiveReminder(t))await cancelReminderNotif(t);
+    const ids=await scheduleReminderSeries(plugin,t.text,when);
+    if(!ids.length){notify('Não foi possível agendar o lembrete.','error');return;}
     t.reminderAt=when.toISOString();
-    t.reminderNotifId=notifId;
+    t.reminderNotifId=ids[0];
+    t.reminderNotifIds=ids;
     await saveTask(t);
-    notify(`Lembrete agendado para ${fdt(t.reminderAt)}!`,'success');
-    closeReminderModal();
+    // Confere de verdade no sistema (não só se a chamada JS não deu erro)
+    // quantas dessas notificações ficaram realmente pendentes no iOS, e
+    // deixa isso visível na própria tela (em vez de um toast que some
+    // rápido) — assim dá pra fotografar com calma se algo não bater.
+    let confirmMsg=`Lembrete agendado para ${fdt(t.reminderAt)}.`;
+    try{
+      const pending=await plugin.getPending();
+      const mine=(pending.notifications||[]).filter(n=>ids.includes(n.id));
+      confirmMsg+=` ${mine.length}/${ids.length} confirmadas no sistema.`;
+      if(mine.length)confirmMsg+=' Horários: '+mine.map(n=>{
+        const at=n.schedule&&n.schedule.at?new Date(n.schedule.at):null;
+        return at?fdt(at.toISOString()):'?';
+      }).sort().join(', ');
+    }catch(e){
+      confirmMsg+=' (não foi possível confirmar no sistema)';
+    }
+    notify(confirmMsg,'success');
+    document.getElementById('reminderHint').textContent=confirmMsg;
+    document.getElementById('reminderHint').style.color='var(--gold)';
+    // Não fecha sozinho dessa vez — deixa a confirmação na tela até você
+    // ler/fotografar e tocar em "Fechar" manualmente.
   }catch(e){
     notify('Não foi possível agendar o lembrete.','error');
   }
@@ -1719,11 +1876,8 @@ async function confirmReminder(){
 async function cancelReminder(){
   const t=tasks.find(t=>String(t.id)===String(reminderTaskId));
   if(!t)return;
-  const plugin=localNotifPlugin();
-  if(plugin&&t.reminderNotifId){
-    await plugin.cancel({notifications:[{id:t.reminderNotifId}]}).catch(()=>{});
-  }
-  t.reminderAt=null;t.reminderNotifId=null;
+  await cancelReminderNotif(t);
+  t.reminderAt=null;t.reminderNotifId=null;t.reminderNotifIds=null;
   await saveTask(t);
   notify('Lembrete cancelado.','info');
   closeReminderModal();
@@ -1872,12 +2026,59 @@ function openReport(){
 function toggleTheme(){applyTheme(!isDark);savePrefs();}
 function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
 // ── UI ───────────────────────────────────────────
+const TAB_ORDER=['hoje','tasks','week','notes','routines'];
 function switchTab(tab){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(tab==='tasks'&&i===0)||(tab==='week'&&i===1)||(tab==='notes'&&i===2)||(tab==='routines'&&i===3)));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',TAB_ORDER[i]===tab));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
+  if(tab==='hoje')renderHoje();
   if(tab==='week')renderWeek();
   if(tab==='routines')renderRoutines();
+}
+// ── HOJE (tela de entrada) ────────────────────────
+// Reorganiza dados que já existem (tarefas, áreas, urgência) numa visão de
+// resumo do dia — não cria nenhum conceito novo (sem Projetos, sem
+// prioridade em 4 níveis, sem status "Em andamento"). Reaproveita taskHTML()
+// pros cards, então check/editar/excluir/lembrete funcionam igual à aba
+// Tarefas, sem duplicar lógica.
+function todayStr(){
+  const n=new Date();
+  return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+}
+function greetName(){
+  const h=new Date().getHours();
+  const greet=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  const name=USERS[cu]&&USERS[cu].name;
+  return name?`${greet}, ${name}`:greet;
+}
+function renderHoje(){
+  const el=document.getElementById('hojeContent');
+  if(!el||!cu)return;
+  const today=todayStr();
+  const todayTasks=tasks.filter(t=>!t.done&&t.date===today).sort((a,b)=>(b.urgency==='urgent')-(a.urgency==='urgent'));
+  const upcoming=tasks.filter(t=>!t.done&&t.date&&t.date>today).sort((a,b)=>a.date<b.date?-1:1).slice(0,4);
+  const urgentCount=tasks.filter(t=>!t.done&&t.urgency==='urgent').length;
+  const doneToday=tasks.filter(t=>t.done&&t.doneAt&&t.doneAt.slice(0,10)===today).length;
+  const overdue=tasks.filter(t=>!t.done&&t.date&&t.date<today).length;
+  const pendingToday=todayTasks.length;
+  const visibleAreaKeys=[...enabledAreas,...customAreas.map(c=>c.key)];
+  const areaCounts=visibleAreaKeys.map(k=>({def:areaDef(k),count:tasks.filter(t=>!t.done&&t.area===k).length})).filter(a=>a.def&&a.count>0).sort((a,b)=>b.count-a.count).slice(0,3);
+  let chipsHTML=`<div class="hchip hu"><span class="hchip-n">${urgentCount}</span><span class="hchip-l">🔴 urgente${urgentCount===1?'':'s'}</span></div>`;
+  chipsHTML+=areaCounts.map(a=>`<div class="hchip"><span class="hchip-n">${a.count}</span><span class="hchip-l">${a.def.emoji} ${esc(a.def.label.toLowerCase())}</span></div>`).join('');
+  el.innerHTML=`
+    <div class="hoje-greet">${esc(greetName())} 👋</div>
+    <div class="hoje-sub">Você tem ${pendingToday} tarefa${pendingToday===1?'':'s'} hoje.</div>
+    <div class="hchips-row">${chipsHTML}</div>
+    <div class="sdiv">📅 Hoje · ${fd(today)}</div>
+    ${todayTasks.length?todayTasks.map(taskHTML).join(''):'<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>Nada marcado pra hoje</div>'}
+    ${upcoming.length?`<div class="sdiv" style="margin-top:14px;">Próximos</div>${upcoming.map(taskHTML).join('')}`:''}
+    <button class="filter-btn" style="margin-top:10px;" onclick="switchTab('tasks')">Ver todas as tarefas →</button>
+    <div class="sdiv" style="margin-top:16px;">✨ Resumo do dia</div>
+    <div class="hoje-summary">
+      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${doneToday}</div><div class="stat-lbl">Concluídas</div></div>
+      <div class="stat-card"><div class="stat-num">${pendingToday}</div><div class="stat-lbl">Pendente${pendingToday===1?'':'s'}</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--red)">${overdue}</div><div class="stat-lbl">Atrasadas</div></div>
+    </div>`;
 }
 function setFilter(f,btn){filter=f;document.querySelectorAll('#statusFilterRow .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTasks();}
 async function refreshAll(){await fetchCal();renderWeek();updateStats();notify('Atualizado!','info');}
@@ -1945,6 +2146,14 @@ function runSiriTask(text){
 if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
   window.Capacitor.Plugins.App.addListener('appUrlOpen',(data)=>{
     if(data&&data.url)handleSiriUrl(data.url);
+  });
+}
+if(isNativeApp()&&localNotifPlugin()){
+  ensureReminderActionsRegistered();
+  localNotifPlugin().addListener('localNotificationActionPerformed',(ev)=>{
+    try{
+      if(ev&&ev.actionId==='snooze'&&ev.notification)snoozeReminderByNotifId(ev.notification.id);
+    }catch(e){}
   });
 }
 document.addEventListener('keydown',(e)=>{
