@@ -226,7 +226,12 @@ textarea::placeholder{color:var(--text-dim);}
 .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
 .stat-num{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold);line-height:1;margin-bottom:2px;}
 .stat-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
-.hoje-greet{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);margin:14px 0 2px;}
+.hoje-greet-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 2px;}
+.hoje-greet{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);}
+.hoje-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;}
+.hoje-filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
+.hoje-filter-menu{display:none;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+.hoje-filter-menu.open{display:flex;}
 .hoje-sub{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
 .hchips-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
 .hchip{flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;min-width:78px;}
@@ -604,6 +609,7 @@ let tasks=[],gcalEvs=[],notes=[];
 let filter='all',shareMode=false,isDark=true,selectedDay=null;
 const AREAS={deus:{label:'Deus',emoji:'🙏'},pessoal:{label:'Pessoal',emoji:'👤'},familia:{label:'Família',emoji:'👨‍👩‍👧'},financas:{label:'Finanças',emoji:'💰'},negocios:{label:'Negócios',emoji:'💼'}};
 let currentArea='',areaFilter='all';
+let hojeAreaFilter='all',hojeFilterOpen=false;
 // Which of the 5 default areas this person actually wants to see. Used to
 // be one-size-fits-all (all 5 hardcoded in the HTML for everyone), which
 // doesn't make sense for someone who, say, doesn't want "Deus" or isn't
@@ -2060,8 +2066,11 @@ function closeMaisMenu(){
 document.addEventListener('click',(e)=>{
   const menu=document.getElementById('maisMenu');
   const btn=document.getElementById('tabMais');
-  if(!menu||!menu.classList.contains('open'))return;
-  if(!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))closeMaisMenu();
+  if(menu&&menu.classList.contains('open')&&!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))closeMaisMenu();
+  const hMenu=document.getElementById('hojeFilterMenu');
+  if(hojeFilterOpen&&hMenu&&!hMenu.contains(e.target)&&!e.target.closest('.hoje-filter-btn')){
+    hojeFilterOpen=false;renderHoje();
+  }
 });
 // ── HOJE (tela de entrada) ────────────────────────
 // Reorganiza dados que já existem (tarefas, áreas, urgência) numa visão de
@@ -2079,12 +2088,38 @@ function greetName(){
   const name=USERS[cu]&&USERS[cu].name;
   return name?`${greet}, ${name}`:greet;
 }
+function hojeFilterLabel(){
+  if(hojeAreaFilter==='all')return 'Filtros';
+  if(hojeAreaFilter==='')return '✦ Geral';
+  const a=areaDef(hojeAreaFilter);
+  return a?`${a.emoji} ${a.label}`:'Filtros';
+}
+function hojeFilterChipsHTML(){
+  let html=`<button class="filter-btn${hojeAreaFilter===''?' active':''}" onclick="setHojeAreaFilter('',this)">✦ Geral</button>`;
+  allAreaKeys().forEach(key=>{
+    if(!enabledAreas.includes(key))return;
+    const a=areaDef(key);
+    if(!a)return;
+    html+=`<button class="filter-btn${hojeAreaFilter===key?' active':''}" onclick="setHojeAreaFilter('${key}',this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
+  });
+  return html;
+}
+function toggleHojeFilterMenu(){
+  hojeFilterOpen=!hojeFilterOpen;
+  renderHoje();
+}
+function setHojeAreaFilter(area){
+  hojeAreaFilter=(hojeAreaFilter===area)?'all':area;
+  hojeFilterOpen=false;
+  renderHoje();
+}
 function renderHoje(){
   const el=document.getElementById('hojeContent');
   if(!el||!cu)return;
   const today=todayStr();
-  const todayTasks=tasks.filter(t=>!t.done&&t.date===today).sort((a,b)=>(b.urgency==='urgent')-(a.urgency==='urgent'));
-  const upcoming=tasks.filter(t=>!t.done&&t.date&&t.date>today).sort((a,b)=>a.date<b.date?-1:1).slice(0,4);
+  const matchesHojeFilter=t=>hojeAreaFilter==='all'||(t.area||'')===hojeAreaFilter;
+  const todayTasks=tasks.filter(t=>!t.done&&t.date===today&&matchesHojeFilter(t)).sort((a,b)=>(b.urgency==='urgent')-(a.urgency==='urgent'));
+  const upcoming=tasks.filter(t=>!t.done&&t.date&&t.date>today&&matchesHojeFilter(t)).sort((a,b)=>a.date<b.date?-1:1).slice(0,4);
   const urgentCount=tasks.filter(t=>!t.done&&t.urgency==='urgent').length;
   const doneToday=tasks.filter(t=>t.done&&t.doneAt&&t.doneAt.slice(0,10)===today).length;
   const overdue=tasks.filter(t=>!t.done&&t.date&&t.date<today).length;
@@ -2094,11 +2129,15 @@ function renderHoje(){
   let chipsHTML=`<div class="hchip hu"><span class="hchip-n">${urgentCount}</span><span class="hchip-l">🔴 urgente${urgentCount===1?'':'s'}</span></div>`;
   chipsHTML+=areaCounts.map(a=>`<div class="hchip"><span class="hchip-n">${a.count}</span><span class="hchip-l">${a.def.emoji} ${esc(a.def.label.toLowerCase())}</span></div>`).join('');
   el.innerHTML=`
-    <div class="hoje-greet">${esc(greetName())} 👋</div>
+    <div class="hoje-greet-row">
+      <div class="hoje-greet">${esc(greetName())} 👋</div>
+      <button class="hoje-filter-btn${hojeAreaFilter!=='all'?' active':''}" onclick="toggleHojeFilterMenu()">🔽 ${esc(hojeFilterLabel())}</button>
+    </div>
+    <div class="hoje-filter-menu${hojeFilterOpen?' open':''}" id="hojeFilterMenu">${hojeFilterChipsHTML()}</div>
     <div class="hoje-sub">Você tem ${pendingToday} tarefa${pendingToday===1?'':'s'} hoje.</div>
     <div class="hchips-row">${chipsHTML}</div>
     <div class="sdiv">📅 Hoje · ${fd(today)}</div>
-    ${todayTasks.length?todayTasks.map(taskHTML).join(''):'<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>Nada marcado pra hoje</div>'}
+    ${todayTasks.length?todayTasks.map(taskHTML).join(''):`<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>${hojeAreaFilter==='all'?'Nada marcado pra hoje':'Nada nessa área hoje'}</div>`}
     ${upcoming.length?`<div class="sdiv" style="margin-top:14px;">Próximos</div>${upcoming.map(taskHTML).join('')}`:''}
     <button class="filter-btn" style="margin-top:10px;" onclick="switchTab('tasks')">Ver todas as tarefas →</button>
     <div class="sdiv" style="margin-top:16px;">✨ Resumo do dia</div>
