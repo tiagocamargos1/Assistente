@@ -239,6 +239,7 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .hoje-greet{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);}
 .hoje-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;}
 .hoje-filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
+.tasks-filter-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
 /* FILTROS (bottom sheet) */
 .fsheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;align-items:flex-end;justify-content:center;}
 .fsheet-ov.open{display:flex;}
@@ -417,14 +418,9 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div id="hojeContent"></div>
     </div>
     <div class="tab-content" id="tab-tasks">
-      <div class="filter-row" id="statusFilterRow">
-        <button class="filter-btn active" onclick="setFilter(&#39;all&#39;,this)">Todas</button>
-        <button class="filter-btn" onclick="setFilter(&#39;mine&#39;,this)">Minhas</button>
-        <button class="filter-btn sf" onclick="setFilter(&#39;shared&#39;,this)">👫 Compartilhadas</button>
-        <button class="filter-btn" onclick="setFilter(&#39;urgent&#39;,this)">🔴 Urgente</button>
-        <button class="filter-btn" onclick="setFilter(&#39;done&#39;,this)">✓ Feitas</button>
+      <div class="tasks-filter-row">
+        <button class="hoje-filter-btn" id="tasksFilterBtn" onclick="openFiltersModal()">🔽 Filtros</button>
       </div>
-      <div class="filter-row" id="areaFilterRow"></div>
       <div id="taskList"></div>
     </div>
     <div class="tab-content" id="tab-week">
@@ -759,6 +755,7 @@ function renderAreaFilterRow(){
 function applyAreaVisibility(){
   renderAreaRow();
   renderAreaFilterRow();
+  renderTasks();
 }
 // Builds the <select> options for the edit-task modal. Always includes the
 // task's CURRENT area even if it has since been turned off (or its custom
@@ -1175,9 +1172,35 @@ function quickLogin(uid){
   startGoogleAuth();
 }
 function startGoogleAuth(){
+  dbg(`startGoogleAuth: standalone=${window.navigator.standalone===true} ua=${(navigator.userAgent||'').slice(0,70)}`);
+  // Native apps (iOS/Android) can't send Google's OAuth screen a top-level
+  // redirect from inside their own embedded WebView — Google actively
+  // detects and blocks that ("Error 403: disallowed_useragent"), which is
+  // exactly what was locking out anyone logging in for the first time from
+  // the installed Android app (it worked fine as a PWA in a real browser
+  // tab, where this restriction doesn't apply). Fix: for native platforms,
+  // open the Google screen in a real system browser tab (Chrome Custom
+  // Tabs / SFSafariViewController via @capacitor/browser) instead of
+  // navigating the app's own WebView. Google redirects that tab to a tiny
+  // static bridge page on GitHub Pages, which immediately hands the token
+  // back to the app via the assistentepessoal:// custom scheme — see the
+  // 'appUrlOpen' listener below, which is where onToken() actually runs
+  // for this path.
+  if(isNativeApp()){
+    const bridge='https://tiagocamargos1.github.io/Assistente/oauth-bridge.html';
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(bridge)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
+    const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+    if(browser){
+      dbg('startGoogleAuth: native platform, opening system browser tab');
+      browser.open({url});
+    }else{
+      dbg('startGoogleAuth: native platform but Browser plugin missing — falling back to in-app redirect (will likely be blocked by Google)');
+      window.location.href=url;
+    }
+    return;
+  }
   const redirect='https://tiagocamargos1.github.io/Assistente';
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
-  dbg(`startGoogleAuth: standalone=${window.navigator.standalone===true} ua=${(navigator.userAgent||'').slice(0,70)}`);
   dbg('startGoogleAuth: redirecting to accounts.google.com now');
   window.location.href=url;
 }
@@ -1783,6 +1806,8 @@ async function saveEditTask(){
 }
 function renderTasks(){
   const el=document.getElementById('taskList');
+  const tfb=document.getElementById('tasksFilterBtn');
+  if(tfb)tfb.classList.toggle('active',advFiltersActive());
   let f=tasks;
   if(filter==='mine')f=tasks.filter(t=>!t.shared&&t.owner===cu);
   if(filter==='shared')f=tasks.filter(t=>t.shared);
@@ -2496,9 +2521,41 @@ function runSiriTask(text){
   inp.value=text;
   processInput();
 }
+// ── OAUTH CALLBACK (apps nativos) ───────────────────
+// Contraparte de startGoogleAuth(): quando o login roda numa aba do
+// navegador do sistema (Custom Tab/SFSafariViewController) em vez do
+// WebView do app, o Google devolve o token pra uma página estática no
+// GitHub Pages (oauth-bridge.html), que repassa pro app via este mesmo
+// esquema assistentepessoal://. Diferencia do link da Siri pelo host da URL.
+function handleOAuthCallbackUrl(rawUrl){
+  try{
+    const u=new URL(rawUrl);
+    const hash=(u.hash||'').replace(/^#/,'');
+    if(!hash)return false;
+    const p=new URLSearchParams(hash);
+    const tk=p.get('access_token');
+    const err=p.get('error');
+    dbg(`handleOAuthCallbackUrl: token=${!!tk} error=${err||'none'}`);
+    const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+    if(browser&&browser.close)browser.close().catch(()=>{});
+    if(tk){
+      let pendingUid=null;
+      try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
+      if(pendingUid)cu=pendingUid;
+      onToken(tk);
+    }else if(err){
+      notify('Login com Google cancelado ou recusado.','info');
+    }
+    return true;
+  }catch(e){dbg(`handleOAuthCallbackUrl: parse error — ${e&&e.message||e}`);return false;}
+}
 if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
   window.Capacitor.Plugins.App.addListener('appUrlOpen',(data)=>{
-    if(data&&data.url)handleSiriUrl(data.url);
+    if(!data||!data.url)return;
+    let host='';
+    try{host=new URL(data.url).hostname;}catch(e){}
+    if(host==='oauthcallback'){handleOAuthCallbackUrl(data.url);}
+    else{handleSiriUrl(data.url);}
   });
 }
 if(isNativeApp()&&localNotifPlugin()){

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistente Pessoal — entrando…</title>
+<style>
+  body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       background:#0f1115;color:#eee;text-align:center;}
+  p{opacity:.7;font-size:14px;padding:0 24px;}
+</style>
+</head>
+<body>
+<p>Entrando no Assistente Pessoal…</p>
+<script>
+  // This page exists purely to hand a Google OAuth token back to the native
+  // app. startGoogleAuth() (in index.html) opens accounts.google.com in a
+  // real system browser tab (not the app's own embedded WebView — Google
+  // blocks OAuth from inside embedded WebViews) with this page's URL as the
+  // redirect_uri. Google appends the token as a URL hash fragment when it
+  // sends the browser here. All this page does is forward that same hash
+  // fragment on to the app via its custom URL scheme, which both platforms
+  // (Android intent-filter / iOS CFBundleURLTypes) already register as
+  // "assistentepessoal://". The OS then closes this browser tab/view and
+  // hands control back to the app, where an 'appUrlOpen' listener in
+  // index.html picks up the token and finishes logging in.
+  var hash = window.location.hash || '';
+  window.location.replace('assistentepessoal://oauthcallback' + hash);
+</script>
+</body>
+</html>
