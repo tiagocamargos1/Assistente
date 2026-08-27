@@ -543,6 +543,7 @@ resolver isso primeiro.
     sessões/arquivos entre projetos diferentes. Conteúdo idêntico, só o
     nome do arquivo (e as auto-referências dentro dele) mudou.
 
+34. **Nova funcionalidade: Caixa de Ideias (captura rapida de ideias de negocio na rua).** Pedido do Tiago: um lugar unico para despejar ideias de negocio que surgem na rua, sem gastar tempo organizando ali na hora -- soh trata tudo depois, com calma, no escritorio. Decisao de design: reaproveitar o MESMO campo de captura rapida que ja existe ("Nova demanda"), em vez de criar um formulario novo -- basta falar ou escrever com o prefixo "Ideia: ..." (mesmo padrao ja usado para "Nota: ...") e o parser local (parseInput) direciona para a nova colecao ao inves de tasks/notes. Implementado: nova aba "Ideias" (com contador de pendentes no icone, igual as Tarefas), gravacao em Firestore em users/{uid}/ideas (mesmo padrao de isolamento por usuario das outras colecoes, sem precisar mexer nas regras do Firestore), e tres estados -- Por tratar / Em curso / Feita -- que ciclam com um toque no rotulo colorido de cada ideia (reaproveita as cores ttag tu/tt/tg ja existentes). Publicado tanto no index.html da raiz quanto na copia em www/index.html (usada pelo empacotamento Capacitor). Objetivo futuro, ainda nao implementado: dar acesso partilhado a essa caixa de ideias para a Annie (assistente remota da BELUTI).
 ## Próximos passos (pendentes)
 
 - [ ] O Tiago precisa criar a conta no Google Play Console
@@ -634,6 +635,7 @@ e limitações conhecidas aceitas pelo Tiago, ver item 23)
       não aqui).
 - [ ] Considerar adicionar um README.md ao repositório (hoje o GitHub mostra
       "Add a README" — não é funcional, só cosmético/documentação pública).
+      - [ ] Testar ao vivo a Caixa de Ideias (item 34): dizer ou escrever "Ideia: comprar uma van refrigerada" (ou algo assim) no campo de captura, confirmar que ela cai na aba Ideias e nao nas Tarefas/Notas; tocar no rotulo colorido da ideia para confirmar que cicla Por tratar -> Em curso -> Feita; testar tambem excluir uma ideia.
 
 ## Protocolo de sessão
 
