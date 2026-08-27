@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- saved from url=(0050)file:///Users/tiagocamargos/Downloads/index_1.html -->
 <html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Assistente">
@@ -111,15 +111,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .google-btn:hover{border-color:var(--gold-dim);color:var(--text);}
 .loading-bar{position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:9999;transition:width .3s ease;width:0;}
 /* HEADER */
-header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);}
+header{position:relative;z-index:10;padding:12px 18px;padding-top:max(12px, env(safe-area-inset-top));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);}
 .logo{display:flex;align-items:center;gap:9px;}
 .logo-icon{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
 .logo-text{font-family:'DM Serif Display',serif;font-size:17px;color:var(--gold-light);}
 .header-right{display:flex;align-items:center;gap:8px;}
 .header-date{font-size:11px;color:var(--text-muted);text-align:right;line-height:1.6;}
-.user-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px 4px 5px;cursor:pointer;transition:all .2s;}
+.user-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 3px;cursor:pointer;transition:all .2s;margin-left:2px;}
 .user-chip:hover{border-color:var(--gold-dim);}
-.chip-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--bg);overflow:hidden;}
+.chip-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg);overflow:hidden;}
 .chip-av img{width:100%;height:100%;object-fit:cover;}
 .chip-name{font-size:12px;color:var(--text-muted);}
 .icon-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:5px;border-radius:6px;transition:color .2s;}
@@ -127,18 +127,19 @@ header{position:relative;z-index:10;padding:12px 18px;border-bottom:1px solid va
 /* MAIN */
 .main{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 62px);max-height:calc(100vh - 62px);overflow:hidden;min-height:0;}
 .left-panel{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;min-height:0;}
+#topGreeting{padding:14px 18px 2px;flex-shrink:0;}
 /* INPUT */
-.input-section{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface);}
+.input-section{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
 .input-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:7px;font-weight:600;}
-.input-row{display:flex;gap:7px;align-items:flex-end;}
-textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 13px;resize:none;height:52px;line-height:1.5;transition:border-color .2s;outline:none;}
-textarea:focus{border-color:var(--gold-dim);}
-textarea::placeholder{color:var(--text-dim);}
-.send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:var(--radius);width:46px;height:52px;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.input-row{display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:26px;padding:5px;transition:border-color .2s;}
+.input-row:focus-within{border-color:var(--gold-dim);}
+textarea{flex:1;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 4px;resize:none;height:48px;line-height:1.4;transition:border-color .2s;outline:none;}
+textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
+.send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:20px;font-weight:600;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .send-btn:hover{background:var(--gold-light);}.send-btn:active{transform:scale(.95);}.send-btn:disabled{opacity:.4;cursor:not-allowed;}
-.mic-btn{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius);width:46px;height:52px;cursor:pointer;font-size:18px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.mic-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
-.mic-btn.listening{background:var(--red);border-color:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
+.mic-btn-lead{background:var(--gold);color:var(--bg);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:16px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.mic-btn-lead:hover{background:var(--gold-light);}
+.mic-btn-lead.listening{background:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
 @keyframes micPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(192,96,96,0.4);}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(192,96,96,0);}}
 .share-row{display:flex;align-items:center;gap:10px;margin-top:7px;}
 .share-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
@@ -158,12 +159,18 @@ textarea::placeholder{color:var(--text-dim);}
 .tab{padding:9px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;background:var(--gold);color:var(--bg);border-radius:8px;font-size:9px;font-weight:700;margin-left:4px;padding:0 3px;}
+.tab-mic-inline{display:none;}
+.tab-mais{display:none;}
+.mais-menu{display:none;position:fixed;left:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.45);z-index:32;overflow:hidden;}
+.mais-menu.open{display:block;}
+.mais-item{padding:12px 14px;font-size:13px;color:var(--text);cursor:pointer;border-radius:10px;transition:background .15s;font-weight:500;}
+.mais-item:active,.mais-item:hover{background:var(--surface2);}
 .tab-content{flex:1;min-height:0;overflow-y:auto;padding:11px 18px;display:none;}
 .tab-content.active{display:block;}
 .tab-content::-webkit-scrollbar{width:3px}.tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 /* FILTERS */
-.filter-row{display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap;}
-.filter-btn{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.filter-row{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;}
+.filter-btn{font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
 .filter-btn.sf.active{border-color:var(--purple);color:var(--purple);background:rgba(155,111,168,.1);}
 /* TASKS */
@@ -173,16 +180,24 @@ textarea::placeholder{color:var(--text-dim);}
 .task-check{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:10px;}
 .task-check:hover{border-color:var(--gold);}
 .task-item.done .task-check{background:var(--green);border-color:var(--green);color:white;}
+.task-item.inprog{background:rgba(90,126,160,.07);border-radius:8px;}
+.task-item.inprog .task-check{border-color:var(--blue);}
 .task-body{flex:1;min-width:0;}
 .task-text{font-size:13px;color:var(--text);line-height:1.4;}
 .task-item.done .task-text{color:var(--text-dim);text-decoration:line-through;}
 .task-meta{font-size:10px;color:var(--text-muted);margin-top:2px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
 .ttag{font-size:9px;padding:1px 6px;border-radius:20px;font-weight:500;}
 .tt{background:rgba(90,126,160,.2);color:var(--blue)}.tu{background:rgba(192,96,96,.2);color:var(--red)}.ts{background:rgba(155,111,168,.2);color:var(--purple)}.tg{background:rgba(90,158,111,.15);color:var(--green)}
-.task-acts{display:flex;gap:3px;opacity:0;transition:opacity .2s;flex-shrink:0;}
-.task-item:hover .task-acts{opacity:1;}
+.task-acts{display:flex;gap:3px;flex-shrink:0;position:relative;}
 .tact{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-dim);padding:2px 3px;border-radius:4px;transition:color .2s;}
 .tact:hover{color:var(--red);}.tact.rb:hover{color:var(--gold);}
+.tact-kebab{background:none;border:none;cursor:pointer;font-size:17px;line-height:1;color:var(--text-dim);padding:2px 7px;border-radius:6px;transition:all .2s;}
+.tact-kebab:hover{color:var(--text);background:var(--surface2);}
+.task-menu{display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:40;min-width:180px;overflow:hidden;}
+.task-menu.open{display:block;}
+.tmenu-item{padding:11px 14px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .15s;}
+.tmenu-item:hover{background:var(--surface2);}
+.tmenu-item.danger{color:var(--red);}
 /* SECTION DIV */
 .sdiv{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin:12px 0 6px;font-weight:600;display:flex;align-items:center;gap:8px;}
 .sdiv::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -220,6 +235,44 @@ textarea::placeholder{color:var(--text-dim);}
 .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
 .stat-num{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold);line-height:1;margin-bottom:2px;}
 .stat-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
+.hoje-greet-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 2px;}
+.hoje-greet{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);}
+.hoje-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;}
+.hoje-filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
+.tasks-filter-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
+/* FILTROS (bottom sheet) */
+.fsheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;align-items:flex-end;justify-content:center;}
+.fsheet-ov.open{display:flex;}
+.fsheet{background:var(--surface);width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:10px 18px 22px;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(30px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.fsheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:4px auto 14px;}
+.fsheet-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.fsheet-hdr h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);}
+.fsheet-close{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fsec{margin-bottom:18px;}
+.fsec-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;font-weight:600;}
+.fseg{display:flex;gap:8px;flex-wrap:wrap;}
+.fseg-btn{flex:1;min-width:90px;text-align:center;padding:10px 8px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.fseg-btn.sel{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1);}
+.fcard{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.fopt{display:flex;align-items:center;gap:10px;padding:12px 14px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+.fopt:last-child{border-bottom:none;}
+.fopt-ic{width:18px;text-align:center;flex-shrink:0;}
+.fopt-lbl{flex:1;}
+.fopt-check{width:18px;height:18px;border-radius:50%;background:var(--gold);color:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;visibility:hidden;}
+.fopt.sel .fopt-check{visibility:visible;}
+.fsheet-foot{display:flex;gap:10px;margin-top:6px;}
+.fclear-btn{flex:1;background:transparent;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.fapply-btn{flex:2;background:var(--gold);color:var(--bg);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
+.hoje-sub{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
+.hchips-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
+.hchip{flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;min-width:78px;cursor:pointer;transition:border-color .15s,background .15s;}
+.hchip:hover,.hchip:active{border-color:var(--gold-dim);background:rgba(201,168,76,.08);}
+.hchip.hu{border-color:rgba(192,96,96,.4);}
+.hchip-n{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold);line-height:1;}
+.hchip.hu .hchip-n{color:var(--red);}
+.hchip-l{font-size:10px;color:var(--text-muted);white-space:nowrap;}
+.hoje-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
 .sync-st{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;}
 .sdot{width:5px;height:5px;border-radius:50%;background:var(--green);}.sdot.off{background:var(--text-dim);}
 .conn-box{border:1px dashed var(--border);border-radius:10px;padding:12px;text-align:center;margin-bottom:8px;}
@@ -252,7 +305,30 @@ textarea::placeholder{color:var(--text-dim);}
 .fb-status{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;margin-left:8px;}
 .fb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);}
 .fb-dot.on{background:var(--green);}
-@media(max-width:680px){.main{grid-template-columns:1fr;max-height:none;overflow:visible;}.right-panel{display:none;}body{overflow-y:auto;}}
+@media(max-width:680px){
+  html,body{height:100%;overflow:hidden;}
+  .main{grid-template-columns:1fr;height:auto;max-height:none;overflow:hidden;}
+  .right-panel{display:none;}
+  .left-panel{height:100%;}
+  .tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.4);padding:6px 4px;justify-content:space-around;align-items:center;}
+  .tab{flex:1;text-align:center;font-size:9px;padding:7px 2px;border-bottom:none;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .tab.tab-more{display:none;}
+  .tab-badge{display:none;}
+  .tab-content{padding-bottom:96px;}
+  .tab-mic-inline{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--gold);color:var(--bg);border:3px solid var(--surface);font-size:19px;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;flex-shrink:0;transform:translateY(-8px);transition:transform .15s;}
+  .tab-mic-inline:active{transform:translateY(-8px) scale(.93);}
+  .tab-mic-inline.listening{background:var(--red);animation:micPulse 1s ease-in-out infinite;}
+  .tab-mais{display:flex;}
+  .mais-menu{bottom:calc(78px + env(safe-area-inset-bottom));}
+  header{padding:10px 12px;padding-top:max(50px, calc(env(safe-area-inset-top) + 8px));gap:6px;flex-wrap:nowrap;}
+  .logo-text{display:none;}
+  .fb-status{display:none;}
+  .header-date{display:none;}
+  .header-right{gap:2px;}
+  .icon-btn{font-size:14px;padding:5px 4px;}
+  .user-chip{padding:2px;background:none;border:none;margin-left:2px;}
+  .chip-name{display:none;}
+}
 </style>
 </head>
 <body>
@@ -295,25 +371,25 @@ textarea::placeholder{color:var(--text-dim);}
   </div>
   <div class="header-right">
     <div class="header-date" id="headerDate">Ter, 26 mai · 23:48</div>
+    <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
+    <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
     <div class="user-chip" onclick="logout()" title="Sair">
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
     </div>
-    <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
-    <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
-    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
-    <button class="icon-btn" onclick="openReport()" title="Relatório">📊</button>
   </div>
 </header>
 <!-- MAIN -->
 <div class="main">
   <div class="left-panel">
+    <div id="topGreeting"></div>
     <div class="input-section">
-      <div class="input-label">✦ Nova demanda</div>
       <div class="input-row">
-        <textarea id="userInput" placeholder="Ex: &quot;Reunião sexta 15h&quot; · &quot;Pagar conta hoje&quot; · &quot;Nota: ideia de viagem&quot;" onkeydown="handleKey(event)"></textarea>
-        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Falar">🎤</button>
-        <button class="send-btn" id="sendBtn" onclick="processInput()">→</button>
+        <button class="mic-btn-lead" id="micBtn" onclick="toggleMic()" title="Falar">🎤</button>
+        <textarea id="userInput" placeholder="Falar tarefa...
+Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="processInput()">+</button>
       </div>
       <div class="share-row">
         <label class="share-toggle" onclick="toggleShare()">
@@ -321,25 +397,30 @@ textarea::placeholder{color:var(--text-dim);}
           <span class="share-lbl" id="shareLbl">Apenas para mim</span>
         </label>
       </div>
-      <div class="filter-row" id="areaRow" style="margin-top:7px;"></div>
       <div class="thinking" id="thinking"><div class="thinking-dots"><span></span><span></span><span></span></div><span id="thinkMsg">Processando…</span></div>
       <div class="ai-resp" id="aiResp"></div>
     </div>
     <div class="tabs">
-      <div class="tab active" onclick="switchTab(&#39;tasks&#39;)">📋 Tarefas <span class="tab-badge" id="bdgT">0</span></div>
-      <div class="tab" onclick="switchTab(&#39;week&#39;)">🗓️ Semana</div>
-      <div class="tab" onclick="switchTab(&#39;notes&#39;)">📝 Notas</div>
-      <div class="tab" onclick="switchTab(&#39;routines&#39;)">🔁 Rotinas</div>
+      <div class="tab active" data-tab="hoje" onclick="switchTab(&#39;hoje&#39;)">🏠 <span class="tab-lbl">Hoje</span></div>
+      <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)">📋 <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
+      <div class="tab tab-more" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
+      <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
+      <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
+      <div class="tab tab-more" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
     </div>
-    <div class="tab-content active" id="tab-tasks">
-      <div class="filter-row" id="statusFilterRow">
-        <button class="filter-btn active" onclick="setFilter(&#39;all&#39;,this)">Todas</button>
-        <button class="filter-btn" onclick="setFilter(&#39;mine&#39;,this)">Minhas</button>
-        <button class="filter-btn sf" onclick="setFilter(&#39;shared&#39;,this)">👫 Compartilhadas</button>
-        <button class="filter-btn" onclick="setFilter(&#39;urgent&#39;,this)">🔴 Urgente</button>
-        <button class="filter-btn" onclick="setFilter(&#39;done&#39;,this)">✓ Feitas</button>
+    <div class="mais-menu" id="maisMenu">
+      <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
+      <div class="mais-item" onclick="switchTab(&#39;routines&#39;);closeMaisMenu()">🔁 Rotinas</div>
+      <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
+    </div>
+    <div class="tab-content active" id="tab-hoje">
+      <div id="hojeContent"></div>
+    </div>
+    <div class="tab-content" id="tab-tasks">
+      <div class="tasks-filter-row">
+        <button class="hoje-filter-btn" id="tasksFilterBtn" onclick="openFiltersModal()">🔽 Filtros</button>
       </div>
-      <div class="filter-row" id="areaFilterRow"></div>
       <div id="taskList"></div>
     </div>
     <div class="tab-content" id="tab-week">
@@ -354,6 +435,16 @@ textarea::placeholder{color:var(--text-dim);}
       <button class="rep-btn" style="margin-top:0;margin-bottom:10px;" onclick="openNewRoutine()">+ Nova rotina</button>
       <div id="routineList"></div>
     </div>
+        <div class="tab-content" id="tab-ideias">
+                <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>p>
+              <div class="filter-row" id="i
+                      <button class="filter-btn active" data-if="all" onclick="setIdeaFilter('all')">Todas</button>
+                      <button class="filter-btn" data-if="pendente" onclick="setIdeaFilter('pendente')">Por tratar</button>
+                      <button class="filter-btn" data-if="andamento" onclick="setIdeaFilter('andamento')">Em curso</button>
+                      <button class="filter-btn" data-if="feita" onclick="setIdeaFilter('feita')">Feitas</button>
+              </div>
+              <div id="ideaList"></div>
+        </div></strong>
   </div>
   <!-- RIGHT -->
   <div class="right-panel">
@@ -402,10 +493,20 @@ textarea::placeholder{color:var(--text-dim);}
       <input type="date" id="editTaskDate" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
     </div>
     <div class="rep-sec">
-      <h3>Urgência</h3>
-      <select id="editTaskUrgency" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
-        <option value="normal">Normal</option>
-        <option value="urgent">🔴 Urgente</option>
+      <h3>Status</h3>
+      <select id="editTaskStatus" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="pendente">○ Pendente</option>
+        <option value="andamento">◐ Em andamento</option>
+        <option value="concluida">✓ Concluída</option>
+      </select>
+    </div>
+    <div class="rep-sec">
+      <h3>Prioridade</h3>
+      <select id="editTaskPriority" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="urgente">🚩 Urgente</option>
+        <option value="alta">🚩 Alta</option>
+        <option value="media">🚩 Média</option>
+        <option value="baixa">🚩 Baixa</option>
       </select>
     </div>
     <div class="rep-sec">
@@ -414,14 +515,54 @@ textarea::placeholder{color:var(--text-dim);}
         <option value="">✦ Geral</option>
       </select>
     </div>
+    <div class="rep-sec">
+      <h3>Projeto</h3>
+      <select id="editTaskProject" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="">Sem projeto</option>
+      </select>
+    </div>
     <div class="rep-sec" id="editShareWrap">
       <label class="share-toggle" onclick="toggleEditShare()">
         <div class="tog-track" id="editShareTrk"><div class="tog-knob"></div></div>
         <span class="share-lbl" id="editShareLbl">Apenas para mim</span>
       </label>
     </div>
+    <div class="rep-sec" id="editAssignWrap" style="display:none;">
+      <h3>Atribuir a</h3>
+      <select id="editTaskAssignee" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <option value="">Ninguém em especial</option>
+      </select>
+    </div>
     <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveEditTask()">Salvar alterações</button>
     <button class="close-btn" onclick="closeEditTask()">Cancelar</button>
+  </div>
+</div>
+<!-- FILTROS (bottom sheet) -->
+<div class="fsheet-ov" id="fsheetOv" onclick="if(event.target===this)closeFiltersModal()">
+  <div class="fsheet">
+    <div class="fsheet-handle"></div>
+    <div class="fsheet-hdr">
+      <h2>Filtros</h2>
+      <button class="fsheet-close" onclick="closeFiltersModal()">✕</button>
+    </div>
+    <div id="fsheetBody"></div>
+  </div>
+</div>
+<!-- REMINDER MODAL -->
+<div class="modal-ov" id="reminderModal">
+  <div class="modal-box">
+    <h2>🔔 Lembrete</h2>
+    <div class="rep-sec">
+      <h3 id="reminderTaskLabel" style="font-weight:400;color:var(--text-dim);"></h3>
+    </div>
+    <div class="rep-sec">
+      <h3>Avisar em</h3>
+      <input type="datetime-local" id="reminderDateTime" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <p id="reminderHint" style="font-size:11px;color:var(--text-dim);margin-top:6px;"></p>
+    </div>
+    <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="confirmReminder()">Agendar lembrete</button>
+    <button class="close-btn" id="cancelReminderBtn" style="display:none;" onclick="cancelReminder()">Cancelar lembrete agendado</button>
+    <button class="close-btn" onclick="closeReminderModal()">Fechar</button>
   </div>
 </div>
 <!-- NEW ROUTINE MODAL -->
@@ -548,6 +689,14 @@ let tasks=[],gcalEvs=[],notes=[];
 let filter='all',shareMode=false,isDark=true,selectedDay=null;
 const AREAS={deus:{label:'Deus',emoji:'🙏'},pessoal:{label:'Pessoal',emoji:'👤'},familia:{label:'Família',emoji:'👨‍👩‍👧'},financas:{label:'Finanças',emoji:'💰'},negocios:{label:'Negócios',emoji:'💼'}};
 let currentArea='',areaFilter='all';
+const PRIORITIES={urgente:{label:'Urgente',emoji:'🚩',color:'var(--red)'},alta:{label:'Alta',emoji:'🚩',color:'#e08a3c'},media:{label:'Média',emoji:'🚩',color:'#d6c24c'},baixa:{label:'Baixa',emoji:'🚩',color:'var(--green)'}};
+function priorityDef(p){return PRIORITIES[p]||PRIORITIES.media;}
+// Prioridade é o novo campo "de verdade" (4 níveis); urgency (antigo,
+// binário) continua sendo salvo em paralelo só pra nada mais no app quebrar
+// — sempre derivado de priority a partir daqui pra frente.
+function taskPriority(t){return t.priority||(t.urgency==='urgent'?'urgente':'media');}
+function taskStatus(t){return t.done?'concluida':(t.inProgress?'andamento':'pendente');}
+function partnerKey(){return cu==='tiago'?'monique':cu==='monique'?'tiago':null;}
 // Which of the 5 default areas this person actually wants to see. Used to
 // be one-size-fits-all (all 5 hardcoded in the HTML for everyone), which
 // doesn't make sense for someone who, say, doesn't want "Deus" or isn't
@@ -616,6 +765,7 @@ function renderAreaFilterRow(){
 function applyAreaVisibility(){
   renderAreaRow();
   renderAreaFilterRow();
+  renderTasks();
 }
 // Builds the <select> options for the edit-task modal. Always includes the
 // task's CURRENT area even if it has since been turned off (or its custom
@@ -634,6 +784,24 @@ function populateEditTaskAreaOptions(currentValue){
     html+=`<option value="${key}">${esc(a.emoji)} ${esc(a.label)}</option>`;
   });
   sel.innerHTML=html;
+}
+function populateEditTaskProjectOptions(currentValue){
+  const sel=document.getElementById('editTaskProject');
+  if(!sel)return;
+  let html='<option value="">Sem projeto</option>';
+  projects.forEach(p=>{html+=`<option value="${p.id}">${esc(p.emoji||'📁')} ${esc(p.name)}</option>`;});
+  sel.innerHTML=html;
+  sel.value=currentValue||'';
+}
+function populateEditTaskAssigneeOptions(currentValue){
+  const sel=document.getElementById('editTaskAssignee');
+  if(!sel)return;
+  const pk=partnerKey();
+  let html='<option value="">Ninguém em especial</option>';
+  if(pk)html+=`<option value="${pk}">${esc(USERS[pk].name)}</option>`;
+  html+=`<option value="${cu}">${esc(USERS[cu]?.name||'Eu')}</option>`;
+  sel.innerHTML=html;
+  sel.value=currentValue||'';
 }
 // Preserves checkbox states across a custom-area-list rebuild (adding or
 // deleting a row replaces the whole list's innerHTML, which would
@@ -714,8 +882,11 @@ async function saveAreaSettings(){
   await savePrefs();
   notify('✓ Áreas atualizadas!','success');
 }
-let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null;
+let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null,fbUnsubProjects=null,fbUnsubIdeas=null;
 let routines=[];
+  let ideas=[];
+  let ideaFilter='all';
+let projects=[];
 // ── FIREBASE PERSISTENCE (cloud) ─────────────────
 function fbPath(col,id){return`${col}/${id}`;}
 async function saveTask(task){
@@ -732,9 +903,33 @@ async function saveNote(note){
   if(!window.fbSave)return;
   await window.fbSave(`users/${cu}/notes/${note.id}`,note);
 }
+  async function saveIdea(idea){
+    if(!window.fbSave)return;
+    await window.fbSave(`users/${cu}/ideas/${idea.id}`,idea);
+  }
+  async function removeIdea(id){
+    if(!window.fbSave)return;
+    await window.fbDelete(`users/${cu}/ideas/${id}`);
+  }
+  async function cycleIdeaStatus(id){
+    const idea=ideas.find(i=>String(i.id)===String(id));
+    if(!idea)return;
+    const order=['pendente','andamento','feita'];
+    const next=order[(order.indexOf(idea.status||'pendente')+1)%order.length];
+    idea.status=next;
+    await saveIdea(idea);
+  }
 async function removeNote(id){
   if(!window.fbSave)return;
   await window.fbDelete(`users/${cu}/notes/${id}`);
+}
+async function saveProject(p){
+  if(!window.fbSave)return;
+  await window.fbSave(`users/${cu}/projects/${p.id}`,p);
+}
+async function removeProject(id){
+  if(!window.fbSave)return;
+  await window.fbDelete(`users/${cu}/projects/${id}`);
 }
 async function savePrefs(){
   if(!window.fbSave||!cu)return;
@@ -745,12 +940,13 @@ function startListeners(){
   if(fbUnsubTasks)fbUnsubTasks();
   if(fbUnsubNotes)fbUnsubNotes();
   if(fbUnsubRoutines)fbUnsubRoutines();
+  if(fbUnsubProjects)fbUnsubProjects();
   if(isFamily(cu)){
     // Tiago/Monique: merge personal + household shared tasks
     fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,myTasks=>{
       window.fbListenCol('shared_tasks',sharedTasks=>{
         tasks=[...myTasks,...sharedTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
-        renderTasks();updateStats();renderShared();
+        renderTasks();updateStats();renderShared();renderHoje();
         document.getElementById('fbDot').classList.add('on');
         document.getElementById('fbLbl').textContent='';
       });
@@ -759,7 +955,7 @@ function startListeners(){
     // Independent/solo accounts: fully private, never touch the family's shared_tasks
     fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,myTasks=>{
       tasks=[...myTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
-      renderTasks();updateStats();renderShared();
+      renderTasks();updateStats();renderShared();renderHoje();
       document.getElementById('fbDot').classList.add('on');
       document.getElementById('fbLbl').textContent='';
     });
@@ -771,6 +967,15 @@ function startListeners(){
   fbUnsubRoutines=window.fbListenCol(`users/${cu}/routines`,r=>{
     routines=r;
     renderRoutines();
+    fbUnsubIdeas=window.fbListenCol(`users/${cu}/ideas`,i=>{
+      ideas=i.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
+      renderIdeas();
+    });
+  });
+  fbUnsubProjects=window.fbListenCol(`users/${cu}/projects`,p=>{
+    projects=p.sort((a,b)=>((a.createdAt||'')<(b.createdAt||''))?-1:1);
+    if(document.getElementById('fsheetOv')?.classList.contains('open'))renderFiltersSheet();
+    renderTasks();
   });
 }
 // ── PIN (local quick-access lock) ────────────────
@@ -999,9 +1204,35 @@ function quickLogin(uid){
   startGoogleAuth();
 }
 function startGoogleAuth(){
+  dbg(`startGoogleAuth: standalone=${window.navigator.standalone===true} ua=${(navigator.userAgent||'').slice(0,70)}`);
+  // Native apps (iOS/Android) can't send Google's OAuth screen a top-level
+  // redirect from inside their own embedded WebView — Google actively
+  // detects and blocks that ("Error 403: disallowed_useragent"), which is
+  // exactly what was locking out anyone logging in for the first time from
+  // the installed Android app (it worked fine as a PWA in a real browser
+  // tab, where this restriction doesn't apply). Fix: for native platforms,
+  // open the Google screen in a real system browser tab (Chrome Custom
+  // Tabs / SFSafariViewController via @capacitor/browser) instead of
+  // navigating the app's own WebView. Google redirects that tab to a tiny
+  // static bridge page on GitHub Pages, which immediately hands the token
+  // back to the app via the assistentepessoal:// custom scheme — see the
+  // 'appUrlOpen' listener below, which is where onToken() actually runs
+  // for this path.
+  if(isNativeApp()){
+    const bridge='https://tiagocamargos1.github.io/Assistente/oauth-bridge.html';
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(bridge)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
+    const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+    if(browser){
+      dbg('startGoogleAuth: native platform, opening system browser tab');
+      browser.open({url});
+    }else{
+      dbg('startGoogleAuth: native platform but Browser plugin missing — falling back to in-app redirect (will likely be blocked by Google)');
+      window.location.href=url;
+    }
+    return;
+  }
   const redirect='https://tiagocamargos1.github.io/Assistente';
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
-  dbg(`startGoogleAuth: standalone=${window.navigator.standalone===true} ua=${(navigator.userAgent||'').slice(0,70)}`);
   dbg('startGoogleAuth: redirecting to accounts.google.com now');
   window.location.href=url;
 }
@@ -1154,9 +1385,11 @@ function logout(){
   if(fbUnsubTasks)fbUnsubTasks();
   if(fbUnsubNotes)fbUnsubNotes();
   if(fbUnsubRoutines)fbUnsubRoutines();
+  if(fbUnsubProjects)fbUnsubProjects();
+  if(fbUnsubIdeas)fbUnsubIdeas();
   if(cu)clearStoredGoogle(cu);
   if(window.fbSignOut)window.fbSignOut();
-  gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];
+  gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];ideas=[];
   document.getElementById('pinScreen').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('fbDot').classList.remove('on');
@@ -1165,7 +1398,7 @@ function logout(){
 function updateChip(){
   const u=USERS[cu]||USERS.tiago;
   const av=document.getElementById('chipAv');
-  if(gProfile?.picture){av.innerHTML=`<img src="${gProfile.picture}" style="width:22px;height:22px;border-radius:50%;">`;}
+  if(gProfile?.picture){av.innerHTML=`<img src="${gProfile.picture}" style="width:28px;height:28px;border-radius:50%;">`;}
   else{av.textContent=u.emoji;av.style.background=u.color;}
   document.getElementById('chipName').textContent=u.name;
 }
@@ -1324,7 +1557,7 @@ async function processInput(){
       }
       switchTab('week');setTimeout(renderWeek,500);
     }else if(parsed.type==='task'){
-      const task={id:Date.now().toString(),text:parsed.title,description:parsed.description,urgency:parsed.urgency||'normal',date:parsed.date,done:false,shared:shareMode,owner:cu,area:currentArea||null,createdAt:new Date().toISOString()};
+      const task={id:Date.now().toString(),text:parsed.title,description:parsed.description,urgency:parsed.urgency||'normal',priority:parsed.priority||'media',inProgress:false,date:parsed.date,done:false,shared:shareMode,owner:cu,assignedTo:null,projectId:null,area:currentArea||null,createdAt:new Date().toISOString()};
       await saveTask(task);
       notify(shareMode?'👫 Tarefa compartilhada!':'✅ Tarefa adicionada!','success');
       switchTab('tasks');
@@ -1333,6 +1566,12 @@ async function processInput(){
       await saveNote(note);
       notify('📝 Nota salva!','success');
       switchTab('notes');
+    }
+    else if(parsed.type==='idea'){
+      const idea={id:Date.now().toString(),text:parsed.title,status:'pendente',owner:cu,area:currentArea||null,createdAt:new Date().toISOString()};
+      await saveIdea(idea);
+      notify('💡 Ideia guardada!','success');
+      switchTab('ideias');
     }
     document.getElementById('aiResp').textContent=parsed.response||'Feito!';
     document.getElementById('aiResp').classList.add('visible');
@@ -1351,11 +1590,14 @@ function parseInput(inp, today){
   const low=inp.toLowerCase().trim();
   const todayStr=today.toISOString().split('T')[0];
   // ── Detect type ──
-  const isNote=/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
+  const isIdea=/^(ideia:|idéia:)/i.test(low);
+  const isNote=!isIdea&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
   const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
     || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
   const isUrgent=/\b(urgente|urgentemente|hoje|agora|já|imediato)\b/i.test(low);
+  const isAltaPrio=/\balta prioridade|prioridade alta\b/i.test(low);
+  const isBaixaPrio=/\bbaixa prioridade|prioridade baixa\b/i.test(low);
   // ── Extract time ──
   let time=null;
   const timeMatch=inp.match(/\b(\d{1,2})[h:](\d{2})?\s*(am|pm)?/i)
@@ -1404,7 +1646,8 @@ function parseInput(inp, today){
     }
   }
   // ── Clean title ──
-  let title=inp
+    let title=inp
+      .replace(/^(ideia:|idéia:)\s*/i,'')
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
     .replace(/\b(às|as|ás)\s*\d{1,2}[h:]?\d{0,2}\s*(am|pm)?\b/gi,'')
     .replace(/\b\d{1,2}[h:]\d{0,2}\s*(am|pm)?\b/gi,'')
@@ -1415,14 +1658,16 @@ function parseInput(inp, today){
   const dateLabel=date?` para ${fd(date)}`:'';
   const timeLabel=time?` às ${time}`:'';
   let response='';
-  if(isNote)response=`Nota salva! ✏️`;
+  if(isIdea)response=`Ideia guardada na Caixa de Ideias! 💡`;
+    else if(isNote)response=`Nota salva! ✏️`;
   else if(isEvent)response=`Compromisso "${title}" agendado${dateLabel}${timeLabel}. ✅`;
   else response=`Tarefa "${title}" adicionada${dateLabel}. ✅`;
   return{
-    type: isNote?'note': isEvent?'event':'task',
+    type:  isIdea?'idea':isNote?'note': isEvent?'event':'task',
     title,
     description:null,
     urgency: isUrgent?'urgent':'normal',
+    priority: isUrgent?'urgente':isAltaPrio?'alta':isBaixaPrio?'baixa':'media',
     date,
     time,
     response
@@ -1431,6 +1676,14 @@ function parseInput(inp, today){
 // ── VOICE INPUT ──────────────────────────────────
 let recognition=null;
 let isListening=false;
+// Botão flutuante de microfone (barra inferior mobile) — o campo "Nova
+// demanda" já fica sempre visível acima das abas, então só precisa focar
+// nele e ligar o mesmo mic que o botão de sempre usa.
+function focusAndMic(){
+  const inp=document.getElementById('userInput');
+  if(inp){inp.scrollIntoView({block:'center',behavior:'smooth'});inp.focus();}
+  toggleMic();
+}
 function toggleMic(){
   if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){
     notify('Reconhecimento de voz não suportado neste navegador.','error');
@@ -1449,6 +1702,7 @@ function startMic(){
     isListening=true;
     document.getElementById('micBtn').classList.add('listening');
     document.getElementById('micBtn').textContent='⏹';
+    const fab=document.getElementById('fabMic');if(fab)fab.classList.add('listening');
     document.getElementById('thinkMsg').textContent='Ouvindo… fale agora!';
     document.getElementById('thinking').classList.add('visible');
     document.getElementById('aiResp').classList.remove('visible');
@@ -1479,6 +1733,7 @@ function stopMic(){
   if(recognition)try{recognition.stop();}catch(e){}
   document.getElementById('micBtn').classList.remove('listening');
   document.getElementById('micBtn').textContent='🎤';
+  const fab=document.getElementById('fabMic');if(fab)fab.classList.remove('listening');
   document.getElementById('thinking').classList.remove('visible');
 }
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();processInput();}}
@@ -1494,15 +1749,33 @@ async function toggleTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
   if(!t)return;
   t.done=!t.done;t.doneBy=t.done?cu:null;t.doneAt=t.done?new Date().toISOString():null;
+  if(t.done){t.inProgress=false;await cancelReminderNotif(t);}
   await saveTask(t);
   if(t.done&&t.shared)sendPush('Tarefa concluída',`${USERS[cu].name} concluiu: ${t.text}`);
   notify(t.done?'✓ Concluída!':'Reaberta',t.done?'success':'info');
+}
+async function toggleInProgress(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t||t.done)return;
+  t.inProgress=!t.inProgress;
+  await saveTask(t);
+  notify(t.inProgress?'▶ Em andamento':'Voltou pra pendente','info');
 }
 async function deleteTask(id){
   const t=tasks.find(t=>String(t.id)===String(id));
   if(!t)return;
   if(t.shared&&t.owner!==cu){notify('Só quem criou pode excluir.','error');return;}
+  await cancelReminderNotif(t);
   await removeTask(String(id),t.shared);
+}
+// Cancela a série inteira de notificações de um lembrete (não só a
+// primeira) — usado ao concluir/excluir a tarefa ou reagendar.
+async function cancelReminderNotif(t){
+  const plugin=localNotifPlugin();
+  if(!plugin)return;
+  const ids=(t.reminderNotifIds&&t.reminderNotifIds.length)?t.reminderNotifIds:(t.reminderNotifId?[t.reminderNotifId]:[]);
+  if(!ids.length)return;
+  await plugin.cancel({notifications:ids.map(id=>({id}))}).catch(()=>{});
 }
 // ── EDIT TASK ──────────────────────────────────
 let editingTaskId=null,editingTaskShared=false;
@@ -1514,12 +1787,16 @@ function openEditTask(id){
   editingTaskShared=!!t.shared;
   document.getElementById('editTaskText').value=t.text||'';
   document.getElementById('editTaskDate').value=t.date||'';
-  document.getElementById('editTaskUrgency').value=t.urgency||'normal';
+  document.getElementById('editTaskStatus').value=taskStatus(t);
+  document.getElementById('editTaskPriority').value=taskPriority(t);
   populateEditTaskAreaOptions(t.area||'');
   document.getElementById('editTaskArea').value=t.area||'';
+  populateEditTaskProjectOptions(t.projectId||'');
+  populateEditTaskAssigneeOptions(t.assignedTo||'');
   document.getElementById('editShareTrk').classList.toggle('on',editingTaskShared);
   updateEditShareLbl();
   document.getElementById('editShareWrap').style.display=isFamily(cu)?'':'none';
+  document.getElementById('editAssignWrap').style.display=(isFamily(cu)&&editingTaskShared)?'':'none';
   document.getElementById('editTaskModal').classList.add('open');
 }
 function closeEditTask(){
@@ -1531,6 +1808,7 @@ function toggleEditShare(){
   editingTaskShared=!editingTaskShared;
   document.getElementById('editShareTrk').classList.toggle('on',editingTaskShared);
   updateEditShareLbl();
+  document.getElementById('editAssignWrap').style.display=editingTaskShared?'':'none';
 }
 function updateEditShareLbl(){
   const other=partnerName();
@@ -1542,8 +1820,11 @@ async function saveEditTask(){
   const newText=document.getElementById('editTaskText').value.trim();
   if(!newText){notify('O texto não pode ficar vazio.','error');return;}
   const newDate=document.getElementById('editTaskDate').value||null;
-  const newUrgency=document.getElementById('editTaskUrgency').value;
+  const newStatus=document.getElementById('editTaskStatus').value;
+  const newPriority=document.getElementById('editTaskPriority').value;
   const newArea=document.getElementById('editTaskArea').value||null;
+  const newProject=document.getElementById('editTaskProject').value||null;
+  const newAssignee=document.getElementById('editTaskAssignee').value||null;
   const wasShared=!!t.shared;
   const nowShared=editingTaskShared;
   if(wasShared!==nowShared){
@@ -1552,26 +1833,37 @@ async function saveEditTask(){
   }
   t.text=newText;
   t.date=newDate;
-  t.urgency=newUrgency;
+  t.priority=newPriority;
+  t.urgency=newPriority==='urgente'?'urgent':'normal';
+  t.done=newStatus==='concluida';
+  t.inProgress=newStatus==='andamento';
+  t.doneBy=t.done?(t.doneBy||cu):null;
+  t.doneAt=t.done?(t.doneAt||new Date().toISOString()):null;
   t.area=newArea;
+  t.projectId=newProject;
+  t.assignedTo=nowShared?newAssignee:null;
   await saveTask(t);
   notify('✏️ Tarefa atualizada!','success');
   closeEditTask();
 }
 function renderTasks(){
   const el=document.getElementById('taskList');
+  const tfb=document.getElementById('tasksFilterBtn');
+  if(tfb)tfb.classList.toggle('active',advFiltersActive());
   let f=tasks;
   if(filter==='mine')f=tasks.filter(t=>!t.shared&&t.owner===cu);
   if(filter==='shared')f=tasks.filter(t=>t.shared);
-  if(filter==='urgent')f=tasks.filter(t=>t.urgency==='urgent'&&!t.done);
+  if(filter==='urgent')f=tasks.filter(t=>taskPriority(t)==='urgente'&&!t.done);
   if(filter==='done')f=tasks.filter(t=>t.done);
   // Every view except "Feitas" hides completed tasks — once marked done, a
   // task moves out of the working list entirely instead of lingering
   // (struck-through) among the pending ones. Keeps the main panel focused
   // on what's still left to do; finished items are still fully available,
-  // just under the dedicated "✓ Feitas" filter.
-  else f=f.filter(t=>!t.done);
+  // just under the dedicated "✓ Feitas" filter. Skipped when the advanced
+  // Status filter (Filtros sheet) is driving visibility instead.
+  else if(advFilters.status==='all')f=f.filter(t=>!t.done);
   if(areaFilter!=='all')f=f.filter(t=>(t.area||'')===areaFilter);
+  f=f.filter(taskMatchesAdvFilters);
   if(!f.length){el.innerHTML=`<div class="empty-state"><div class="icon">✦</div>Nenhuma tarefa aqui</div>`;return;}
   const shared=f.filter(t=>t.shared),mine=f.filter(t=>!t.shared);
   let html='';
@@ -1585,29 +1877,250 @@ function taskHTML(t){
   const canDel=!t.shared||t.owner===cu;
   const other=t.owner&&t.owner!==cu?USERS[t.owner]?.name:null;
   const tid=String(t.id).replace(/'/g,'');
-  return`<div class="task-item${t.done?' done':''}">
+  const prio=taskPriority(t);
+  const pDef=priorityDef(prio);
+  const status=taskStatus(t);
+  const proj=t.projectId?projects.find(p=>p.id===t.projectId):null;
+  const assignee=t.shared&&t.assignedTo?USERS[t.assignedTo]?.name:null;
+  return`<div class="task-item${t.done?' done':''}${status==='andamento'?' inprog':''}">
     <div class="task-check" onclick="toggleTask('${tid}')">${t.done?'✓':''}</div>
     <div class="task-body">
       <div class="task-text">${esc(t.text||'')}</div>
       <div class="task-meta">
         ${t.date?`<span>📅 ${fd(t.date)}</span>`:''}
+        ${reminderBadgeHTML(t)}
         ${t.shared?`<span class="ttag ts">👫</span>`:''}
-        ${t.urgency==='urgent'?`<span class="ttag tu">🔴</span>`:''}
+        ${prio!=='media'?`<span class="ttag" style="color:${pDef.color};background:transparent;border:1px solid ${pDef.color};">${pDef.emoji} ${pDef.label}</span>`:''}
+        ${status==='andamento'?`<span class="ttag" style="color:var(--blue);background:rgba(90,126,160,.15);">◐ Em andamento</span>`:''}
+        ${proj?`<span class="ttag" style="color:var(--text-muted);background:rgba(255,255,255,.06);">📁 ${esc(proj.name)}</span>`:''}
         ${areaTag(t.area)}
         ${other?`<span style="font-size:10px;color:var(--text-dim)">por ${other}</span>`:''}
+        ${assignee?`<span style="font-size:10px;color:var(--gold-dim)">→ ${esc(assignee)}</span>`:''}
         ${t.done&&t.doneBy?`<span style="font-size:10px;color:var(--green)">✓ ${USERS[t.doneBy]?.name||t.doneBy}</span>`:''}
       </div>
     </div>
     <div class="task-acts">
-      <button class="tact rb" onclick="scheduleReminder('${esc(t.text||'')}')">🔔</button>
-      ${canDel?`<button class="tact" onclick="openEditTask('${tid}')" title="Editar">✏️</button>`:''}
-      ${canDel?`<button class="tact" onclick="deleteTask('${tid}')">✕</button>`:''}
+      <button class="tact-kebab" onclick="toggleTaskMenu(event)">⋮</button>
+      <div class="task-menu">
+        ${!t.done?`<div class="tmenu-item" onclick="toggleInProgress('${tid}');closeAllTaskMenus()">${status==='andamento'?'⏸ Pausar':'▶ Iniciar'}</div>`:''}
+        <div class="tmenu-item" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}');closeAllTaskMenus()">${hasActiveReminder(t)?'⏰ Lembrete agendado':'🔔 Agendar lembrete'}</div>
+        ${canDel?`<div class="tmenu-item" onclick="openEditTask('${tid}');closeAllTaskMenus()">✏️ Editar</div>`:''}
+        ${canDel?`<div class="tmenu-item danger" onclick="deleteTask('${tid}');closeAllTaskMenus()">✕ Excluir</div>`:''}
+      </div>
     </div>
   </div>`;
 }
-function scheduleReminder(text){
-  if(Notification.permission==='granted'){new Notification('🔔 Lembrete — Assistente',{body:text});notify('Lembrete enviado!','success');}
-  else notify('Ative as notificações primeiro.','info');
+// ── LEMBRETES COM ALARME (notificação local, iOS nativo) ────
+// Usa o plugin @capacitor/local-notifications: agenda uma notificação real
+// no sistema operacional para um horário futuro específico, com som — toca
+// mesmo com o app fechado, ao contrário da antiga Notification instantânea.
+// Só funciona dentro do app nativo (iOS); no navegador, avisamos a
+// limitação em vez de fingir que agendou algo que não vai disparar.
+function isNativeApp(){
+  return!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+}
+function localNotifPlugin(){
+  return(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications)||null;
+}
+// Botão de ação "Reagendar" na própria notificação (swipe/long-press),
+// igual ao app Lembretes nativo. foreground:true porque o handler que
+// reagenda (snoozeReminderByNotifId) roda em JS — precisa do app vivo
+// pra processar o toque na ação com confiabilidade no iOS.
+const REMINDER_ACTION_TYPE='REMINDER_ACTIONS';
+let reminderActionsRegistered=false;
+async function ensureReminderActionsRegistered(){
+  const plugin=localNotifPlugin();
+  if(!plugin||reminderActionsRegistered)return;
+  try{
+    await plugin.registerActionTypes({types:[{
+      id:REMINDER_ACTION_TYPE,
+      actions:[{id:'snooze',title:'Reagendar 1h',foreground:true}]
+    }]});
+    reminderActionsRegistered=true;
+  }catch(e){}
+}
+// Em vez de uma notificação só, agenda uma SÉRIE (a cada poucos minutos),
+// pra "insistir" como um alarme até a tarefa ser marcada como feita — a
+// própria conclusão da tarefa cancela o restante da série (ver toggleTask).
+const REMINDER_REPEAT_COUNT=6,REMINDER_REPEAT_MIN=5;
+// Agenda cada notificação da série com uma chamada separada (em vez de um
+// array só numa chamada). O plugin nativo (iOS) tem uma falha conhecida:
+// se UM item de um lote tiver o horário "no passado" (ex.: o 1º item caiu
+// bem em cima do horário atual por alguma folga de milissegundos), ele
+// rejeita a chamada inteira SEM parar o loop — os itens seguintes do MESMO
+// lote continuam sendo processados de forma inconsistente. Chamadas
+// separadas isolam cada notificação: se uma falhar, as outras 5 continuam
+// normalmente. Também garante uma folga mínima de 3s no horário de cada
+// uma, pra nunca cair "no passado" por uma questão de milissegundos.
+async function scheduleReminderSeries(plugin,text,when){
+  await ensureReminderActionsRegistered();
+  const ids=[];
+  const minAt=Date.now()+3000;
+  for(let i=0;i<REMINDER_REPEAT_COUNT;i++){
+    const at=new Date(Math.max(when.getTime()+i*REMINDER_REPEAT_MIN*60000,minAt+i*1000));
+    const id=Math.floor((Date.now()+i)%2147000000);
+    try{
+      await plugin.schedule({notifications:[{
+        title:'🔔 Lembrete — Assistente',
+        body:text||'',
+        id,
+        schedule:{at,allowWhileIdle:true},
+        sound:'default',
+        actionTypeId:REMINDER_ACTION_TYPE
+      }]});
+      ids.push(id);
+    }catch(e){}
+  }
+  return ids;
+}
+function findTaskByReminderNotifId(notifId){
+  return tasks.find(t=>String(t.reminderNotifId)===String(notifId)||(t.reminderNotifIds||[]).some(id=>String(id)===String(notifId)));
+}
+async function snoozeReminderByNotifId(oldNotifId){
+  const t=findTaskByReminderNotifId(oldNotifId);
+  if(!t)return;
+  const plugin=localNotifPlugin();
+  if(!plugin)return;
+  try{
+    await cancelReminderNotif(t);
+    const when=new Date(Date.now()+60*60*1000);
+    const ids=await scheduleReminderSeries(plugin,t.text,when);
+    t.reminderAt=when.toISOString();
+    t.reminderNotifId=ids[0];
+    t.reminderNotifIds=ids;
+    await saveTask(t);
+    notify(`Lembrete reagendado para ${fdt(t.reminderAt)}!`,'success');
+    renderTasks();
+  }catch(e){}
+}
+// Ativo enquanto houver um horário marcado e a tarefa não estiver feita —
+// inclui o período "atrasado" (passou da hora mas ninguém concluiu ainda),
+// pra manter o sino aceso e o selo vermelho contando até a conclusão real.
+function hasActiveReminder(t){
+  return!!(t.reminderAt&&!t.done);
+}
+function isReminderOverdue(t){
+  return hasActiveReminder(t)&&new Date(t.reminderAt).getTime()<=Date.now();
+}
+function overdueLabel(iso){
+  const mins=Math.max(0,Math.floor((Date.now()-new Date(iso).getTime())/60000));
+  if(mins<60)return`atrasado há ${mins}m`;
+  const h=Math.floor(mins/60),m=mins%60;
+  return`atrasado há ${h}h${m?` ${m}m`:''}`;
+}
+function reminderBadgeHTML(t){
+  if(!hasActiveReminder(t))return'';
+  const tid=String(t.id).replace(/'/g,'');
+  if(isReminderOverdue(t))return`<span class="ttag" id="rembadge-${tid}" style="color:var(--red);border-color:var(--red);background:rgba(192,96,96,.15);">🔴 ${overdueLabel(t.reminderAt)}</span>`;
+  return`<span class="ttag" style="color:var(--gold);border-color:var(--gold);">⏰ ${fdt(t.reminderAt)}</span>`;
+}
+function fdt(iso){
+  const d=new Date(iso);
+  const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0');
+  const hh=String(d.getHours()).padStart(2,'0'),mi=String(d.getMinutes()).padStart(2,'0');
+  return`${dd}/${mm} ${hh}:${mi}`;
+}
+// Atualiza os selos "atrasado há Xm" a cada 30s. Pra selos que JÁ nasceram
+// atrasados (id no DOM), só troca o texto — mais leve. Mas se algum
+// lembrete AINDA gold (futuro) acabou de passar da hora nesse meio-tempo,
+// não existe id pra ele ainda (só é criado quando renderizado atrasado),
+// então nesse caso força um re-render completo da lista pra ele "virar"
+// vermelho de verdade, não só o texto.
+setInterval(()=>{
+  let needsFullRender=false;
+  tasks.forEach(t=>{
+    if(!isReminderOverdue(t))return;
+    const el=document.getElementById(`rembadge-${String(t.id).replace(/'/g,'')}`);
+    if(el)el.textContent=`🔴 ${overdueLabel(t.reminderAt)}`;
+    else needsFullRender=true;
+  });
+  if(needsFullRender){renderTasks();renderHoje();}
+},30000);
+let reminderTaskId=null;
+function openReminderModal(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t)return;
+  reminderTaskId=id;
+  document.getElementById('reminderTaskLabel').textContent=t.text||'';
+  const dt=document.getElementById('reminderDateTime');
+  if(hasActiveReminder(t)){
+    dt.value=toLocalInputValue(new Date(t.reminderAt));
+    document.getElementById('cancelReminderBtn').style.display='';
+  }else{
+    const def=new Date(Date.now()+60*60*1000);
+    dt.value=toLocalInputValue(def);
+    document.getElementById('cancelReminderBtn').style.display='none';
+  }
+  document.getElementById('reminderHint').textContent=isNativeApp()?'':'Lembretes com alarme funcionam no app instalado no iPhone. No navegador, o lembrete não vai tocar sozinho.';
+  document.getElementById('reminderModal').classList.add('open');
+}
+function toLocalInputValue(d){
+  const pad=n=>String(n).padStart(2,'0');
+  return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function closeReminderModal(){
+  document.getElementById('reminderModal').classList.remove('open');
+  reminderTaskId=null;
+}
+async function confirmReminder(){
+  const t=tasks.find(t=>String(t.id)===String(reminderTaskId));
+  if(!t)return;
+  const val=document.getElementById('reminderDateTime').value;
+  if(!val){notify('Escolha data e hora do lembrete.','error');return;}
+  const when=new Date(val);
+  if(when.getTime()<=Date.now()){notify('Escolha um horário no futuro.','error');return;}
+  if(!isNativeApp()){
+    notify('Lembretes com alarme funcionam no app instalado no iPhone.','info');
+    return;
+  }
+  const plugin=localNotifPlugin();
+  if(!plugin){notify('Plugin de notificações locais indisponível.','error');return;}
+  try{
+    const perm=await plugin.checkPermissions();
+    if(perm.display!=='granted'){
+      const req=await plugin.requestPermissions();
+      if(req.display!=='granted'){notify('Permita notificações nos Ajustes para usar lembretes.','error');return;}
+    }
+    if(hasActiveReminder(t))await cancelReminderNotif(t);
+    const ids=await scheduleReminderSeries(plugin,t.text,when);
+    if(!ids.length){notify('Não foi possível agendar o lembrete.','error');return;}
+    t.reminderAt=when.toISOString();
+    t.reminderNotifId=ids[0];
+    t.reminderNotifIds=ids;
+    await saveTask(t);
+    // Confere de verdade no sistema (não só se a chamada JS não deu erro)
+    // quantas dessas notificações ficaram realmente pendentes no iOS, e
+    // deixa isso visível na própria tela (em vez de um toast que some
+    // rápido) — assim dá pra fotografar com calma se algo não bater.
+    let confirmMsg=`Lembrete agendado para ${fdt(t.reminderAt)}.`;
+    try{
+      const pending=await plugin.getPending();
+      const mine=(pending.notifications||[]).filter(n=>ids.includes(n.id));
+      confirmMsg+=` ${mine.length}/${ids.length} confirmadas no sistema.`;
+      if(mine.length)confirmMsg+=' Horários: '+mine.map(n=>{
+        const at=n.schedule&&n.schedule.at?new Date(n.schedule.at):null;
+        return at?fdt(at.toISOString()):'?';
+      }).sort().join(', ');
+    }catch(e){
+      confirmMsg+=' (não foi possível confirmar no sistema)';
+    }
+    notify(confirmMsg,'success');
+    document.getElementById('reminderHint').textContent=confirmMsg;
+    document.getElementById('reminderHint').style.color='var(--gold)';
+    // Não fecha sozinho dessa vez — deixa a confirmação na tela até você
+    // ler/fotografar e tocar em "Fechar" manualmente.
+  }catch(e){
+    notify('Não foi possível agendar o lembrete.','error');
+  }
+}
+async function cancelReminder(){
+  const t=tasks.find(t=>String(t.id)===String(reminderTaskId));
+  if(!t)return;
+  await cancelReminderNotif(t);
+  t.reminderAt=null;t.reminderNotifId=null;t.reminderNotifIds=null;
+  await saveTask(t);
+  notify('Lembrete cancelado.','info');
+  closeReminderModal();
 }
 // ── NOTES ────────────────────────────────────────
 async function deleteNote(id){await removeNote(String(id));}
@@ -1620,6 +2133,33 @@ function renderNotes(){
       <div class="note-meta">${fd2(n.createdAt)} · ${USERS[n.owner]?.name||'?'}</div>
       <button class="note-del" onclick="deleteNote('${String(n.id)}')">✕</button>
     </div>`).join('');
+  // ── IDEIAS (caixa de despejo de ideias) ───
+  function setIdeaFilter(f){
+      ideaFilter=f;
+      document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.if===f));
+      renderIdeas();
+  }
+  async function deleteIdea(id){await removeIdea(String(id));}
+  const IDEA_STATUS={pendente:{label:'Por tratar',cls:'tu'},andamento:{label:'Em curso',cls:'tt'},feita:{label:'Feita',cls:'tg'}};
+  function renderIdeas(){
+      const el=document.getElementById('ideaList');
+      const bdg=document.getElementById('bdgI');
+      const pendCount=ideas.filter(i=>(i.status||'pendente')!=='feita').length;
+      if(bdg)bdg.textContent=pendCount;
+      const list=ideaFilter==='all'?ideas:ideas.filter(i=>(i.status||'pendente')===ideaFilter);
+      if(!list.length){el.innerHTML=`<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: …"</small></div>`;return;}
+      el.innerHTML=list.map(i=>{
+            const st=IDEA_STATUS[i.status||'pendente'];
+            return`
+                <div class="note-card">
+                      <div class="note-text">${esc(i.text||'')}</div>
+                            <div class="note-meta">
+                                    <span class="ttag ${st.cls}" style="cursor:pointer;" onclick="cycleIdeaStatus('${String(i.id)}')" title="Toque para mudar o estado">${st.label}</span>
+                                            · ${fd2(i.createdAt)} · ${USERS[i.owner]?.name||'?'}
+                                                  </div>
+                                                        <button class="note-del" onclick="deleteIdea('${String(i.id)}')">✕</button>
+                                                            </div>`;}).join('');
+  }
 }
 // ── ROUTINES (recurring habits) ───────────────────
 function openNewRoutine(){
@@ -1754,11 +2294,239 @@ function toggleTheme(){applyTheme(!isDark);savePrefs();}
 function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
 // ── UI ───────────────────────────────────────────
 function switchTab(tab){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(tab==='tasks'&&i===0)||(tab==='week'&&i===1)||(tab==='notes'&&i===2)||(tab==='routines'&&i===3)));
+  document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  const maisTab=document.getElementById('tabMais');
+  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines'||tab==='ideias');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
+  if(tab==='hoje')renderHoje();
   if(tab==='week')renderWeek();
   if(tab==='routines')renderRoutines();
+  if(tab==='ideias')renderIdeas();
+}
+function toggleMaisMenu(){
+  const m=document.getElementById('maisMenu');
+  if(m)m.classList.toggle('open');
+}
+function closeMaisMenu(){
+  const m=document.getElementById('maisMenu');
+  if(m)m.classList.remove('open');
+}
+document.addEventListener('click',(e)=>{
+  const menu=document.getElementById('maisMenu');
+  const btn=document.getElementById('tabMais');
+  if(menu&&menu.classList.contains('open')&&!menu.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))closeMaisMenu();
+  if(!e.target.closest('.task-acts'))closeAllTaskMenus();
+});
+function toggleTaskMenu(e){
+  e.stopPropagation();
+  const menu=e.currentTarget.nextElementSibling;
+  const wasOpen=menu&&menu.classList.contains('open');
+  closeAllTaskMenus();
+  if(menu&&!wasOpen)menu.classList.add('open');
+}
+function closeAllTaskMenus(){
+  document.querySelectorAll('.task-menu.open').forEach(m=>m.classList.remove('open'));
+}
+// ── HOJE (tela de entrada) ────────────────────────
+// Reorganiza tarefas (com Projetos, prioridade em 4 níveis e status "Em
+// andamento") numa visão de resumo do dia. Reaproveita taskHTML() pros
+// cards, então check/editar/excluir/lembrete funcionam igual à aba Tarefas,
+// sem duplicar lógica.
+function todayStr(){
+  const n=new Date();
+  return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+}
+function greetName(){
+  const h=new Date().getHours();
+  const greet=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+  const name=USERS[cu]&&USERS[cu].name;
+  return name?`${greet}, ${name}`:greet;
+}
+// ── FILTROS AVANÇADOS (Tarefas/Projetos, Visão, Status, Prioridade, Área/Projeto, Data) ──
+function defaultAdvFilters(){return{type:'tasks',visao:'all',status:'all',priority:'all',area:'all',project:'all',date:'all'};}
+let advFilters=defaultAdvFilters();
+let draftFilters=defaultAdvFilters();
+let newProjectDraftOpen=false;
+function advFiltersActive(){
+  const d=defaultAdvFilters();
+  return Object.keys(d).some(k=>k!=='type'&&advFilters[k]!==d[k]);
+}
+function taskMatchesAdvFilters(t){
+  if(advFilters.visao==='mine'&&!(!t.shared&&t.owner===cu))return false;
+  if(advFilters.visao==='assigned'&&!(t.shared&&t.assignedTo===cu))return false;
+  const st=taskStatus(t);
+  if(advFilters.status!=='all'&&st!==advFilters.status)return false;
+  if(advFilters.priority!=='all'&&taskPriority(t)!==advFilters.priority)return false;
+  if(advFilters.type==='tasks'){
+    if(advFilters.area!=='all'&&(t.area||'')!==advFilters.area)return false;
+  }else{
+    if(advFilters.project==='none'&&t.projectId)return false;
+    if(advFilters.project!=='all'&&advFilters.project!=='none'&&t.projectId!==advFilters.project)return false;
+  }
+  if(advFilters.date==='today'&&t.date!==todayStr())return false;
+  return true;
+}
+function openFiltersModal(){
+  draftFilters={...advFilters};
+  newProjectDraftOpen=false;
+  document.getElementById('fsheetOv').classList.add('open');
+  renderFiltersSheet();
+}
+function closeFiltersModal(){
+  document.getElementById('fsheetOv').classList.remove('open');
+}
+function setDraftFilter(key,val){
+  draftFilters[key]=val;
+  if(key==='type'){draftFilters.area='all';draftFilters.project='all';}
+  renderFiltersSheet();
+}
+function applyFilters(){
+  advFilters={...draftFilters};
+  closeFiltersModal();
+  renderTasks();renderHoje();
+}
+function clearFilters(){
+  draftFilters=defaultAdvFilters();
+  renderFiltersSheet();
+}
+function toggleNewProjectDraft(){newProjectDraftOpen=!newProjectDraftOpen;renderFiltersSheet();}
+async function confirmNewProject(){
+  const inp=document.getElementById('newProjectNameInput');
+  const name=inp?inp.value.trim():'';
+  if(!name){notify('Digite um nome pro projeto.','error');return;}
+  const p={id:Date.now().toString(),name,emoji:'📁',createdAt:new Date().toISOString()};
+  projects=[...projects,p];
+  await saveProject(p);
+  newProjectDraftOpen=false;
+  notify('📁 Projeto criado!','success');
+  renderFiltersSheet();
+}
+async function deleteProjectPrompt(id,name){
+  if(!confirm(`Excluir o projeto "${name}"? As tarefas dele voltam a ficar sem projeto.`))return;
+  projects=projects.filter(p=>p.id!==id);
+  await removeProject(id);
+  if(draftFilters.project===id)draftFilters.project='all';
+  if(advFilters.project===id)advFilters.project='all';
+  notify('Projeto excluído.','info');
+  renderFiltersSheet();
+  renderTasks();
+}
+function fOptRow(sel,ic,lbl,onclick,icColor){
+  return `<div class="fopt${sel?' sel':''}" onclick="${onclick}"><span class="fopt-ic"${icColor?` style="color:${icColor}"`:''}>${ic}</span><span class="fopt-lbl">${lbl}</span><span class="fopt-check">${sel?'✓':''}</span></div>`;
+}
+function renderFiltersSheet(){
+  const el=document.getElementById('fsheetBody');
+  if(!el)return;
+  const df=draftFilters;
+  const showAssigned=isFamily(cu);
+  const visaoBtns=`
+    <button class="fseg-btn${df.visao==='all'?' sel':''}" onclick="setDraftFilter('visao','all')">Todas</button>
+    <button class="fseg-btn${df.visao==='mine'?' sel':''}" onclick="setDraftFilter('visao','mine')">Minhas</button>
+    ${showAssigned?`<button class="fseg-btn${df.visao==='assigned'?' sel':''}" onclick="setDraftFilter('visao','assigned')">Atribuídas a mim</button>`:''}`;
+  const statusRows=[['all','📚','Todas'],['pendente','○','Pendentes'],['andamento','◐','Em andamento'],['concluida','✓','Concluídas']]
+    .map(([v,ic,lbl])=>fOptRow(df.status===v,ic,lbl,`setDraftFilter('status','${v}')`)).join('');
+  const prioRows=[['all','🏳️','Todas',''],['urgente','🚩','Urgente','var(--red)'],['alta','🚩','Alta','#e08a3c'],['media','🚩','Média','#d6c24c'],['baixa','🚩','Baixa','var(--green)']]
+    .map(([v,ic,lbl,c])=>fOptRow(df.priority===v,ic,lbl,`setDraftFilter('priority','${v}')`,c)).join('');
+  let catTitle,catRows;
+  if(df.type==='tasks'){
+    catTitle='Área / Categoria';
+    catRows=fOptRow(df.area==='all','▦','Todas áreas',`setDraftFilter('area','all')`);
+    catRows+=fOptRow(df.area==='','✦','Geral',`setDraftFilter('area','')`);
+    allAreaKeys().forEach(key=>{
+      if(!enabledAreas.includes(key))return;
+      const a=areaDef(key);if(!a)return;
+      catRows+=fOptRow(df.area===key,a.emoji,esc(a.label),`setDraftFilter('area','${key}')`);
+    });
+  }else{
+    catTitle='Projeto';
+    catRows=fOptRow(df.project==='all','▦','Todos os projetos',`setDraftFilter('project','all')`);
+    catRows+=fOptRow(df.project==='none','✦','Sem projeto',`setDraftFilter('project','none')`);
+    projects.forEach(p=>{
+      catRows+=`<div class="fopt${df.project===p.id?' sel':''}">
+        <span class="fopt-ic" onclick="setDraftFilter('project','${p.id}')">${p.emoji||'📁'}</span>
+        <span class="fopt-lbl" onclick="setDraftFilter('project','${p.id}')">${esc(p.name)}</span>
+        <span class="fopt-check" onclick="setDraftFilter('project','${p.id}')">${df.project===p.id?'✓':''}</span>
+        <button class="tact" style="margin-left:6px;" onclick="event.stopPropagation();deleteProjectPrompt('${p.id}','${esc(p.name).replace(/'/g,'')}')" title="Excluir">✕</button>
+      </div>`;
+    });
+    catRows+=newProjectDraftOpen
+      ?`<div class="fopt" style="gap:8px;">
+          <input id="newProjectNameInput" type="text" placeholder="Nome do projeto" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 9px;">
+          <button class="tact" style="color:var(--gold);" onclick="confirmNewProject()">✓</button>
+        </div>`
+      :`<div class="fopt" onclick="toggleNewProjectDraft()"><span class="fopt-ic">＋</span><span class="fopt-lbl" style="color:var(--gold);">Novo projeto</span></div>`;
+  }
+  const dateRows=[['all','📅','Qualquer data'],['today','📌','Hoje']]
+    .map(([v,ic,lbl])=>fOptRow(df.date===v,ic,lbl,`setDraftFilter('date','${v}')`)).join('');
+  el.innerHTML=`
+    <div class="fsec">
+      <div class="fsec-title">Tipo de filtro</div>
+      <div class="fseg">
+        <button class="fseg-btn${df.type==='tasks'?' sel':''}" onclick="setDraftFilter('type','tasks')">📋 Tarefas</button>
+        <button class="fseg-btn${df.type==='projects'?' sel':''}" onclick="setDraftFilter('type','projects')">📁 Projetos</button>
+      </div>
+    </div>
+    <div class="fsec"><div class="fsec-title">Visão</div><div class="fseg">${visaoBtns}</div></div>
+    <div class="fsec"><div class="fsec-title">Status</div><div class="fcard">${statusRows}</div></div>
+    <div class="fsec"><div class="fsec-title">Prioridade</div><div class="fcard">${prioRows}</div></div>
+    <div class="fsec"><div class="fsec-title">${catTitle}</div><div class="fcard">${catRows}</div></div>
+    <div class="fsec"><div class="fsec-title">Data</div><div class="fcard">${dateRows}</div></div>
+    <div class="fsheet-foot">
+      <button class="fclear-btn" onclick="clearFilters()">Limpar filtros</button>
+      <button class="fapply-btn" onclick="applyFilters()">▽ Aplicar filtros</button>
+    </div>`;
+}
+// Filtro rápido: tocar num chip de estatística (urgentes / uma área) aplica
+// esse filtro nos Filtros avançados e já leva pra aba Tarefas mostrando só
+// o que bate com ele.
+function applyQuickFilter(type,value){
+  advFilters=defaultAdvFilters();
+  if(type==='priority')advFilters.priority=value;
+  else if(type==='area')advFilters.area=value;
+  renderTasks();
+  switchTab('tasks');
+}
+function renderTopGreeting(){
+  const el=document.getElementById('topGreeting');
+  if(!el||!cu)return;
+  const today=todayStr();
+  const todayTasks=tasks.filter(t=>!t.done&&t.date===today);
+  const pendingToday=todayTasks.length;
+  const urgentCount=tasks.filter(t=>!t.done&&t.urgency==='urgent').length;
+  const visibleAreaKeys=[...enabledAreas,...customAreas.map(c=>c.key)];
+  const areaCounts=visibleAreaKeys.map(k=>({key:k,def:areaDef(k),count:tasks.filter(t=>!t.done&&t.area===k).length})).filter(a=>a.def&&a.count>0).sort((a,b)=>b.count-a.count).slice(0,3);
+  let chipsHTML=`<div class="hchip hu" onclick="applyQuickFilter('priority','urgente')"><span class="hchip-n">${urgentCount}</span><span class="hchip-l">🔴 urgente${urgentCount===1?'':'s'}</span></div>`;
+  chipsHTML+=areaCounts.map(a=>`<div class="hchip" onclick="applyQuickFilter('area','${a.key}')"><span class="hchip-n">${a.count}</span><span class="hchip-l">${a.def.emoji} ${esc(a.def.label.toLowerCase())}</span></div>`).join('');
+  el.innerHTML=`
+    <div class="hoje-greet-row">
+      <div class="hoje-greet">${esc(greetName())} 👋</div>
+      <button class="hoje-filter-btn${advFiltersActive()?' active':''}" onclick="openFiltersModal()">🔽 Filtros</button>
+    </div>
+    <div class="hoje-sub">Você tem ${pendingToday} tarefa${pendingToday===1?'':'s'} hoje.</div>
+    <div class="hchips-row">${chipsHTML}</div>`;
+}
+function renderHoje(){
+  renderTopGreeting();
+  const el=document.getElementById('hojeContent');
+  if(!el||!cu)return;
+  const today=todayStr();
+  const todayTasks=tasks.filter(t=>!t.done&&t.date===today&&taskMatchesAdvFilters(t)).sort((a,b)=>(b.urgency==='urgent')-(a.urgency==='urgent'));
+  const upcoming=tasks.filter(t=>!t.done&&t.date&&t.date>today&&taskMatchesAdvFilters(t)).sort((a,b)=>a.date<b.date?-1:1).slice(0,4);
+  const doneToday=tasks.filter(t=>t.done&&t.doneAt&&t.doneAt.slice(0,10)===today).length;
+  const overdue=tasks.filter(t=>!t.done&&t.date&&t.date<today).length;
+  const pendingToday=todayTasks.length;
+  el.innerHTML=`
+    <div class="sdiv">📅 Hoje · ${fd(today)}</div>
+    ${todayTasks.length?todayTasks.map(taskHTML).join(''):`<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>${advFiltersActive()?'Nada aqui pra esse filtro':'Nada marcado pra hoje'}</div>`}
+    ${upcoming.length?`<div class="sdiv" style="margin-top:14px;">Próximos</div>${upcoming.map(taskHTML).join('')}`:''}
+    <button class="filter-btn" style="margin-top:10px;" onclick="switchTab('tasks')">Ver todas as tarefas →</button>
+    <div class="sdiv" style="margin-top:16px;">✨ Resumo do dia</div>
+    <div class="hoje-summary">
+      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${doneToday}</div><div class="stat-lbl">Concluídas</div></div>
+      <div class="stat-card"><div class="stat-num">${pendingToday}</div><div class="stat-lbl">Pendente${pendingToday===1?'':'s'}</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--red)">${overdue}</div><div class="stat-lbl">Atrasadas</div></div>
+    </div>`;
 }
 function setFilter(f,btn){filter=f;document.querySelectorAll('#statusFilterRow .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTasks();}
 async function refreshAll(){await fetchCal();renderWeek();updateStats();notify('Atualizado!','info');}
@@ -1823,9 +2591,49 @@ function runSiriTask(text){
   inp.value=text;
   processInput();
 }
+// ── OAUTH CALLBACK (apps nativos) ───────────────────
+// Contraparte de startGoogleAuth(): quando o login roda numa aba do
+// navegador do sistema (Custom Tab/SFSafariViewController) em vez do
+// WebView do app, o Google devolve o token pra uma página estática no
+// GitHub Pages (oauth-bridge.html), que repassa pro app via este mesmo
+// esquema assistentepessoal://. Diferencia do link da Siri pelo host da URL.
+function handleOAuthCallbackUrl(rawUrl){
+  try{
+    const u=new URL(rawUrl);
+    const hash=(u.hash||'').replace(/^#/,'');
+    if(!hash)return false;
+    const p=new URLSearchParams(hash);
+    const tk=p.get('access_token');
+    const err=p.get('error');
+    dbg(`handleOAuthCallbackUrl: token=${!!tk} error=${err||'none'}`);
+    const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+    if(browser&&browser.close)browser.close().catch(()=>{});
+    if(tk){
+      let pendingUid=null;
+      try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
+      if(pendingUid)cu=pendingUid;
+      onToken(tk);
+    }else if(err){
+      notify('Login com Google cancelado ou recusado.','info');
+    }
+    return true;
+  }catch(e){dbg(`handleOAuthCallbackUrl: parse error — ${e&&e.message||e}`);return false;}
+}
 if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
   window.Capacitor.Plugins.App.addListener('appUrlOpen',(data)=>{
-    if(data&&data.url)handleSiriUrl(data.url);
+    if(!data||!data.url)return;
+    let host='';
+    try{host=new URL(data.url).hostname;}catch(e){}
+    if(host==='oauthcallback'){handleOAuthCallbackUrl(data.url);}
+    else{handleSiriUrl(data.url);}
+  });
+}
+if(isNativeApp()&&localNotifPlugin()){
+  ensureReminderActionsRegistered();
+  localNotifPlugin().addListener('localNotificationActionPerformed',(ev)=>{
+    try{
+      if(ev&&ev.actionId==='snooze'&&ev.notification)snoozeReminderByNotifId(ev.notification.id);
+    }catch(e){}
   });
 }
 document.addEventListener('keydown',(e)=>{
