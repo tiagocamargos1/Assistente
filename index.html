@@ -435,6 +435,16 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <button class="rep-btn" style="margin-top:0;margin-bottom:10px;" onclick="openNewRoutine()">+ Nova rotina</button>
       <div id="routineList"></div>
     </div>
+        <div class="tab-content" id="tab-ideias">
+                <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>p>
+              <div class="filter-row" id="i
+                      <button class="filter-btn active" data-if="all" onclick="setIdeaFilter('all')">Todas</button>
+                      <button class="filter-btn" data-if="pendente" onclick="setIdeaFilter('pendente')">Por tratar</button>
+                      <button class="filter-btn" data-if="andamento" onclick="setIdeaFilter('andamento')">Em curso</button>
+                      <button class="filter-btn" data-if="feita" onclick="setIdeaFilter('feita')">Feitas</button>
+              </div>
+              <div id="ideaList"></div>
+        </div></strong>
   </div>
   <!-- RIGHT -->
   <div class="right-panel">
@@ -872,8 +882,10 @@ async function saveAreaSettings(){
   await savePrefs();
   notify('✓ Áreas atualizadas!','success');
 }
-let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null,fbUnsubProjects=null;
+let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null,fbUnsubProjects=null,fbUnsubIdeas=null;
 let routines=[];
+  let ideas=[];
+  let ideaFilter='all';
 let projects=[];
 // ── FIREBASE PERSISTENCE (cloud) ─────────────────
 function fbPath(col,id){return`${col}/${id}`;}
@@ -891,6 +903,22 @@ async function saveNote(note){
   if(!window.fbSave)return;
   await window.fbSave(`users/${cu}/notes/${note.id}`,note);
 }
+  async function saveIdea(idea){
+    if(!window.fbSave)return;
+    await window.fbSave(`users/${cu}/ideas/${idea.id}`,idea);
+  }
+  async function removeIdea(id){
+    if(!window.fbSave)return;
+    await window.fbDelete(`users/${cu}/ideas/${id}`);
+  }
+  async function cycleIdeaStatus(id){
+    const idea=ideas.find(i=>String(i.id)===String(id));
+    if(!idea)return;
+    const order=['pendente','andamento','feita'];
+    const next=order[(order.indexOf(idea.status||'pendente')+1)%order.length];
+    idea.status=next;
+    await saveIdea(idea);
+  }
 async function removeNote(id){
   if(!window.fbSave)return;
   await window.fbDelete(`users/${cu}/notes/${id}`);
@@ -939,6 +967,10 @@ function startListeners(){
   fbUnsubRoutines=window.fbListenCol(`users/${cu}/routines`,r=>{
     routines=r;
     renderRoutines();
+    fbUnsubIdeas=window.fbListenCol(`users/${cu}/ideas`,i=>{
+      ideas=i.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
+      renderIdeas();
+    });
   });
   fbUnsubProjects=window.fbListenCol(`users/${cu}/projects`,p=>{
     projects=p.sort((a,b)=>((a.createdAt||'')<(b.createdAt||''))?-1:1);
@@ -1354,9 +1386,10 @@ function logout(){
   if(fbUnsubNotes)fbUnsubNotes();
   if(fbUnsubRoutines)fbUnsubRoutines();
   if(fbUnsubProjects)fbUnsubProjects();
+  if(fbUnsubIdeas)fbUnsubIdeas();
   if(cu)clearStoredGoogle(cu);
   if(window.fbSignOut)window.fbSignOut();
-  gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];
+  gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];ideas=[];
   document.getElementById('pinScreen').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('fbDot').classList.remove('on');
@@ -1534,6 +1567,12 @@ async function processInput(){
       notify('📝 Nota salva!','success');
       switchTab('notes');
     }
+    else if(parsed.type==='idea'){
+      const idea={id:Date.now().toString(),text:parsed.title,status:'pendente',owner:cu,area:currentArea||null,createdAt:new Date().toISOString()};
+      await saveIdea(idea);
+      notify('💡 Ideia guardada!','success');
+      switchTab('ideias');
+    }
     document.getElementById('aiResp').textContent=parsed.response||'Feito!';
     document.getElementById('aiResp').classList.add('visible');
     document.getElementById('userInput').value='';
@@ -1551,7 +1590,8 @@ function parseInput(inp, today){
   const low=inp.toLowerCase().trim();
   const todayStr=today.toISOString().split('T')[0];
   // ── Detect type ──
-  const isNote=/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
+  const isIdea=/^(ideia:|idéia:)/i.test(low);
+  const isNote=!isIdea&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
   const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
     || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
@@ -1606,7 +1646,8 @@ function parseInput(inp, today){
     }
   }
   // ── Clean title ──
-  let title=inp
+    let title=inp
+      .replace(/^(ideia:|idéia:)\s*/i,'')
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
     .replace(/\b(às|as|ás)\s*\d{1,2}[h:]?\d{0,2}\s*(am|pm)?\b/gi,'')
     .replace(/\b\d{1,2}[h:]\d{0,2}\s*(am|pm)?\b/gi,'')
@@ -1617,11 +1658,12 @@ function parseInput(inp, today){
   const dateLabel=date?` para ${fd(date)}`:'';
   const timeLabel=time?` às ${time}`:'';
   let response='';
-  if(isNote)response=`Nota salva! ✏️`;
+  if(isIdea)response=`Ideia guardada na Caixa de Ideias! 💡`;
+    else if(isNote)response=`Nota salva! ✏️`;
   else if(isEvent)response=`Compromisso "${title}" agendado${dateLabel}${timeLabel}. ✅`;
   else response=`Tarefa "${title}" adicionada${dateLabel}. ✅`;
   return{
-    type: isNote?'note': isEvent?'event':'task',
+    type:  isIdea?'idea':isNote?'note': isEvent?'event':'task',
     title,
     description:null,
     urgency: isUrgent?'urgent':'normal',
@@ -2091,6 +2133,33 @@ function renderNotes(){
       <div class="note-meta">${fd2(n.createdAt)} · ${USERS[n.owner]?.name||'?'}</div>
       <button class="note-del" onclick="deleteNote('${String(n.id)}')">✕</button>
     </div>`).join('');
+  // ── IDEIAS (caixa de despejo de ideias) ───
+  function setIdeaFilter(f){
+      ideaFilter=f;
+      document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.if===f));
+      renderIdeas();
+  }
+  async function deleteIdea(id){await removeIdea(String(id));}
+  const IDEA_STATUS={pendente:{label:'Por tratar',cls:'tu'},andamento:{label:'Em curso',cls:'tt'},feita:{label:'Feita',cls:'tg'}};
+  function renderIdeas(){
+      const el=document.getElementById('ideaList');
+      const bdg=document.getElementById('bdgI');
+      const pendCount=ideas.filter(i=>(i.status||'pendente')!=='feita').length;
+      if(bdg)bdg.textContent=pendCount;
+      const list=ideaFilter==='all'?ideas:ideas.filter(i=>(i.status||'pendente')===ideaFilter);
+      if(!list.length){el.innerHTML=`<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: …"</small></div>`;return;}
+      el.innerHTML=list.map(i=>{
+            const st=IDEA_STATUS[i.status||'pendente'];
+            return`
+                <div class="note-card">
+                      <div class="note-text">${esc(i.text||'')}</div>
+                            <div class="note-meta">
+                                    <span class="ttag ${st.cls}" style="cursor:pointer;" onclick="cycleIdeaStatus('${String(i.id)}')" title="Toque para mudar o estado">${st.label}</span>
+                                            · ${fd2(i.createdAt)} · ${USERS[i.owner]?.name||'?'}
+                                                  </div>
+                                                        <button class="note-del" onclick="deleteIdea('${String(i.id)}')">✕</button>
+                                                            </div>`;}).join('');
+  }
 }
 // ── ROUTINES (recurring habits) ───────────────────
 function openNewRoutine(){
@@ -2227,12 +2296,13 @@ function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('dat
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   const maisTab=document.getElementById('tabMais');
-  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines');
+  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines'||tab==='ideias');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   if(tab==='hoje')renderHoje();
   if(tab==='week')renderWeek();
   if(tab==='routines')renderRoutines();
+  if(tab==='ideias')renderIdeas();
 }
 function toggleMaisMenu(){
   const m=document.getElementById('maisMenu');
