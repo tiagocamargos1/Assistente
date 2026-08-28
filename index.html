@@ -435,16 +435,17 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <button class="rep-btn" style="margin-top:0;margin-bottom:10px;" onclick="openNewRoutine()">+ Nova rotina</button>
       <div id="routineList"></div>
     </div>
-        <div class="tab-content" id="tab-ideias">
-                <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>p>
-              <div class="filter-row" id="i
-                      <button class="filter-btn active" data-if="all" onclick="setIdeaFilter('all')">Todas</button>
-                      <button class="filter-btn" data-if="pendente" onclick="setIdeaFilter('pendente')">Por tratar</button>
-                      <button class="filter-btn" data-if="andamento" onclick="setIdeaFilter('andamento')">Em curso</button>
-                      <button class="filter-btn" data-if="feita" onclick="setIdeaFilter('feita')">Feitas</button>
-              </div>
-              <div id="ideaList"></div>
-        </div></strong>
+<div class="tab-content" id="tab-ideias">        
+  <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>p>
+  <div class="filter-row" id="ideaFilterRow">
+    <button class="filter-btn active" data-if="all" onclick="setIdeaFilter('all')">Todas</button>
+    <button class="filter-btn" data-if="pendente" onclick="setIdeaFilter('pendente')">Por tratar</button>
+    <button class="filter-btn" data-if="andamento" onclick="setIdeaFilter('andamento')">Em curso</button>
+    <button class="filter-btn" data-if="feita" onclick="setIdeaFilter('feita')">Feitas</button>
+  </div>
+  <div id="ideaList">
+  </div>
+</div>
   </div>
   <!-- RIGHT -->
   <div class="right-panel">
