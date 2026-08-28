@@ -407,11 +407,13 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
       <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
       <div class="tab tab-more" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab tab-more" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
       <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
       <div class="mais-item" onclick="switchTab(&#39;routines&#39;);closeMaisMenu()">🔁 Rotinas</div>
+      <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()">💡 Ideias</div>
       <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
     </div>
     <div class="tab-content active" id="tab-hoje">
@@ -436,7 +438,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div id="routineList"></div>
     </div>
 <div class="tab-content" id="tab-ideias">        
-  <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>p>
+  <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>
   <div class="filter-row" id="ideaFilterRow">
     <button class="filter-btn active" data-if="all" onclick="setIdeaFilter('all')">Todas</button>
     <button class="filter-btn" data-if="pendente" onclick="setIdeaFilter('pendente')">Por tratar</button>
