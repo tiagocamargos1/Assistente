@@ -1590,7 +1590,7 @@ function parseInput(inp, today){
   const low=inp.toLowerCase().trim();
   const todayStr=today.toISOString().split('T')[0];
   // ── Detect type ──
-  const isIdea=/^(ideia:|idéia:)/i.test(low);
+  const isIdea=/^(ideia|idéia)\b[:\-–—,]?\s*/i.test(low);
   const isNote=!isIdea&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
   const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
     || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
@@ -1647,7 +1647,7 @@ function parseInput(inp, today){
   }
   // ── Clean title ──
     let title=inp
-      .replace(/^(ideia:|idéia:)\s*/i,'')
+          .replace(/^(ideia|idéia)\b[:\-–—,]?\s*/i,'')
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
     .replace(/\b(às|as|ás)\s*\d{1,2}[h:]?\d{0,2}\s*(am|pm)?\b/gi,'')
     .replace(/\b\d{1,2}[h:]\d{0,2}\s*(am|pm)?\b/gi,'')
