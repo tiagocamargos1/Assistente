@@ -139,8 +139,71 @@ async function buildBriefing(uid, dateStr, dow) {
   return parts.join(' · ');
 }
 
+// ── CASA: lembretes das tarefas diárias partilhadas do lar ──────────────
+// A aba "Casa" do app guarda em household/casa a lista de tarefas do dia
+// (algumas com hora-limite) e, em household/casa/days/YYYY-MM-DD, quem já
+// marcou o quê. Este job (a cada 10 min) avisa TODOS os membros da casa que
+// têm push ativado quando uma tarefa com hora-limite ainda não está marcada:
+// uma vez 30 minutos antes ("pre") e outra à própria hora ("due"). O que já
+// foi avisado fica registado em days/{data}.reminded para nunca repetir.
+const CASA_PRE_MIN = 30;
+async function sendCasaReminders(subsByUid) {
+  const houseSnap = await db.doc('household/casa').get();
+  if (!houseSnap.exists) return;
+  const house = houseSnap.data();
+  const timezone = house.timezone || 'Europe/Lisbon';
+  const today = localDateStr(timezone);
+  const nowMin = minutesSinceMidnight(localHHMM(timezone));
+  const dayRef = db.doc(`household/casa/days/${today}`);
+  const daySnap = await dayRef.get();
+  const day = daySnap.exists ? daySnap.data() : {};
+  const done = day.done || {};
+  const reminded = day.reminded || {};
+  const memberUids = Object.keys(house.members || {});
+  const targets = memberUids.map((uid) => subsByUid[uid]).filter(Boolean);
+
+  for (const task of house.tasks || []) {
+    if (!task || !task.label || !task.time || done[task.id]) continue;
+    const tMin = minutesSinceMidnight(task.time);
+    const slots = [
+      { key: 'pre', at: tMin - CASA_PRE_MIN, title: '🏡 Casa — daqui a 30 min', body: `${task.label} (até às ${task.time})` },
+      { key: 'due', at: tMin, title: '🏡 Casa — hora-limite', body: `${task.label} ainda não está marcado (${task.time})` }
+    ];
+    for (const slot of slots) {
+      if (slot.at < 0) continue;
+      const diff = nowMin - slot.at;
+      if (diff < 0 || diff >= 10) continue;
+      const rkey = `${task.id}_${slot.key}`;
+      if (reminded[rkey]) continue;
+      let sent = 0;
+      for (const doc of targets) {
+        const sub = doc.data();
+        try {
+          await webpush.sendNotification(sub.subscription, JSON.stringify({ title: slot.title, body: slot.body, url: './?tab=casa' }));
+          sent++;
+        } catch (err) {
+          if (err.statusCode === 404 || err.statusCode === 410) {
+            await doc.ref.delete();
+          } else {
+            console.error(`Casa: failed push to ${doc.id}:`, err.message);
+          }
+        }
+      }
+      await dayRef.set({ date: today, reminded: { [rkey]: true } }, { merge: true });
+      console.log(`Casa: reminder "${rkey}" (${task.label}) sent to ${sent} member(s).`);
+    }
+  }
+}
+
 async function main() {
   const subsSnap = await db.collection('push_subscriptions').get();
+  const subsByUid = {};
+  subsSnap.forEach((d) => { subsByUid[d.data().uid || d.id] = d; });
+  try {
+    await sendCasaReminders(subsByUid);
+  } catch (e) {
+    console.error('Casa reminders failed:', e.message);
+  }
   if (subsSnap.empty) {
     console.log('No push subscriptions found.');
     return;
