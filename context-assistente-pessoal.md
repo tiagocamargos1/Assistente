@@ -549,7 +549,71 @@ resolver isso primeiro.
 
 37. **Confirmados ao vivo, sozinho via automacao de navegador, tres itens que ainda estavam pendentes de teste: configuracao de areas padrao (item 27), auto-submit do PIN (item 24) e migracao de dados antigos.** Configuracao de areas padrao: desmarquei "Deus" em Areas numa conta com uma tarefa real usando essa area ("Angolano - Biblia Brasil"), salvei, e confirmei que o botao "Deus" sumiu tanto do resumo do topo quanto do filtro de areas -- mas a tarefa continuou aparecendo normalmente na lista, com a tag "🙏 Deus" ainda visivel (area padrao nunca fica orfa, ao contrario da personalizada do item 36, porque `AREAS` e um dicionario fixo no codigo, nao um registro que pode ser apagado). Reabri essa tarefa no editor: o dropdown mostrou "Deus" corretamente selecionado, e salvar sem mexer no campo nao apagou o valor. Rearmei "Deus" no final pra devolver a conta do Tiago ao estado original. Auto-submit do PIN: como nao tenho o PIN real do Tiago, troquei temporariamente o hash salvo em `localStorage` por um PIN de teste conhecido (restaurando o hash original ao final, sem em nenhum momento ver ou usar a senha de verdade), e testei tres cenarios -- PIN de 4 digitos entra sozinho ao completar; um PIN salvo de 6 digitos NAO deixa entrar so com os 4 primeiros digitos (nao dispara entrada errada antes de completar); e o PIN de 6 digitos completo entra sozinho tambem. Os tres bateram com o esperado. Migracao de dados antigos: comparei a colecao antiga `tasks_tiago` (42 documentos) com a nova `users/tiago/tasks` (185 tarefas) e confirmei que os 42 IDs antigos estao todos presentes na nova estrutura (zero tarefas faltando); `notes_tiago`/`routines_tiago` antigas estavam vazias, entao nao havia nada a migrar nelas. Não deu pra confirmar a migração da Monique da mesma forma: tentei ler a coleção antiga `tasks_monique` logado como Tiago e recebi `permission-denied` do Firestore -- comportamento correto (isolamento por usuário funcionando), mas significa que só a própria Monique logando consegue confirmar os dados dela.
 
+38. **Nova aba "🏡 Casa" — tarefas diárias partilhadas do lar (substitui a
+    "Tabela das Férias" em papel).** O Tiago tinha uma tabela impressa
+    (tarefas × dias do mês: comida do Paçoca às 08:00 e 20:00, café da
+    manhã, vitamina, almoço até 13:30, lanche, jantar até 20:00 das
+    crianças, mais "outras tarefas") que ele, a Monique e a Lu marcavam à
+    caneta. Decisão: virar módulo do Assistente (não app à parte), no mesmo
+    espírito da lista de compras partilhada já planeada. Implementado:
+    - Aba "Casa" (no menu ☰ Mais no telemóvel) com a lista do dia em botões
+      grandes — um toque marca/desmarca; cada marcação guarda **quem** e a
+      **hora** (`✓ Lu · 13:05`). Barra de progresso, contador de pendentes
+      no ícone (`bdgC`), navegação por dias (‹ Hoje ›) para ver dias
+      passados, tarefas em atraso a vermelho quando a hora-limite passou.
+    - Tarefas editáveis (modal ⚙️ "Tarefas da casa": nome, hora-limite
+      opcional, ordem, remover, adicionar) — a lista repete-se todos os
+      dias sem fim (renova sozinha à meia-noite, `scheduleCasaMidnight`),
+      não é presa a um mês como o papel. "+ Tarefa só para este dia" cobre
+      as linhas "Outras tarefas" do papel (`extras` no doc do dia).
+    - **Dados**: `household/casa` → `{tasks:[{id,label,time,order}],
+      emails:[…], members:{appUid:{name,color,email}}}` e
+      `household/casa/days/YYYY-MM-DD` → `{done:{taskId:{by,name,at}},
+      extras:[…], reminded:{…}}`. O doc da casa é criado automaticamente
+      pelo Tiago (dono, `CASA_OWNER_EMAIL`) na primeira abertura, já com a
+      tabela do papel como ponto de partida e com os e-mails de Tiago,
+      Monique (2 contas) e Lucileia. Cada membro regista-se sozinho em
+      `members` ao abrir a aba (é isso que o job de lembretes usa para
+      saber a quem enviar push).
+    - **Pertença por e-mail, não por uid fixo**: ao contrário de
+      `shared_tasks` (tiago/monique hardcoded em `isFamily`), a Casa aceita
+      qualquer conta Google cuja `request.auth.token.email` esteja em
+      `household/casa.emails`. A Lu entra com a conta dinâmica dela
+      (`g_<googleId>`) sem mexer no código. Só o dono edita a lista de
+      e-mails (secção "Membros da casa" no modal, escondida para os outros).
+      Uma conta que não é membro recebe `permission-denied` no listener e a
+      aba simplesmente não aparece (`window.fbListenDoc`, novo helper com
+      callback de erro; também novos `fbUpdate`/`fbDeleteField` para
+      desmarcar sem reescrever o doc do dia inteiro).
+    - **Regras do Firestore** publicadas no Firebase Console (bloco
+      `match /household/{hid}`): `isHouseMember(hid)` compara o e-mail do
+      token (em minúsculas) com `emails` do doc; `read`/`update` para
+      membros, `create` só para o e-mail do dono; `days/{day}` read/write
+      para membros.
+    - **Lembretes nas horas-limite, em duas camadas**: (1) servidor —
+      `scripts/send-daily-briefing.js` ganhou `sendCasaReminders()`,
+      corrida a cada 10 min pelo mesmo workflow: para cada tarefa com hora
+      ainda não marcada, envia web push a todos os membros com subscrição
+      30 min antes (`pre`) e à hora (`due`), registando em
+      `days/{data}.reminded` para nunca repetir; o push abre `./?tab=casa`
+      (novo deep link `?tab=` tratado em `enterApp`). (2) app nativo —
+      `syncCasaLocalNotifs()` agenda notificações locais (ids 777000+) para
+      as mesmas horas e **reagenda a cada alteração do dia**, por isso
+      quando alguém marca noutro telemóvel o aviso é cancelado neste
+      também. Limitação conhecida: o push web só chega a quem ativou
+      notificações no banner (ver pendente antigo) — a Monique e a Lu
+      precisam de tocar em "Ativar" uma vez.
+
 ## Próximos passos (pendentes)
+
+- [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
+      🏡 Casa aparece para elas (e-mails na lista) e ativar as notificações
+      no banner para receberem os lembretes das horas-limite. Se a Lu usar
+      outro e-mail Google que não `lucyleiaoliveira@gmail.com`, o Tiago
+      acrescenta-o em ⚙️ Tarefas da casa → Membros.
+- [ ] Casa: vista mensal em grelha (tarefas × dias, igual ao papel) ficou
+      de fora da v1 por decisão do Tiago — candidata a v2, junto com um
+      resumo da Casa no ecrã "Hoje".
 
 - [ ] O Tiago precisa criar a conta no Google Play Console
       (https://play.google.com/console/signup, taxa única de US$ 25) —

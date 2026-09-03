@@ -14,7 +14,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithCredential, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
@@ -81,6 +81,13 @@ window.fbListenCol = (path, cb) => {
     cb(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   });
 };
+// Variante de fbListen com callback de erro (necessária para a Casa: uma conta
+// que não é membro recebe permission-denied e a aba simplesmente não aparece).
+window.fbListenDoc = (path, cb, onErr) => {
+  return onSnapshot(doc(db, path), snap => cb(snap.exists() ? snap.data() : null), err => { if (onErr) onErr(err); });
+};
+window.fbUpdate = async (path, data) => { await updateDoc(doc(db, path), data); };
+window.fbDeleteField = () => deleteField();
 window.firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -305,6 +312,29 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .fb-status{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;margin-left:8px;}
 .fb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);}
 .fb-dot.on{background:var(--green);}
+/* CASA (tarefas diárias partilhadas) */
+.casa-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.casa-date{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold-light);}
+.casa-nav{display:flex;gap:4px;}
+.casa-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;}
+.casa-nav button:disabled{opacity:.4;cursor:default;}
+.casa-prog{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:12px;}
+.casa-prog div{height:100%;background:var(--green);transition:width .3s;}
+.casa-item{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .15s;}
+.casa-item:active{transform:scale(.99);}
+.casa-item.done{border-color:rgba(90,158,111,.4);background:rgba(90,158,111,.08);}
+.casa-item.late{border-color:rgba(192,96,96,.55);}
+.casa-check{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all .15s;}
+.casa-item.done .casa-check{background:var(--green);border-color:var(--green);color:#fff;}
+.casa-lbl{font-size:14px;font-weight:500;flex:1;min-width:0;}
+.casa-item.done .casa-lbl>div:first-child{color:var(--text-muted);text-decoration:line-through;}
+.casa-sub{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.casa-item.done .casa-sub{color:var(--green);}
+.casa-item.late .casa-sub{color:var(--red);}
+.casa-time{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+.casa-item.late .casa-time{color:var(--red);font-weight:600;}
+.casa-avs{display:flex;gap:4px;}
+.casa-av{width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--bg);}
 @media(max-width:680px){
   html,body{height:100%;overflow:hidden;}
   .main{grid-template-columns:1fr;height:auto;max-height:none;overflow:hidden;}
@@ -408,12 +438,14 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
       <div class="tab tab-more" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
       <div class="tab tab-more" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
+      <div class="tab tab-more" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
       <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
       <div class="mais-item" onclick="switchTab(&#39;routines&#39;);closeMaisMenu()">🔁 Rotinas</div>
       <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()">💡 Ideias</div>
+      <div class="mais-item" data-mais="casa" onclick="switchTab('casa');closeMaisMenu()" style="display:none;">🏡 Casa</div>
       <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
     </div>
     <div class="tab-content active" id="tab-hoje">
@@ -447,6 +479,9 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
   </div>
   <div id="ideaList">
   </div>
+</div>
+<div class="tab-content" id="tab-casa">
+  <div id="casaContent"></div>
 </div>
   </div>
   <!-- RIGHT -->
@@ -597,6 +632,23 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     </div>
     <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="confirmNewRoutine()">Criar rotina</button>
     <button class="close-btn" onclick="document.getElementById('newRoutineModal').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
+<!-- CASA: editar tarefas / membros -->
+<div class="modal-ov" id="casaEditModal">
+  <div class="modal-box">
+    <h2>🏡 Tarefas da casa</h2>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Estas tarefas repetem-se todos os dias. A hora é opcional — quando existe, é a hora-limite e serve para os lembretes.</p>
+    <div class="rep-sec">
+      <div id="casaEditList"></div>
+      <button class="rep-btn" onclick="casaDraftAdd()">+ Adicionar tarefa</button>
+    </div>
+    <div class="rep-sec" id="casaEmailsWrap" style="display:none;">
+      <h3>Membros da casa (e-mails Google, um por linha)</h3>
+      <textarea id="casaEmails" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;resize:vertical;"></textarea>
+    </div>
+    <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveCasaEdit()">Guardar</button>
+    <button class="close-btn" onclick="document.getElementById('casaEditModal').classList.remove('open')">Cancelar</button>
   </div>
 </div>
 <!-- PIN SETUP MODAL -->
@@ -1366,6 +1418,7 @@ async function enterApp(){
     }catch(e){}
   }
   startListeners();
+  startCasaListener();
   // Load prefs
   try{
     const prefs=await window.fbGet(`prefs/${cu}`);
@@ -1380,6 +1433,8 @@ async function enterApp(){
   applyAreaVisibility();
   initWeek();
   applyFamilyUI();
+  // Abrir direto numa aba (ex.: o push da Casa manda para ./?tab=casa)
+  try{const tp=new URLSearchParams(location.search).get('tab');if(tp&&document.getElementById('tab-'+tp))switchTab(tp);}catch(e){}
   focusCaptureIfQuick();
   if(pendingSiriTaskText){
     const t=pendingSiriTaskText;
@@ -1394,6 +1449,7 @@ function logout(){
   if(fbUnsubRoutines)fbUnsubRoutines();
   if(fbUnsubProjects)fbUnsubProjects();
   if(fbUnsubIdeas)fbUnsubIdeas();
+  stopCasaListeners();
   if(cu)clearStoredGoogle(cu);
   if(window.fbSignOut)window.fbSignOut();
   gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];ideas=[];
@@ -2248,6 +2304,239 @@ function renderRoutines(){
     </div>`;
   }).join('');
 }
+// ── CASA (tarefas diárias partilhadas do lar) ─────────────
+// Substitui a "Tabela das Férias" em papel: uma lista fixa de tarefas do dia
+// (comida do Paçoca, refeições das crianças, …) que qualquer membro da casa
+// marca com um toque, no próprio telemóvel. Cada marcação guarda QUEM marcou
+// e a HORA. A lista é a mesma todos os dias (renova-se sozinha à meia-noite)
+// e é editável a qualquer momento. Dados em Firestore:
+//   household/casa            → {tasks:[{id,label,time,order}], emails:[…], members:{uid:{name,color}}}
+//   household/casa/days/YYYY-MM-DD → {done:{taskId:{by,name,at}}, extras:[{id,label}], reminded:{…}}
+// A pertença à casa é decidida pelo e-mail Google (lista `emails`), tanto no
+// app como nas regras do Firestore — não depende dos uids fixos tiago/monique.
+const CASA_ID='casa';
+const CASA_OWNER_EMAIL='tiagocamargos@tocsmartgroup.com';
+const CASA_DEFAULT_EMAILS=['tiagocamargos@tocsmartgroup.com','moniqueabril@gmail.com','moniquegcamargos@gmail.com','lucyleiaoliveira@gmail.com'];
+const CASA_DEFAULT_TASKS=[
+  {id:'pacoca_manha',label:'Paçoca – Comida',time:'08:00'},
+  {id:'cafe',label:'Café da manhã das crianças',time:''},
+  {id:'vitamina',label:'Vitamina das crianças',time:''},
+  {id:'almoco',label:'Almoço das crianças',time:'13:30'},
+  {id:'lanche',label:'Lanche das crianças',time:''},
+  {id:'jantar',label:'Jantar das crianças',time:'20:00'},
+  {id:'pacoca_noite',label:'Paçoca – Comida',time:'20:00'}
+].map((t,i)=>({...t,order:i}));
+let casa=null,casaDay=null,casaDate=null,casaMember=false;
+let fbUnsubCasa=null,fbUnsubCasaDay=null,casaMidnightTimer=null;
+let casaDraftTasks=[];
+function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`gemail_${cu}`)||'').toLowerCase();}
+function casaIsOwner(){return cu==='tiago'||casaEmail()===CASA_OWNER_EMAIL;}
+function casaTasks(){return((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));}
+function casaSetTabVisible(on){
+  document.querySelectorAll('[data-tab="casa"],[data-mais="casa"]').forEach(el=>el.style.display=on?'':'none');
+}
+function startCasaListener(){
+  if(fbUnsubCasa)fbUnsubCasa();
+  if(fbUnsubCasaDay)fbUnsubCasaDay();
+  casa=null;casaDay=null;casaMember=false;casaDate=todayStr();
+  casaSetTabVisible(false);
+  if(!window.fbListenDoc)return;
+  fbUnsubCasa=window.fbListenDoc(`household/${CASA_ID}`,async data=>{
+    if(!data){
+      // Ainda não existe: só o dono (Tiago) cria a casa, com a tabela do papel como ponto de partida
+      if(casaIsOwner()){
+        try{await window.fbSave(`household/${CASA_ID}`,{name:'Casa',emails:CASA_DEFAULT_EMAILS,tasks:CASA_DEFAULT_TASKS,members:{},createdAt:new Date().toISOString()});}catch(e){console.error('casa create',e);}
+      }
+      return;
+    }
+    casa=data;casaMember=true;casaSetTabVisible(true);
+    // Regista-me como membro (uid → nome/cor), para os avatares e para o job de lembretes saber a quem enviar push
+    const me=USERS[cu]||{};
+    const m=(data.members||{})[cu];
+    if(!m||m.name!==me.name){
+      try{await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{name:me.name||cu,color:me.color||'#c9a84c',email:casaEmail()||null}}});}catch(e){}
+    }
+    listenCasaDay();
+    renderCasa();
+  },err=>{
+    // permission-denied = esta conta não pertence à casa → aba escondida, sem erro visível
+    casa=null;casaMember=false;casaSetTabVisible(false);
+    if(!(err&&/permission/i.test(err.code||err.message||'')))console.error('casa listen',err);
+  });
+  if(casaMidnightTimer)clearTimeout(casaMidnightTimer);
+  scheduleCasaMidnight();
+}
+function scheduleCasaMidnight(){
+  const n=new Date();const next=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1,0,0,5);
+  casaMidnightTimer=setTimeout(()=>{if(casaDate===todayStr())return;casaDate=todayStr();listenCasaDay();scheduleCasaMidnight();},next-n);
+}
+function listenCasaDay(){
+  if(fbUnsubCasaDay)fbUnsubCasaDay();
+  casaDay=null;
+  if(!casaMember||!window.fbListenDoc)return;
+  fbUnsubCasaDay=window.fbListenDoc(`household/${CASA_ID}/days/${casaDate}`,d=>{casaDay=d||{};renderCasa();syncCasaLocalNotifs();},()=>{});
+}
+function stopCasaListeners(){
+  if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();
+  fbUnsubCasa=null;fbUnsubCasaDay=null;casa=null;casaDay=null;casaMember=false;
+}
+function casaShiftDate(delta){
+  const [y,m,d]=casaDate.split('-').map(Number);
+  const n=new Date(y,m-1,d+delta);
+  casaDate=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  listenCasaDay();renderCasa();
+}
+function casaGoToday(){casaDate=todayStr();listenCasaDay();renderCasa();}
+function casaFmtDate(ds){
+  const [y,m,d]=ds.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  const wd=['domingo','segunda','terça','quarta','quinta','sexta','sábado'][dt.getDay()];
+  const label=ds===todayStr()?'Hoje':wd.charAt(0).toUpperCase()+wd.slice(1);
+  return `${label}, ${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}`;
+}
+function casaMinutes(hhmm){if(!hhmm)return null;const [h,m]=hhmm.split(':').map(Number);return h*60+m;}
+function casaNowMin(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function casaFmtTime(iso){try{return new Date(iso).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});}catch(e){return'';}}
+function casaAllItems(){
+  const extras=((casaDay&&casaDay.extras)||[]).map(e=>({...e,extra:true}));
+  return[...casaTasks(),...extras];
+}
+function casaPendingToday(){
+  if(!casaMember)return 0;
+  const done=(casaDay&&casaDay.done)||{};
+  return casaAllItems().filter(t=>!done[t.id]).length;
+}
+function renderCasa(){
+  const el=document.getElementById('casaContent');
+  if(!el)return;
+  const bdg=document.getElementById('bdgC');
+  if(bdg&&casaDate===todayStr())bdg.textContent=casaPendingToday();
+  if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🏡</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
+  const items=casaAllItems();
+  const done=(casaDay&&casaDay.done)||{};
+  const isToday=casaDate===todayStr();
+  const nowMin=casaNowMin();
+  const doneCount=items.filter(t=>done[t.id]).length;
+  const pct=items.length?Math.round(doneCount/items.length*100):0;
+  const members=Object.entries((casa&&casa.members)||{});
+  const avs=members.map(([uid,m])=>`<div class="casa-av" title="${esc(m.name||uid)}" style="background:${esc(m.color||'#c9a84c')}">${esc((m.name||uid).charAt(0).toUpperCase())}</div>`).join('');
+  const rows=items.map(t=>{
+    const dn=done[t.id];
+    const tMin=casaMinutes(t.time);
+    const late=!dn&&isToday&&tMin!==null&&nowMin>tMin;
+    const timeLbl=t.time?(late?`⚠️ ${t.time}`:`até ${t.time}`):'';
+    const sub=dn?`✓ ${esc(dn.name||dn.by||'')} · ${casaFmtTime(dn.at)}`:(late?'em atraso':(t.extra?'só hoje':''));
+    return `<div class="casa-item${dn?' done':''}${late?' late':''}" onclick="casaToggle('${esc(t.id)}')">
+      <div class="casa-check">${dn?'✓':''}</div>
+      <div class="casa-lbl"><div>${esc(t.label)}</div>${sub?`<div class="casa-sub">${sub}</div>`:''}</div>
+      ${timeLbl?`<div class="casa-time">${timeLbl}</div>`:''}
+      ${t.extra?`<button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();casaRemoveExtra('${esc(t.id)}')">✕</button>`:''}
+    </div>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="casa-hdr">
+      <div class="casa-nav"><button onclick="casaShiftDate(-1)">‹</button><button onclick="casaGoToday()" ${isToday?'disabled':''}>Hoje</button><button onclick="casaShiftDate(1)">›</button></div>
+      <div class="casa-date">${casaFmtDate(casaDate)}</div>
+      <div class="casa-avs">${avs}</div>
+    </div>
+    <div class="casa-prog"><div style="width:${pct}%"></div></div>
+    <div style="font-size:11px;color:var(--text-dim);margin:-6px 0 10px;text-align:right;">${doneCount}/${items.length} feitas</div>
+    ${rows||`<div class="empty-state"><div class="icon">🏡</div>Sem tarefas. Toque em "Editar tarefas" para começar.</div>`}
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="rep-btn" style="margin-top:0;" onclick="casaAddExtra()">+ Tarefa só para este dia</button>
+      <button class="rep-btn" style="margin-top:0;" onclick="openCasaEdit()">⚙️ Editar tarefas</button>
+    </div>`;
+}
+async function casaToggle(id){
+  if(!casaMember||!window.fbSave)return;
+  const path=`household/${CASA_ID}/days/${casaDate}`;
+  const done=(casaDay&&casaDay.done)||{};
+  try{
+    if(done[id]){
+      await window.fbUpdate(path,{[`done.${id}`]:window.fbDeleteField()});
+    }else{
+      const me=USERS[cu]||{};
+      await window.fbSave(path,{date:casaDate,done:{[id]:{by:cu,name:me.name||cu,at:new Date().toISOString()}}});
+    }
+  }catch(e){console.error('casaToggle',e);notify('Não foi possível guardar: '+(e.code||e.message),'error');}
+}
+async function casaAddExtra(){
+  const label=prompt('Tarefa só para este dia:');
+  if(!label||!label.trim())return;
+  const extras=[...(((casaDay&&casaDay.extras)||[])),{id:'x_'+Date.now(),label:label.trim()}];
+  try{await window.fbSave(`household/${CASA_ID}/days/${casaDate}`,{date:casaDate,extras});}catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+async function casaRemoveExtra(id){
+  const extras=((casaDay&&casaDay.extras)||[]).filter(e=>e.id!==id);
+  try{
+    await window.fbSave(`household/${CASA_ID}/days/${casaDate}`,{extras});
+    if(casaDay&&casaDay.done&&casaDay.done[id])await window.fbUpdate(`household/${CASA_ID}/days/${casaDate}`,{[`done.${id}`]:window.fbDeleteField()});
+  }catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+// ── Editar tarefas / membros ──
+function openCasaEdit(){
+  casaDraftTasks=casaTasks().map(t=>({...t}));
+  renderCasaEditList();
+  const emWrap=document.getElementById('casaEmailsWrap');
+  if(emWrap){emWrap.style.display=casaIsOwner()?'':'none';document.getElementById('casaEmails').value=((casa&&casa.emails)||[]).join('\n');}
+  document.getElementById('casaEditModal').classList.add('open');
+}
+function renderCasaEditList(){
+  const el=document.getElementById('casaEditList');
+  if(!el)return;
+  el.innerHTML=casaDraftTasks.map((t,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+    <input type="text" value="${esc(t.label)}" oninput="casaDraftTasks[${i}].label=this.value" placeholder="Tarefa" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+    <input type="time" value="${esc(t.time||'')}" onchange="casaDraftTasks[${i}].time=this.value" title="Hora-limite (opcional)" style="width:92px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 4px;">
+    <button onclick="casaDraftMove(${i},-1)" class="filter-btn" style="padding:6px 8px;">↑</button>
+    <button onclick="casaDraftMove(${i},1)" class="filter-btn" style="padding:6px 8px;">↓</button>
+    <button onclick="casaDraftTasks.splice(${i},1);renderCasaEditList()" class="filter-btn" style="padding:6px 8px;color:var(--red);">✕</button>
+  </div>`).join('')||'<div style="font-size:12px;color:var(--text-dim);">Nenhuma tarefa.</div>';
+}
+function casaDraftMove(i,d){
+  const j=i+d;if(j<0||j>=casaDraftTasks.length)return;
+  [casaDraftTasks[i],casaDraftTasks[j]]=[casaDraftTasks[j],casaDraftTasks[i]];
+  renderCasaEditList();
+}
+function casaDraftAdd(){casaDraftTasks.push({id:'t_'+Date.now(),label:'',time:''});renderCasaEditList();setTimeout(()=>{const inputs=document.querySelectorAll('#casaEditList input[type=text]');if(inputs.length)inputs[inputs.length-1].focus();},50);}
+async function saveCasaEdit(){
+  const tasks=casaDraftTasks.filter(t=>t.label&&t.label.trim()).map((t,i)=>({id:t.id,label:t.label.trim(),time:t.time||'',order:i}));
+  const data={tasks};
+  if(casaIsOwner()){
+    const emails=document.getElementById('casaEmails').value.split(/[\n,;\s]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@'));
+    if(!emails.includes(CASA_OWNER_EMAIL))emails.unshift(CASA_OWNER_EMAIL);
+    data.emails=emails;
+  }
+  try{
+    await window.fbSave(`household/${CASA_ID}`,data);
+    document.getElementById('casaEditModal').classList.remove('open');
+    notify('✓ Tarefas da casa atualizadas!','success');
+  }catch(e){notify('Erro ao guardar: '+(e.code||e.message),'error');}
+}
+// ── Lembretes locais (app nativo): 30 min antes e à hora-limite, só para o que ainda não está feito ──
+// Recalculado a cada alteração do dia (se alguém marcar noutro telemóvel, o aviso é cancelado aqui também).
+const CASA_NOTIF_BASE=777000;
+async function syncCasaLocalNotifs(){
+  const plugin=localNotifPlugin();
+  if(!plugin||!isNativeApp()||casaDate!==todayStr())return;
+  try{
+    const cancel=[];for(let i=0;i<100;i++)cancel.push({id:CASA_NOTIF_BASE+i});
+    await plugin.cancel({notifications:cancel});
+    const done=(casaDay&&casaDay.done)||{};
+    const now=new Date();
+    let idx=0;
+    for(const t of casaTasks()){
+      if(!t.time||done[t.id])continue;
+      const [h,m]=t.time.split(':').map(Number);
+      const at=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0);
+      const pre=new Date(at.getTime()-30*60000);
+      const list=[];
+      if(pre>now)list.push({id:CASA_NOTIF_BASE+idx*2,title:'🏡 Casa — daqui a 30 min',body:`${t.label} (até às ${t.time})`,schedule:{at:pre,allowWhileIdle:true},sound:'default'});
+      if(at>now)list.push({id:CASA_NOTIF_BASE+idx*2+1,title:'🏡 Casa — hora-limite',body:`${t.label} ainda não está marcado (${t.time})`,schedule:{at,allowWhileIdle:true},sound:'default'});
+      for(const n of list){try{await plugin.schedule({notifications:[n]});}catch(e){}}
+      idx++;if(idx>=50)break;
+    }
+  }catch(e){}
+}
 // ── BRIEFING ─────────────────────────────────────
 function renderCalBriefing(){
   const today=new Date().toISOString().split('T')[0];
@@ -2303,13 +2592,14 @@ function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('dat
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   const maisTab=document.getElementById('tabMais');
-  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines'||tab==='ideias');
+  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines'||tab==='ideias'||tab==='casa');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   if(tab==='hoje')renderHoje();
   if(tab==='week')renderWeek();
   if(tab==='routines')renderRoutines();
   if(tab==='ideias')renderIdeas();
+  if(tab==='casa')renderCasa();
 }
 function toggleMaisMenu(){
   const m=document.getElementById('maisMenu');
