@@ -567,12 +567,7 @@ resolver isso primeiro.
       material.
 
 - [x] ~~Testar ao vivo as áreas personalizadas (item 28)~~ — CONFIRMADO (item 36): criar, atribuir a uma tarefa, excluir a área e reabrir a tarefa testados com sucesso. Um bug real foi encontrado nesse processo (a exclusão apagava silenciosamente a área da tarefa ao salvar) e corrigido — ver item 36.
-- [ ] Testar ao vivo a nova configuração de áreas (item 27): abrir 🏷️
-      Áreas no cabeçalho, desmarcar alguma área (ex: Deus ou Família),
-      salvar, e confirmar que ela some do campo "Nova demanda" e do
-      filtro da lista de tarefas, mas tarefas antigas com aquela área
-      continuam aparecendo normalmente e continuam editáveis sem perder o
-      valor da área.
+- [x] ~~Testar ao vivo a nova configuração de áreas (item 27)~~ — CONFIRMADO (item 37): desmarquei uma área padrão (Deus) numa conta com tarefa usando essa área, confirmei que sumiu do resumo do topo e do filtro, mas a tarefa continuou aparecendo normalmente com a tag visível e editável sem perder o valor da área. Área padrão nunca fica órfã (ao contrário da personalizada — ver item 36), porque `AREAS` é um dicionário fixo no código.
 
 - [ ] Testar ao vivo a correção da renovação silenciosa do token do
       Google (item 25): deixar o token expirar (ou simular) e ver se a
@@ -586,11 +581,7 @@ resolver isso primeiro.
       Cloud Functions) pra manter a conexão de verdade sem depender de
       truques de navegador. Mais trabalho de configuração, mas resolve de
       vez, inclusive no iPhone.
-- [ ] Testar ao vivo o auto-submit do PIN (item 24): digitar um PIN
-      correto e confirmar que entra sozinho no app sem tocar em "Entrar";
-      confirmar também que um PIN de 4 dígitos que é prefixo de um PIN de
-      6 dígitos salvo não dispara entrada errada antes de completar o PIN
-      certo.
+- [x] ~~Testar ao vivo o auto-submit do PIN (item 24)~~ — CONFIRMADO (item 37): testado com um PIN de teste temporário (hash original restaurado ao final, sem em nenhum momento ver ou usar a senha real) — PIN de 4 dígitos entra sozinho ao completar, um PIN de 6 dígitos salvo NÃO deixa entrar só com os 4 primeiros dígitos, e o PIN de 6 dígitos completo entra sozinho também.
 
 (nenhum pendente relacionado ao atalho de voz — funcionalidade concluída
 e limitações conhecidas aceitas pelo Tiago, ver item 23)
@@ -610,10 +601,7 @@ e limitações conhecidas aceitas pelo Tiago, ver item 23)
       abrir o app e clicar em "Ativar" no banner que aparece após o login.
       Sem isso não existe subscription salva e o job não tem para quem
       mandar.
-- [ ] Confirmar visualmente que a migração automática dos dados antigos
-      (`tasks_tiago`/`tasks_monique` → `users/{uid}/tasks`) rodou certo —
-      abrir o app como Tiago e Monique e checar se as tarefas antigas
-      aparecem normalmente.
+- [x] ~~Confirmar visualmente que a migração automática dos dados antigos (`tasks_tiago`/`tasks_monique` → `users/{uid}/tasks`) rodou certo~~ — PARCIALMENTE CONFIRMADO (item 37): do lado do Tiago, os 42 documentos antigos de `tasks_tiago` estão todos presentes na nova `users/tiago/tasks` (185 tarefas, zero faltando); `notes_tiago`/`routines_tiago` antigas estavam vazias, então não havia nada a migrar nelas. Do lado da Monique não deu pra confirmar da mesma forma — tentar ler `tasks_monique` logado como Tiago deu `permission-denied` do Firestore (isolamento por usuário funcionando corretamente), então só a própria Monique logando consegue confirmar os dados dela.
 - [ ] Convidar mais alguém para testar o app via "Entrar com Google"
       (sistema de usuário dinâmico), como parte do objetivo de eventualmente
       vender a ferramenta. Annie já recebeu o link; app agora mostra tela
