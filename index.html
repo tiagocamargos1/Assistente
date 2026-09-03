@@ -922,6 +922,8 @@ async function saveNote(note){
     idea.status=next;
     await saveIdea(idea);
   }
+  async function setIdeaFilter(f){ideaFilter=f;document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-if')===f);});renderIdeas();}
+    function renderIdeas(){var el=document.getElementById('ideaList');if(!el)return;var list=ideas;if(ideaFilter!=='all'){list=list.filter(function(i){return(i.status||'pendente')===ideaFilter;});}if(!list.length){el.innerHTML='<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia por aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: ..."</small></div>';return;}var cls={pendente:'tu',andamento:'tt',feita:'tg'};var lbl={pendente:'Por tratar',andamento:'Em curso',feita:'Feita'};el.innerHTML=list.map(function(i){var st=i.status||'pendente';var iid=String(i.id).replace(/'/g,'');var strike=st==='feita'?'text-decoration:line-through;color:var(--text-muted);':'';return '<div class="task-row" style="align-items:flex-start;"><div style="flex:1;min-width:0;"><div style="'+strike+'">'+esc(i.text||'')+'</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><span class="ttag '+cls[st]+'" style="cursor:pointer;" onclick="cycleIdeaStatus(\''+iid+'\')">'+lbl[st]+'</span></div></div><div class="task-actions"><span onclick="removeIdea(\''+iid+'\')" style="cursor:pointer;opacity:.6;padding:4px;">🗑️</span></div></div>';}).join('');}
 async function removeNote(id){
   if(!window.fbSave)return;
   await window.fbDelete(`users/${cu}/notes/${id}`);
