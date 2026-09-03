@@ -719,7 +719,9 @@ let draftChecked={};
 function areaDef(key){
   if(AREAS[key])return AREAS[key];
   const c=customAreas.find(c=>c.key===key);
-  return c?{label:c.label,emoji:c.emoji||'🔖'}:null;
+   if(c)return{label:c.label,emoji:c.emoji||'🔖'};
+  if(key&&String(key).indexOf('custom_')===0)return{label:'Área removida',emoji:'🔖'};
+  return null;
 }
 function setArea(area,btn){
   currentArea=area;
