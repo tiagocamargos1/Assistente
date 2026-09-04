@@ -678,6 +678,30 @@ resolver isso primeiro.
     configuração no iPhone. Publicados no GitHub: `capacitor.config.json`,
     `package.json`, `sw.js`, `.gitignore`, este ficheiro.
 
+42. **Microfone no app nativo: faltavam as descrições de uso no Info.plist.**
+    Depois do item 41, tocar no 🎤 no iPhone dava "Permita o acesso ao
+    microfone nas configurações" e em Definições → Assistente Pessoal não
+    existia sequer o interruptor Microfone — o iOS nunca tinha pedido.
+    Causa: `ios/App/App/Info.plist` não tinha `NSMicrophoneUsageDescription`
+    nem `NSSpeechRecognitionUsageDescription` (sem elas o WebKit recusa o
+    `webkitSpeechRecognition` sem perguntar). Adicionadas as duas chaves
+    (textos em pt) e reinstalado pelo Xcode. Nota: `ios/` não está no
+    repositório (só o `www/`, `capacitor.config.json` e `package.json`
+    estão), por isso esta alteração vive apenas no projeto nativo no SSD.
+    Tentei antes o plugin `@capacitor-community/speech-recognition`, mas a
+    versão atual (7.0.1) não traz `Package.swift` e o projeto usa SPM —
+    removido; fica como alternativa se o WebKit continuar a falhar.
+
+43. **Voz no iPhone: "ouve e volta sem escrever nada" — o prazo de 2 s
+    (item 40) era curto demais antes da primeira palavra.** Com as
+    permissões dadas (item 42), o reconhecimento arrancava mas no iOS o
+    primeiro resultado demora vários segundos; o temporizador de silêncio
+    disparava aos 2 s e parava a escuta ainda sem texto. Corrigido com dois
+    prazos: `MIC_FIRST_MS` = 8 s até à primeira palavra reconhecida
+    (`micGotResult`), e só depois `MIC_SILENCE_MS` = 2 s de silêncio para
+    terminar e executar. Se a escuta acabar sem texto nenhum, o app diz
+    "Não percebi nada…" em vez de ficar mudo.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba

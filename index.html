@@ -1765,11 +1765,16 @@ function toggleMic(){
 // nunca chega), há um temporizador de silêncio — 2 s sem palavras novas e a
 // escuta pára sozinha; ao parar, o que foi ouvido é EXECUTADO (processInput),
 // não só escrito no campo. A flag micSubmitted evita executar duas vezes.
-const MIC_SILENCE_MS=2000;
-let micSilenceTimer=null,micSubmitted=false;
+// Dois prazos: antes da primeira palavra reconhecida dá-se mais tempo
+// (MIC_FIRST_MS), porque no iOS o reconhecimento demora alguns segundos a
+// devolver o primeiro resultado — parar aos 2 s aí matava a escuta antes de
+// haver texto ("ouve e volta sem escrever nada"). Depois da primeira palavra,
+// 2 s de silêncio (MIC_SILENCE_MS) terminam e executam.
+const MIC_SILENCE_MS=2000,MIC_FIRST_MS=8000;
+let micSilenceTimer=null,micSubmitted=false,micGotResult=false;
 function micArmSilence(){
   if(micSilenceTimer)clearTimeout(micSilenceTimer);
-  micSilenceTimer=setTimeout(()=>{if(recognition)try{recognition.stop();}catch(e){}},MIC_SILENCE_MS);
+  micSilenceTimer=setTimeout(()=>{if(recognition)try{recognition.stop();}catch(e){}},micGotResult?MIC_SILENCE_MS:MIC_FIRST_MS);
 }
 function micSubmitIfPending(){
   if(micSubmitted)return;
@@ -1785,7 +1790,7 @@ function startMic(){
   recognition.lang='pt-PT'; // Portuguese Portugal (works for BR too)
   recognition.continuous=false;
   recognition.interimResults=true;
-  micSubmitted=false;
+  micSubmitted=false;micGotResult=false;
   recognition.onstart=()=>{
     isListening=true;
     document.getElementById('micBtn').classList.add('listening');
@@ -1802,6 +1807,7 @@ function startMic(){
       transcript+=e.results[i][0].transcript;
     }
     document.getElementById('userInput').value=transcript;
+    if(transcript.trim())micGotResult=true;
     micArmSilence();
     // Auto-submit when final result
     if(e.results[e.results.length-1].isFinal){
@@ -1822,6 +1828,8 @@ function startMic(){
     if(micSilenceTimer)clearTimeout(micSilenceTimer);
     stopMic();
     // O motor parou (silêncio, fim natural ou toque no ⏹): executar o que foi ouvido
+    const had=(document.getElementById('userInput').value||'').trim();
+    if(!had&&!micSubmitted)notify('Não percebi nada. Toca no 🎤 e fala logo a seguir.','info');
     micSubmitIfPending();
   };
   recognition.start();
