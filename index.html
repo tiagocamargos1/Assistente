@@ -341,6 +341,19 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .casa-time{font-size:11px;color:var(--text-muted);white-space:nowrap;}
 .casa-item.late .casa-time{color:var(--red);font-weight:600;}
 .casa-avs{display:flex;gap:4px;}
+.casa-view{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px;}
+.casa-view button{background:transparent;border:none;color:var(--text-muted);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.casa-view button.active{background:var(--gold);color:var(--bg);}
+.casa-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px;background:var(--surface2);}
+.casa-grid{border-collapse:separate;border-spacing:0;font-size:11px;min-width:100%;}
+.casa-grid th,.casa-grid td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:0;text-align:center;height:34px;min-width:30px;}
+.casa-grid th{color:var(--text-dim);font-weight:600;font-size:10px;background:var(--surface2);position:sticky;top:0;z-index:2;}
+.casa-grid th:first-child,.casa-grid td:first-child{position:sticky;left:0;background:var(--surface);z-index:3;text-align:left;padding:0 10px;min-width:130px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:500;}
+.casa-grid th.today,.casa-grid td.today{background:rgba(201,168,76,.10);}
+.casa-grid td.miss{background:rgba(192,96,96,.18);}
+.casa-grid td.done span{display:inline-flex;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bg);}
+.casa-grid td.future{opacity:.35;}
+.casa-grid td.cell{cursor:pointer;}
 .casa-av{width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--bg);}
 @media(max-width:680px){
   html,body{height:100%;overflow:hidden;}
@@ -2363,7 +2376,7 @@ const CASA_DEFAULT_TASKS=[
   {id:'jantar',label:'Jantar das crianças',time:'20:00'},
   {id:'pacoca_noite',label:'Paçoca – Comida',time:'20:00'}
 ].map((t,i)=>({...t,order:i}));
-let casa=null,casaDay=null,casaDate=null,casaMember=false;
+let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMonth=null,casaMonthDays={},fbUnsubCasaMonth=null;
 let fbUnsubCasa=null,fbUnsubCasaDay=null,casaMidnightTimer=null;
 let casaDraftTasks=[];
 function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`gemail_${cu}`)||'').toLowerCase();}
@@ -2375,6 +2388,7 @@ function casaSetTabVisible(on){
 function startCasaListener(){
   if(fbUnsubCasa)fbUnsubCasa();
   if(fbUnsubCasaDay)fbUnsubCasaDay();
+  if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};casaView='day';casaMonth=null;
   casa=null;casaDay=null;casaMember=false;casaDate=todayStr();
   casaSetTabVisible(false);
   if(!window.fbListenDoc)return;
@@ -2414,8 +2428,68 @@ function listenCasaDay(){
   if(!casaMember||!window.fbListenDoc)return;
   fbUnsubCasaDay=window.fbListenDoc(`household/${CASA_ID}/days/${casaDate}`,d=>{casaDay=d||{};renderCasa();syncCasaLocalNotifs();},()=>{});
 }
+// ── Vista mensal: ouve a coleção inteira de dias (é pequena: um doc por dia) e filtra pelo mês no ecrã
+function listenCasaMonth(){
+  if(fbUnsubCasaMonth||!casaMember||!window.fbListenCol)return;
+  fbUnsubCasaMonth=window.fbListenCol(`household/${CASA_ID}/days`,list=>{
+    casaMonthDays={};for(const d of list)casaMonthDays[d.id]=d;
+    if(casaView==='month')renderCasa();
+  });
+}
+function casaSetView(v){
+  casaView=v;
+  if(v==='month'){if(!casaMonth)casaMonth=todayStr().slice(0,7);listenCasaMonth();}
+  renderCasa();
+}
+function casaShiftMonth(delta){
+  const [y,m]=(casaMonth||todayStr().slice(0,7)).split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  casaMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  renderCasa();
+}
+function casaOpenDay(ds){casaDate=ds;casaView='day';listenCasaDay();renderCasa();}
+function casaMemberColor(uid){const m=(casa&&casa.members||{})[uid];return(m&&m.color)||(USERS[uid]&&USERS[uid].color)||'#c9a84c';}
+function renderCasaMonth(){
+  const [y,m]=casaMonth.split('-').map(Number);
+  const nDays=new Date(y,m,0).getDate();
+  const today=todayStr();const nowMin=casaNowMin();
+  const tasks=casaTasks();
+  const monthLabel=new Date(y,m-1,1).toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
+  const members=Object.entries((casa&&casa.members)||{});
+  const legend=members.map(([uid,mm])=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;"><span class="casa-av" style="background:${esc(mm.color||'#c9a84c')};width:18px;height:18px;font-size:9px;">${esc((mm.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(mm.name||uid)}</span></span>`).join('')+`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:rgba(192,96,96,.4)"></span><span style="font-size:11px;color:var(--text-muted)">não feito</span></span>`;
+  let head='<tr><th>Tarefa</th>';
+  for(let d=1;d<=nDays;d++){const ds=`${casaMonth}-${String(d).padStart(2,'0')}`;head+=`<th class="${ds===today?'today':''}">${d}</th>`;}
+  head+='</tr>';
+  // Linha por tarefa + uma linha "Extras" com o total de tarefas só-desse-dia feitas
+  let body='';
+  const stats={};
+  for(const t of tasks){
+    body+=`<tr><td title="${esc(t.label)}">${esc(t.label)}${t.time?` <span style="color:var(--text-dim);font-size:10px">${esc(t.time)}</span>`:''}</td>`;
+    for(let d=1;d<=nDays;d++){
+      const ds=`${casaMonth}-${String(d).padStart(2,'0')}`;
+      const day=casaMonthDays[ds];const dn=day&&day.done&&day.done[t.id];
+      let cls='cell',inner='';
+      if(dn){cls+=' done';inner=`<span style="background:${esc(casaMemberColor(dn.by))}" title="${esc(dn.name||dn.by||'')} · ${casaFmtTime(dn.at)}">${esc((dn.name||dn.by||'?').charAt(0).toUpperCase())}</span>`;stats[dn.by]=(stats[dn.by]||0)+1;}
+      else if(ds<today||(ds===today&&t.time&&casaMinutes(t.time)<nowMin)){cls+=' miss';}
+      else{cls+=' future';}
+      if(ds===today)cls+=' today';
+      body+=`<td class="${cls}" onclick="casaOpenDay('${ds}')">${inner}</td>`;
+    }
+    body+='</tr>';
+  }
+  const totals=members.map(([uid,mm])=>`${esc(mm.name||uid)}: <strong>${stats[uid]||0}</strong>`).join(' · ');
+  return `
+    <div class="casa-hdr">
+      <div class="casa-nav"><button onclick="casaShiftMonth(-1)">‹</button><button onclick="casaMonth=todayStr().slice(0,7);renderCasa()" ${casaMonth===today.slice(0,7)?'disabled':''}>Este mês</button><button onclick="casaShiftMonth(1)">›</button></div>
+      <div class="casa-date" style="text-transform:capitalize">${esc(monthLabel)}</div>
+      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button class="active" onclick="casaSetView('month')">Mês</button></div>
+    </div>
+    <div style="margin:-4px 0 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${legend}</div>
+    <div class="casa-grid-wrap"><table class="casa-grid"><thead>${head}</thead><tbody>${body||'<tr><td colspan="32" style="text-align:center;color:var(--text-dim);padding:16px">Sem tarefas</td></tr>'}</tbody></table></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Marcações no mês — ${totals||'—'}. Toca num dia para o abrir.</div>`;
+}
 function stopCasaListeners(){
-  if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();
+  if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};
   fbUnsubCasa=null;fbUnsubCasaDay=null;casa=null;casaDay=null;casaMember=false;
   stopShoppingListener();
 }
@@ -2451,6 +2525,7 @@ function renderCasa(){
   const bdg=document.getElementById('bdgC');
   if(bdg&&casaDate===todayStr())bdg.textContent=casaPendingToday();
   if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🏡</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
+  if(casaView==='month'){el.innerHTML=renderCasaMonth();return;}
   const items=casaAllItems();
   const done=(casaDay&&casaDay.done)||{};
   const isToday=casaDate===todayStr();
@@ -2476,7 +2551,7 @@ function renderCasa(){
     <div class="casa-hdr">
       <div class="casa-nav"><button onclick="casaShiftDate(-1)">‹</button><button onclick="casaGoToday()" ${isToday?'disabled':''}>Hoje</button><button onclick="casaShiftDate(1)">›</button></div>
       <div class="casa-date">${casaFmtDate(casaDate)}</div>
-      <div class="casa-avs">${avs}</div>
+      <div style="display:flex;align-items:center;gap:8px;"><div class="casa-avs">${avs}</div><div class="casa-view"><button class="active" onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button></div></div>
     </div>
     <div class="casa-prog"><div style="width:${pct}%"></div></div>
     <div style="font-size:11px;color:var(--text-dim);margin:-6px 0 10px;text-align:right;">${doneCount}/${items.length} feitas</div>
@@ -2705,7 +2780,7 @@ function swipeToTab(dir){
   area.addEventListener('touchstart',e=>{
     const t=e.touches[0];
     const tag=(e.target.tagName||'').toLowerCase();
-    active=!(tag==='input'||tag==='textarea'||tag==='select'||e.target.closest('.modal-ov,.week-grid,.casa-nav'));
+    active=!(tag==='input'||tag==='textarea'||tag==='select'||e.target.closest('.modal-ov,.week-grid,.casa-nav,.casa-view,.casa-grid-wrap'));
     sx=t.clientX;sy=t.clientY;st=Date.now();
   },{passive:true});
   area.addEventListener('touchend',e=>{
