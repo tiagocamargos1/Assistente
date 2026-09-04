@@ -784,6 +784,20 @@ resolver isso primeiro.
     (com link "ativa aqui" quando o próprio é um deles). O antigo pendente
     "tornar o banner mais difícil de ignorar" fica resolvido.
 
+49. **Compras v2: categorias, partilhar por WhatsApp, quantidades por voz.**
+    (a) Cada item ganha uma categoria atribuída sozinha por palavra-chave
+    (`SHOP_CATS`: 🥦 Frescos, 🛒 Mercearia, 💊 Farmácia, 🧴 Casa e higiene,
+    📦 Outros — `shopCatFor`), guardada em `cat`; a lista aparece agrupada
+    por categoria e um toque na etiqueta roda para a categoria seguinte
+    (`cycleShopCat`). (b) Botão "📤 Partilhar lista" gera texto agrupado por
+    categoria (`shoppingAsText`) e usa a folha de partilha do sistema
+    (`navigator.share` — no iPhone abre WhatsApp, Mensagens, etc.); em
+    navegadores sem isso abre `wa.me` com o texto. (c) `parseShopItem`
+    percebe quantidades ditas ou escritas: "dois pacotes de leite" →
+    Leite (2 pacotes), "3 kg de batatas", "meia dúzia de ovos" → 6, "uma
+    garrafa de azeite", "leite x2"; números por extenso até doze e unidades
+    comuns (`UNIT_WORDS`). Rótulo fica com inicial maiúscula.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -793,10 +807,8 @@ resolver isso primeiro.
       acrescenta-o em ⚙️ Tarefas da casa → Membros.
 - [x] ~~Casa: vista mensal em grelha~~ — FEITA (item 45).
 - [x] ~~Casa: resumo no ecrã "Hoje"~~ — FEITO (item 46).
-- [ ] Compras (item 44): testar com a Monique/Lu a acrescentar do telemóvel
-      delas; ideias de v2 — categorias (mercearia/farmácia), partilhar a
-      lista por WhatsApp como texto, e "Comprar:" a reconhecer quantidades
-      ditas por voz ("dois pacotes de leite").
+- [ ] Compras: testar com a Monique/Lu a acrescentar do telemóvel delas
+      (v2 com categorias/partilha/quantidades já feita — item 49).
 
 - [ ] O Tiago precisa criar a conta no Google Play Console
       (https://play.google.com/console/signup, taxa única de US$ 25) —

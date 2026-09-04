@@ -2755,6 +2755,43 @@ async function syncCasaLocalNotifs(){
 // Mesma pertença por e-mail da Casa (regras do Firestore: household/{hid}/{sub}/{doc}).
 let shopping=[],fbUnsubShopping=null,shoppingShowBought=false;
 function normLabel(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ');}
+// Categorias: atribuídas sozinhas por palavra-chave ao acrescentar (pode-se mudar com um toque na etiqueta)
+const SHOP_CATS=[
+  {key:'frescos',label:'🥦 Frescos',words:['fruta','maçã','maca','banana','laranja','pera','uva','morango','legume','alface','tomate','cebola','alho','batata','cenoura','courgette','pepino','couve','brócolo','brocolo','espinafre','salsa','coentro','limão','limao','abacate','manga','melancia','melão','melao','carne','frango','peru','vaca','porco','bife','peixe','salmão','salmao','bacalhau','atum','sardinha','camarão','camarao','fiambre','queijo','ovo','ovos','leite','iogurte','manteiga','natas','pão','pao','broa']},
+  {key:'mercearia',label:'🛒 Mercearia',words:['arroz','massa','esparguete','farinha','açúcar','acucar','sal','azeite','óleo','oleo','vinagre','café','cafe','chá','cha','cereal','cereais','bolacha','bolachas','chocolate','feijão','feijao','grão','grao','lentilha','atum','conserva','molho','ketchup','maionese','mostarda','água','agua','sumo','refrigerante','cerveja','vinho','leite condensado','mel','compota','tosta','tostas','aveia','papas','fralda','fraldas','toalhita','toalhitas','ração','racao','areia']},
+  {key:'farmacia',label:'💊 Farmácia',words:['farmácia','farmacia','remédio','remedio','medicamento','comprimido','xarope','vitamina','pomada','penso','pensos','álcool','alcool','soro','termómetro','termometro','ben-u-ron','brufen','paracetamol','ibuprofeno']},
+  {key:'casa',label:'🧴 Casa e higiene',words:['detergente','lixívia','lixivia','amaciador','esfregão','esfregao','esponja','saco','sacos','lixo','papel','higiénico','higienico','guardanapo','guardanapos','rolo','cozinha','champô','champo','shampoo','gel','banho','sabonete','pasta','dentes','escova','desodorizante','lâmina','lamina','algodão','algodao','pilha','pilhas','lâmpada','lampada','vela','velas']},
+  {key:'outros',label:'📦 Outros',words:[]}
+];
+function shopCatFor(label){
+  const l=normLabel(label);
+  for(const c of SHOP_CATS){if(c.words.some(w=>l===w||l.includes(w)))return c.key;}
+  return 'outros';
+}
+function shopCatDef(key){return SHOP_CATS.find(c=>c.key===key)||SHOP_CATS[SHOP_CATS.length-1];}
+async function cycleShopCat(id){
+  const it=shopping.find(i=>String(i.id)===String(id));if(!it||!window.fbSave)return;
+  const i=SHOP_CATS.findIndex(c=>c.key===(it.cat||'outros'));
+  const next=SHOP_CATS[(i+1)%SHOP_CATS.length].key;
+  try{await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{cat:next});}catch(e){}
+}
+// Quantidades ditas por voz: "dois pacotes de leite", "3 kg de batatas", "meia dúzia de ovos", "leite x2"
+const NUM_WORDS={um:1,uma:1,dois:2,duas:2,três:3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,'meia dúzia':6,'meia duzia':6,'uma dúzia':12,'uma duzia':12,dúzia:12,duzia:12};
+const UNIT_WORDS='(pacotes?|caixas?|garrafas?|latas?|sacos?|kg|quilos?|kilos?|g|gramas?|l|litros?|ml|unidades?|embalagens?|frascos?|rolos?|dúzias?|duzias?|pares?|peças?|pecas?|cabeças?|cabecas?|molhos?|ramos?|barras?|tabletes?|potes?|iogurtes?|garrafões?|garrafoes?)';
+function parseShopItem(raw){
+  let t=String(raw||'').trim().replace(/\s+/g,' ');
+  let qty='',label=t;
+  const numRe=new RegExp('^(\\d+[\\d.,]*|'+Object.keys(NUM_WORDS).sort((a,b)=>b.length-a.length).join('|')+')\\s+(?:'+UNIT_WORDS+'\\s+)?(?:de\\s+|d[eo]s?\\s+)?(.+)$','i');
+  const m=t.match(numRe);
+  const m2=t.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
+  if(m){
+    const nRaw=m[1].toLowerCase();const n=NUM_WORDS[nRaw]!==undefined?NUM_WORDS[nRaw]:nRaw;
+    const unit=m[2]?m[2].toLowerCase():'';
+    qty=unit?`${n} ${unit}`:String(n);label=m[3].trim();
+  }else if(m2){label=m2[1].trim();qty=m2[2];}
+  label=label.charAt(0).toUpperCase()+label.slice(1);
+  return {label,qty};
+}
 function startShoppingListener(){
   if(fbUnsubShopping)fbUnsubShopping();
   shopping=[];
@@ -2784,16 +2821,14 @@ async function addShoppingItem(text){
   if(!casaMember||!window.fbSave)return false;
   const raw=String(text||'').trim();
   if(!raw)return false;
-  // "3 pacotes de leite" / "leite x2" → quantidade opcional
-  let label=raw,qty='';
-  const m1=raw.match(/^(\d+[\w.,]*)\s+(.+)$/);const m2=raw.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
-  if(m2){label=m2[1].trim();qty=m2[2];}else if(m1){qty=m1[1];label=m1[2].trim();}
+  const {label,qty}=parseShopItem(raw);
+  const cat=shopCatFor(label);
   const key=normLabel(label);
   if(shoppingPending().some(i=>normLabel(i.label)===key)){notify(`"${label}" já está na lista.`,'info');return true;}
   const me=USERS[cu]||{};
   const id=Date.now().toString()+Math.random().toString(36).slice(2,6);
   try{
-    await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{id,label,qty,addedBy:cu,addedByName:me.name||cu,addedAt:new Date().toISOString(),bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
+    await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{id,label,qty,cat,addedBy:cu,addedByName:me.name||cu,addedAt:new Date().toISOString(),bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
     return true;
   }catch(e){notify('Erro ao guardar: '+(e.code||e.message),'error');return false;}
 }
@@ -2817,6 +2852,22 @@ async function addShoppingFromField(){
   if(ok){inp.value='';inp.focus();}
 }
 function shopKey(e){if(e.key==='Enter'){e.preventDefault();addShoppingFromField();}}
+function shoppingAsText(){
+  const pend=shoppingPending();
+  if(!pend.length)return '';
+  const groups={};for(const i of pend){const k=i.cat||shopCatFor(i.label);(groups[k]=groups[k]||[]).push(i);}
+  let out='🛒 Lista de compras — '+new Date().toLocaleDateString('pt-PT')+'\n';
+  for(const c of SHOP_CATS){const g=groups[c.key];if(!g)continue;out+='\n'+c.label+'\n'+g.map(i=>`• ${i.label}${i.qty?' ('+i.qty+')':''}`).join('\n')+'\n';}
+  return out.trim();
+}
+async function shareShopping(){
+  const text=shoppingAsText();
+  if(!text){notify('A lista está vazia.','info');return;}
+  try{
+    if(navigator.share){await navigator.share({text});return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
 async function clearBoughtOld(){
   // Limpa comprados com mais de 60 dias (o histórico recente chega para as sugestões)
   const cutoff=new Date(Date.now()-60*86400000).toISOString();
@@ -2832,11 +2883,14 @@ function renderShopping(){
   const pend=shoppingPending();
   const bdg=document.getElementById('bdgS');if(bdg)bdg.textContent=pend.length;
   if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🛒</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
-  const rows=pend.map(i=>`<div class="task-item" onclick="toggleShoppingItem('${esc(i.id)}')">
+  const groups={};for(const i of pend){const k=i.cat||shopCatFor(i.label);(groups[k]=groups[k]||[]).push(i);}
+  const rowHTML=i=>`<div class="task-item" onclick="toggleShoppingItem('${esc(i.id)}')">
       <div class="task-check"></div>
-      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''}</div></div>
+      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''} · <span class="ttag ts" style="cursor:pointer;" title="Toca para mudar a categoria" onclick="event.stopPropagation();cycleShopCat('${esc(i.id)}')">${esc(shopCatDef(i.cat||shopCatFor(i.label)).label)}</span></div></div>
       <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();removeShoppingItem('${esc(i.id)}')">✕</button>
-    </div>`).join('');
+    </div>`;
+  const rows=SHOP_CATS.filter(c=>groups[c.key]).map(c=>`<div class="sdiv" style="margin-top:6px;">${esc(c.label)} · ${groups[c.key].length}</div>`+groups[c.key].map(rowHTML).join('')).join('');
+  const shareBtn=pend.length?`<button class="rep-btn" style="margin:4px 0 10px;" onclick="shareShopping()">📤 Partilhar lista (WhatsApp, …)</button>`:'';
   const sugg=shoppingSuggestions();
   const suggHtml=sugg.length?`<div class="sdiv">Sugestões — já compraram antes</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${sugg.map(s=>`<button class="filter-btn" onclick="addShoppingItem('${esc(s.label).replace(/'/g,'&#39;')}')">+ ${esc(s.label)}${s.n>1?` <span style="opacity:.6">×${s.n}</span>`:''}</button>`).join('')}</div>`:'';
   const bought=shoppingBought();
@@ -2844,7 +2898,7 @@ function renderShopping(){
       <div class="task-check">✓</div>
       <div class="task-body"><div class="task-text">${esc(i.label)}</div><div class="note-meta" style="color:var(--green)">✓ ${esc(i.boughtByName||'')}${i.boughtAt?` · ${fd2(i.boughtAt)}`:''}</div></div>
     </div>`).join('')+`<button class="rep-btn" onclick="clearBoughtOld()">🧹 Limpar comprados há mais de 60 dias</button>`:''):'';
-  el.innerHTML=(rows||`<div class="empty-state"><div class="icon">🛒</div>Lista vazia<br><small style="font-size:11px;margin-top:6px;display:block;">Escreve aqui em cima, ou diz "Comprar: leite" no campo de voz.</small></div>`)+suggHtml+boughtHtml;
+  el.innerHTML=(rows||`<div class="empty-state"><div class="icon">🛒</div>Lista vazia<br><small style="font-size:11px;margin-top:6px;display:block;">Escreve aqui em cima, ou diz "Comprar: leite" no campo de voz.</small></div>`)+shareBtn+suggHtml+boughtHtml;
 }
 // ── SWIPE ENTRE ABAS (telemóvel) ─────────────────
 // Deslizar o conteúdo para a esquerda/direita passa para a aba seguinte/
