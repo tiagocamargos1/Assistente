@@ -963,8 +963,10 @@ e limitações conhecidas aceitas pelo Tiago, ver item 23)
 - [ ] Em aberto / não decidido ainda: ideias de integração conceitual entre
       Assistente Pessoal e Setoriza (tratar na conversa própria do Setoriza,
       não aqui).
-- [ ] Considerar adicionar um README.md ao repositório (hoje o GitHub mostra
-      "Add a README" — não é funcional, só cosmético/documentação pública).
+- [x] ~~Adicionar um README.md ao repositório~~ — FEITO (04/09): README
+      público em pt-PT com funcionalidades por aba, stack, estrutura de
+      pastas, como desenvolver/publicar, configuração externa (sem
+      segredos) e licença de uso pessoal.
 - [x] ~~Testar ao vivo a Caixa de Ideias (item 34)~~ — CONFIRMADO (item 35): criar, ciclar status, filtrar e excluir ideias testados com sucesso num recarregamento limpo, sem cache antigo.
 
 ## Protocolo de sessão
