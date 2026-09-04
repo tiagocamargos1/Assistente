@@ -768,6 +768,22 @@ resolver isso primeiro.
     matrícula tem sempre um terceiro bloco) e valida dia 1–31 / mês 1–12.
     As 4 tarefas afetadas foram limpas ao vivo (`date: null`).
 
+48. **Notificações: banner sem escapatória fácil + quem tem lembretes na
+    Casa.** O banner de ativação perdeu o "✕": passa a ter "Ativar" ou
+    "Agora não" (esconde só até ao próximo login, via `sessionStorage`), e
+    explica que sem isto os lembretes da Casa não chegam. No **app nativo**
+    (iPhone) não existe Web Push dentro da WKWebView — o banner aí pede a
+    permissão de notificações locais (`reqNativeNotif` →
+    `LocalNotifications.requestPermissions`), que é o que os lembretes da
+    Casa usam (`syncCasaLocalNotifs`); antes disto ninguém no nativo era
+    alguma vez convidado a ativar. Estado por pessoa gravado em
+    `household/casa.members[uid].notif = 'web' | 'native'`
+    (`syncNotifStatusToCasa`, corre ao ativar e em cada arranque quando já
+    está autorizado); a aba Casa mostra 🔔/🔕 em cada avatar e a linha
+    "🔕 Sem lembretes: Monique, Lu — cada um ativa no próprio telemóvel"
+    (com link "ativa aqui" quando o próprio é um deles). O antigo pendente
+    "tornar o banner mais difícil de ignorar" fica resolvido.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -837,9 +853,7 @@ e limitações conhecidas aceitas pelo Tiago, ver item 23)
       (sistema de usuário dinâmico), como parte do objetivo de eventualmente
       vender a ferramenta. Annie já recebeu o link; app agora mostra tela
       de login genérica pra ela (não mais os cartões do Tiago/Monique).
-- [ ] Opcional: tornar o banner de ativação de push mais difícil de ignorar
-      (remover o "✕" de dispensa rápida, obrigando escolher entre "Ativar"
-      ou "Agora não" explicitamente).
+- [x] ~~Tornar o banner de ativação de push mais difícil de ignorar~~ — FEITO (item 48).
 - [ ] Não decidido/descartado por ora: compartilhamento seletivo de tarefas
       entre usuários dinâmicos e Tiago (feature nova de "compartilhar com",
       tarefa por tarefa). Decisão tomada: por enquanto NENHUM
