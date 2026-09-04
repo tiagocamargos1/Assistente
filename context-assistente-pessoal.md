@@ -635,6 +635,16 @@ resolver isso primeiro.
     ⏹ também executa. (b) Barra inferior no telemóvel agora mostra os 4 mais
     usados — Hoje, Tarefas, Casa, Rotinas — mais 🎤 e ☰ Mais (Semana, Notas,
     Ideias, Relatório). Casa continua escondida para quem não é membro.
+    (c) O Tiago perguntou se a barra podia rolar para o lado com todos os
+    botões; recomendei em vez disso **deslizar o conteúdo com o dedo**
+    (barra rolável esconde botões e provoca toques acidentais — nem iOS nem
+    Android a usam) e ele aceitou. Implementado: `touchstart`/`touchend` em
+    `.left-panel` (`swipeToTab`), ordem `SWIPE_ORDER` = Hoje, Tarefas, Casa,
+    Rotinas, Notas, Ideias, Semana (salta abas escondidas); ignora gestos que
+    começam em campos de texto, no calendário da Semana, na navegação de
+    dias da Casa ou com modal aberto; exige ≥70 px horizontais, <600 ms, e
+    mais horizontal do que vertical (para não interferir com o scroll).
+    Animação curta de entrada (`swipe-left`/`swipe-right`).
 
 ## Próximos passos (pendentes)
 
