@@ -832,6 +832,31 @@ resolver isso primeiro.
     build instalado pelo Xcode não registou os atalhos — ver com
     `Atalhos` → "Assistente Pessoal").
 
+52. **Siri / App Shortcuts — investigação fechada (04/09):** o projeto iOS
+    está correto e o pacote instalado (`DerivedData/Build/Products/
+    Debug-iphoneos/App.app`) contém `Metadata.appintents/extract.actionsdata`
+    com o `AssistenteShortcuts` e as frases "Nova tarefa no
+    ${applicationName}", "Criar tarefa no …" e "Tarefa urgente no …".
+    Ajustes feitos no caminho (ficam no projeto, ios/ não está no git):
+    `IPHONEOS_DEPLOYMENT_TARGET` 15.0 → 16.0 (4 configs), `CapApp-SPM/
+    Package.swift` → `.iOS(.v16)`, anotações `@available(iOS 16.0, *)`
+    removidas de `AddTaskIntent.swift`, `ENABLE_DEBUG_DYLIB = NO` (o Xcode
+    16+ compilava o código num `App.debug.dylib`; agora o binário é único),
+    `AppShortcuts.xcstrings` duplicado retirado (ficam só os `.strings` em
+    en/pt-BR/pt-PT.lproj). Frases fixas sem `\(.applicationName)` NÃO
+    compilam ("Every App Shortcut utterance should have one
+    ${applicationName}") — obrigatório manter a variável.
+    **Causa real:** o iPhone do Tiago corre uma **beta do iOS 27** e nem o
+    WhatsApp mostra a secção "Atalhos" em Definições → app → Apple
+    Intelligence e Siri → o sistema não está a registar App Shortcuts de
+    nenhuma app. Nada mais a fazer do nosso lado; deve resolver-se com uma
+    beta seguinte ou versão estável, sem reinstalar.
+    **Contorno já disponível:** atalho pessoal na app Atalhos chamado
+    "Nova tarefa no Assistente" = ação "Perguntar" ("Qual é a tarefa?") +
+    "Abrir URLs" com `assistentepessoal://addtask?title=` + variável da
+    entrada. A Siri corre atalhos pessoais pelo nome, independentemente
+    dos App Shortcuts.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -848,10 +873,10 @@ resolver isso primeiro.
       (https://play.google.com/console/signup, taxa única de US$ 25) —
       isso não pode ser feito por mim (regra de segurança: nunca criar
       contas ou inserir pagamento em nome do usuário).
-- [ ] Siri: "Nova tarefa no Assistente Pessoal" NÃO funciona — a Siri diz
-      que é preciso descarregar uma app (reportado pelo Tiago em 04/09,
-      ver item 51). Investigar o App Intent / AppShortcutsProvider no
-      projeto iOS e testar de novo.
+- [ ] Siri: App Shortcuts não aparecem por causa da beta do iOS 27 (nem
+      no WhatsApp) — projeto já corrigido, ver item 52. Voltar a testar
+      "Nova tarefa no Assistente Pessoal" após atualização do iOS; até lá
+      usar o atalho pessoal na app Atalhos (item 52).
 - [ ] Depois que os testes acima forem confirmados, ajudar com: texto e
       ficha da loja (descrição, categoria), política de privacidade
       publicada (posso gerar e hospedar no GitHub Pages), prints de tela
