@@ -798,6 +798,18 @@ resolver isso primeiro.
     garrafa de azeite", "leite x2"; números por extenso até doze e unidades
     comuns (`UNIT_WORDS`). Rótulo fica com inicial maiúscula.
 
+50. **Feed de atividade da Casa + aviso quando outro membro marca.** A aba
+    Casa ganhou a terceira vista "Atividade" (Dia | Mês | Atividade): linha
+    do tempo "Lu fez: Almoço das crianças · 13:05", "Monique acrescentou à
+    lista: Leite", "Tiago comprou: Ovos", agrupada por Hoje/Ontem/data, com
+    contagem de ações por pessoa nos últimos 7 dias. **Sem coleção nova**:
+    é derivada do que já existe (`days/*.done` com quem/quando, e os campos
+    `addedAt`/`boughtAt` das compras) — `casaFeedEvents()`. E um aviso
+    in-app (toast) quando OUTRO membro marca uma tarefa de hoje enquanto a
+    app está aberta (`casaAnnounceChanges`, compara o `done` do documento
+    de hoje com o último visto; ignora as próprias marcações). Não é push —
+    o push das horas-limite continua a ser o do item 38.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
