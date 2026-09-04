@@ -1735,10 +1735,13 @@ function parseInput(inp, today){
       }
     }
     // DD/MM or DD de Mês
-    const dmMatch=inp.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+    // Data DD/MM ou DD-MM — mas NÃO matrículas portuguesas ("91-29-TB",
+    // "00-46-UP", "AA-12-34"): exige que não haja letra/dígito colado antes
+    // ou depois, e que dia e mês sejam válidos (senão dava "2026-29-91").
+    const dmMatch=inp.match(/(?<![\w-])(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?(?![\w-])/);
     if(dmMatch){
       const day=parseInt(dmMatch[1]),mon=parseInt(dmMatch[2]),yr=dmMatch[3]?parseInt(dmMatch[3]):today.getFullYear();
-      date=`${yr<100?2000+yr:yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      if(day>=1&&day<=31&&mon>=1&&mon<=12)date=`${yr<100?2000+yr:yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     }
     const deMatch=inp.match(/(\d{1,2})\s+de\s+(\w+)/i);
     if(deMatch&&months[deMatch[2].toLowerCase()]){
