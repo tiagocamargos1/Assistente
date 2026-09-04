@@ -810,6 +810,28 @@ resolver isso primeiro.
     de hoje com o último visto; ignora as próprias marcações). Não é push —
     o push das horas-limite continua a ser o do item 38.
 
+51. **Barra inferior refeita (pedido do Tiago, com fotos):** (1) o
+    microfone flutuante saiu da barra — o 🎤 continua no campo de captura
+    do topo; (2) a aba ativa passou a ser um botão dourado cheio (antes só
+    o texto mudava de cor e "quase não se via"); (3) todas as abas ficam
+    **numa linha que rola para o lado** dentro da própria barra, na ordem
+    HOJE · TAREFAS · CASA · ROTINAS · COMPRAS · NOTAS · SEMANA · IDEIAS —
+    acabou o menu ☰ Mais no telemóvel (o Tiago preferiu isto ao swipe do
+    conteúdo, que continua a existir mas já não é a única forma). A aba
+    ativa é trazida para o centro da barra (`scrollIntoView` em
+    `switchTab`), há uma máscara de desvanecimento nas pontas a sugerir
+    que existe mais, e a barra ficou excluída do gesto de swipe entre abas
+    (para rolar a barra não trocar de aba sem querer). `SWIPE_ORDER`
+    alinhado com a mesma ordem. Casa e Compras continuam escondidas para
+    quem não é membro.
+    Pendente relacionado (Siri, item 23/32): o Tiago reporta que ao dizer
+    "nova tarefa no Assistente Pessoal" a Siri responde que é preciso
+    descarregar uma app — o App Intent nativo (`AddTaskIntent.swift`) não
+    está a ser reconhecido. A avaliar a seguir (provável: falta o
+    `AppShortcutsProvider` com frases que incluam `.applicationName`, ou o
+    build instalado pelo Xcode não registou os atalhos — ver com
+    `Atalhos` → "Assistente Pessoal").
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -826,10 +848,10 @@ resolver isso primeiro.
       (https://play.google.com/console/signup, taxa única de US$ 25) —
       isso não pode ser feito por mim (regra de segurança: nunca criar
       contas ou inserir pagamento em nome do usuário).
-- [ ] Testar ao vivo, no iPhone físico (com Apple Watch pareado), o
-      atalho de Siri "Nova tarefa no Assistente Pessoal" / "Tarefa
-      urgente no Assistente Pessoal" — único pedaço do app nativo que
-      só dá pra confirmar com teste humano de verdade (ver item 32).
+- [ ] Siri: "Nova tarefa no Assistente Pessoal" NÃO funciona — a Siri diz
+      que é preciso descarregar uma app (reportado pelo Tiago em 04/09,
+      ver item 51). Investigar o App Intent / AppShortcutsProvider no
+      projeto iOS e testar de novo.
 - [ ] Depois que os testes acima forem confirmados, ajudar com: texto e
       ficha da loja (descrição, categoria), política de privacidade
       publicada (posso gerar e hospedar no GitHub Pages), prints de tela

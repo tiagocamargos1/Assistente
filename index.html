@@ -164,7 +164,7 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 /* TABS */
 .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surface);}
 .tab{padding:9px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,.14);border-radius:10px 10px 0 0;}
 .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;background:var(--gold);color:var(--bg);border-radius:8px;font-size:9px;font-weight:700;margin-left:4px;padding:0 3px;}
 .tab-mic-inline{display:none;}
 .tab-mais{display:none;}
@@ -360,15 +360,17 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
   .main{grid-template-columns:1fr;height:auto;max-height:none;overflow:hidden;}
   .right-panel{display:none;}
   .left-panel{height:100%;}
-  .tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.4);padding:6px 4px;justify-content:space-around;align-items:center;}
-  .tab{flex:1;text-align:center;font-size:9px;padding:7px 2px;border-bottom:none;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:2px;}
-  .tab.tab-more{display:none;}
+  /* Barra inferior: todas as abas numa linha que rola para o lado (sem menu "Mais", sem mic flutuante) */
+  .tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.4);padding:6px 6px;justify-content:flex-start;align-items:center;gap:4px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:0 0 auto;min-width:68px;text-align:center;font-size:9px;padding:8px 10px;border-bottom:none;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:18px;scroll-snap-align:center;transition:background .2s,color .2s,transform .2s;}
+  .tab.active{background:var(--gold);color:var(--bg);font-weight:700;transform:scale(1.04);box-shadow:0 2px 10px rgba(201,168,76,.45);}
+  .tab.tab-more{display:flex;}
   .tab-badge{display:none;}
   .tab-content{padding-bottom:96px;}
-  .tab-mic-inline{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--gold);color:var(--bg);border:3px solid var(--surface);font-size:19px;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;flex-shrink:0;transform:translateY(-8px);transition:transform .15s;}
-  .tab-mic-inline:active{transform:translateY(-8px) scale(.93);}
-  .tab-mic-inline.listening{background:var(--red);animation:micPulse 1s ease-in-out infinite;}
-  .tab-mais{display:flex;}
+  .tab-mic-inline{display:none !important;}
+  .tab-mais{display:none !important;}
   .mais-menu{bottom:calc(78px + env(safe-area-inset-bottom));}
   header{padding:10px 12px;padding-top:max(50px, calc(env(safe-area-inset-top) + 8px));gap:6px;flex-wrap:nowrap;}
   .logo-text{display:none;}
@@ -450,17 +452,17 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div class="thinking" id="thinking"><div class="thinking-dots"><span></span><span></span><span></span></div><span id="thinkMsg">Processando…</span></div>
       <div class="ai-resp" id="aiResp"></div>
     </div>
-    <div class="tabs">
+    <div class="tabs" id="tabsBar">
       <div class="tab active" data-tab="hoje" onclick="switchTab(&#39;hoje&#39;)">🏠 <span class="tab-lbl">Hoje</span></div>
       <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)">📋 <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
-      <div class="tab tab-more" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
-      <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
       <div class="tab" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
       <div class="tab" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
-      <div class="tab tab-more" data-tab="compras" onclick="switchTab('compras')" style="display:none;">🛒 <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
-      <div class="tab tab-more" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
-      <div class="tab tab-more" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
-      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
+      <div class="tab" data-tab="compras" onclick="switchTab('compras')" style="display:none;">🛒 <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
+      <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
+      <div class="tab" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
+      <div class="tab" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
+      <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa" style="display:none;">🎤</button>
+      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()" style="display:none;">☰ <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
@@ -2969,7 +2971,7 @@ function renderShopping(){
 // anterior, pela ordem abaixo (só as abas visíveis — Casa é ignorada para
 // quem não é membro). Não dispara quando o gesto começa num campo de texto,
 // quando é mais vertical do que horizontal (scroll normal) ou é muito curto.
-const SWIPE_ORDER=['hoje','tasks','casa','compras','routines','notes','ideias','week'];
+const SWIPE_ORDER=['hoje','tasks','casa','routines','compras','notes','week','ideias'];
 function swipeTabs(){
   return SWIPE_ORDER.filter(t=>{const el=document.querySelector(`.tab[data-tab="${t}"]`);return el&&el.style.display!=='none';});
 }
@@ -2992,7 +2994,7 @@ function swipeToTab(dir){
   area.addEventListener('touchstart',e=>{
     const t=e.touches[0];
     const tag=(e.target.tagName||'').toLowerCase();
-    active=!(tag==='input'||tag==='textarea'||tag==='select'||e.target.closest('.modal-ov,.week-grid,.casa-nav,.casa-view,.casa-grid-wrap'));
+    active=!(tag==='input'||tag==='textarea'||tag==='select'||e.target.closest('.modal-ov,.week-grid,.casa-nav,.casa-view,.casa-grid-wrap,.tabs'));
     sx=t.clientX;sy=t.clientY;st=Date.now();
   },{passive:true});
   area.addEventListener('touchend',e=>{
@@ -3060,6 +3062,8 @@ function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('dat
 // ── UI ───────────────────────────────────────────
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  // Barra inferior rolável: trazer a aba ativa para o centro
+  try{const at=document.querySelector(`.tab[data-tab="${tab}"]`);if(at&&window.innerWidth<=680)at.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});}catch(e){}
   const maisTab=document.getElementById('tabMais');
   if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='notes'||tab==='ideias'||tab==='compras');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
