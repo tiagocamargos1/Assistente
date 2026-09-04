@@ -2487,13 +2487,74 @@ function listenCasaMonth(){
   if(fbUnsubCasaMonth||!casaMember||!window.fbListenCol)return;
   fbUnsubCasaMonth=window.fbListenCol(`household/${CASA_ID}/days`,list=>{
     casaMonthDays={};for(const d of list)casaMonthDays[d.id]=d;
-    if(casaView==='month')renderCasa();
+    if(casaView==='month'||casaView==='feed')renderCasa();
   });
 }
 function casaSetView(v){
   casaView=v;
-  if(v==='month'){if(!casaMonth)casaMonth=todayStr().slice(0,7);listenCasaMonth();}
+  if(v==='month'||v==='feed'){if(!casaMonth)casaMonth=todayStr().slice(0,7);listenCasaMonth();}
   renderCasa();
+}
+// ── Feed de atividade: derivado do que já existe (marcações dos dias + compras), sem coleção nova
+function casaFeedEvents(){
+  const ev=[];
+  const labelOf={};for(const t of casaTasks())labelOf[t.id]=t.label;
+  for(const [ds,day] of Object.entries(casaMonthDays)){
+    const extras={};for(const e of (day.extras||[]))extras[e.id]=e.label;
+    for(const [tid,dn] of Object.entries(day.done||{})){
+      if(!dn||!dn.at)continue;
+      ev.push({at:dn.at,who:dn.name||dn.by||'?',uid:dn.by,icon:'🏡',text:`fez: ${labelOf[tid]||extras[tid]||tid}`});
+    }
+  }
+  for(const i of shopping){
+    if(i.addedAt)ev.push({at:i.addedAt,who:i.addedByName||i.addedBy||'?',uid:i.addedBy,icon:'🛒',text:`acrescentou à lista: ${i.label}${i.qty?' ('+i.qty+')':''}`});
+    if(i.bought&&i.boughtAt)ev.push({at:i.boughtAt,who:i.boughtByName||i.boughtBy||'?',uid:i.boughtBy,icon:'✅',text:`comprou: ${i.label}`});
+  }
+  return ev.sort((a,b)=>a.at<b.at?1:-1).slice(0,150);
+}
+function casaFeedDayLabel(ds){
+  const t=todayStr();
+  if(ds===t)return 'Hoje';
+  const y=new Date();y.setDate(y.getDate()-1);
+  const ys=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+  if(ds===ys)return 'Ontem';
+  return casaFmtDate(ds);
+}
+function renderCasaFeed(){
+  const ev=casaFeedEvents();
+  const members=Object.entries((casa&&casa.members)||{});
+  const week=Date.now()-7*86400000;
+  const counts={};for(const e of ev){if(new Date(e.at).getTime()>=week)counts[e.uid]=(counts[e.uid]||0)+1;}
+  const stats=members.map(([uid,m])=>`<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="casa-av" style="background:${esc(m.color||'#c9a84c')};width:20px;height:20px;font-size:9px;">${esc((m.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(m.name||uid)}: <strong>${counts[uid]||0}</strong></span></span>`).join('');
+  let html='';let lastDay='';
+  for(const e of ev){
+    const ds=e.at.slice(0,10);
+    if(ds!==lastDay){html+=`<div class="sdiv" style="margin-top:10px;">${esc(casaFeedDayLabel(ds))}</div>`;lastDay=ds;}
+    html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);font-size:13px;">
+      <span class="casa-av" style="background:${esc(casaMemberColor(e.uid))};width:26px;height:26px;font-size:11px;flex-shrink:0;">${esc(e.who.charAt(0).toUpperCase())}</span>
+      <div style="flex:1;min-width:0;"><strong>${esc(e.who)}</strong> ${esc(e.text)}</div>
+      <span style="font-size:11px;color:var(--text-dim);white-space:nowrap;">${e.icon} ${casaFmtTime(e.at)}</span>
+    </div>`;
+  }
+  return `
+    <div class="casa-hdr">
+      <div class="casa-date">Atividade</div>
+      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button><button class="active" onclick="casaSetView('feed')">Atividade</button></div>
+    </div>
+    <div style="margin:-4px 0 6px;display:flex;flex-wrap:wrap;align-items:center;"><span style="font-size:11px;color:var(--text-dim);margin-right:8px;">Últimos 7 dias —</span>${stats}</div>
+    ${html||'<div class="empty-state"><div class="icon">🏡</div>Ainda não há atividade registada.</div>'}`;
+}
+// Aviso in-app quando OUTRO membro marca algo (a app está aberta; sem push extra)
+let casaSeenDone=null;
+function casaAnnounceChanges(day){
+  const done=(day&&day.done)||{};
+  if(casaSeenDone===null){casaSeenDone=new Set(Object.keys(done));return;}
+  const labelOf={};for(const t of casaTasks())labelOf[t.id]=t.label;
+  for(const [tid,dn] of Object.entries(done)){
+    if(casaSeenDone.has(tid))continue;
+    if(dn&&dn.by&&dn.by!==cu)notify(`🏡 ${dn.name||dn.by} fez: ${labelOf[tid]||tid}`,'success');
+  }
+  casaSeenDone=new Set(Object.keys(done));
 }
 function casaShiftMonth(delta){
   const [y,m]=(casaMonth||todayStr().slice(0,7)).split('-').map(Number);
@@ -2539,7 +2600,7 @@ function renderCasaMonth(){
     <div class="casa-hdr">
       <div class="casa-nav"><button onclick="casaShiftMonth(-1)">‹</button><button onclick="casaMonth=todayStr().slice(0,7);renderCasa()" ${casaMonth===today.slice(0,7)?'disabled':''}>Este mês</button><button onclick="casaShiftMonth(1)">›</button></div>
       <div class="casa-date" style="text-transform:capitalize">${esc(monthLabel)}</div>
-      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button class="active" onclick="casaSetView('month')">Mês</button></div>
+      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button class="active" onclick="casaSetView('month')">Mês</button><button onclick="casaSetView('feed')">Atividade</button></div>
     </div>
     <div style="margin:-4px 0 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${legend}</div>
     <div class="casa-grid-wrap"><table class="casa-grid"><thead>${head}</thead><tbody>${body||'<tr><td colspan="32" style="text-align:center;color:var(--text-dim);padding:16px">Sem tarefas</td></tr>'}</tbody></table></div>
@@ -2552,7 +2613,8 @@ function listenCasaToday(){
   if(fbUnsubCasaToday&&casaTodayListenedFor===t)return;
   if(fbUnsubCasaToday)fbUnsubCasaToday();
   casaTodayListenedFor=t;
-  fbUnsubCasaToday=window.fbListenDoc(`household/${CASA_ID}/days/${t}`,d=>{casaTodayDay=d||{};renderHoje();},()=>{});
+  casaSeenDone=null;
+  fbUnsubCasaToday=window.fbListenDoc(`household/${CASA_ID}/days/${t}`,d=>{casaTodayDay=d||{};casaAnnounceChanges(casaTodayDay);renderHoje();},()=>{});
 }
 function casaHojeHTML(){
   if(!casaMember||!casa)return'';
@@ -2615,6 +2677,7 @@ function renderCasa(){
   if(bdg&&casaDate===todayStr())bdg.textContent=casaPendingToday();
   if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🏡</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
   if(casaView==='month'){el.innerHTML=renderCasaMonth();return;}
+  if(casaView==='feed'){el.innerHTML=renderCasaFeed();return;}
   const items=casaAllItems();
   const done=(casaDay&&casaDay.done)||{};
   const isToday=casaDate===todayStr();
@@ -2642,7 +2705,7 @@ function renderCasa(){
     <div class="casa-hdr">
       <div class="casa-nav"><button onclick="casaShiftDate(-1)">‹</button><button onclick="casaGoToday()" ${isToday?'disabled':''}>Hoje</button><button onclick="casaShiftDate(1)">›</button></div>
       <div class="casa-date">${casaFmtDate(casaDate)}</div>
-      <div style="display:flex;align-items:center;gap:8px;"><div class="casa-avs">${avs}</div><div class="casa-view"><button class="active" onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button></div></div>
+      <div style="display:flex;align-items:center;gap:8px;"><div class="casa-avs">${avs}</div><div class="casa-view"><button class="active" onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button><button onclick="casaSetView('feed')">Atividade</button></div></div>
     </div>
     <div class="casa-prog"><div style="width:${pct}%"></div></div>
     <div style="font-size:11px;color:var(--text-dim);margin:-6px 0 10px;text-align:right;">${doneCount}/${items.length} feitas</div>
@@ -2800,6 +2863,7 @@ function startShoppingListener(){
     shopping=items;
     renderShopping();
     if(currentTab()==='hoje')renderHoje();
+    if(casaView==='feed')renderCasa();
   });
 }
 function stopShoppingListener(){if(fbUnsubShopping)fbUnsubShopping();fbUnsubShopping=null;shopping=[];}
