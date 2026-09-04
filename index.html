@@ -181,16 +181,19 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
 .filter-btn.sf.active{border-color:var(--purple);color:var(--purple);background:rgba(155,111,168,.1);}
 /* TASKS */
-.task-item{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;border-radius:8px;margin-bottom:3px;transition:background .15s;animation:si .25s ease;}
+.task-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);transition:all .15s;animation:si .25s ease;}
+.task-item.done{border-color:rgba(90,158,111,.4);background:rgba(90,158,111,.08);}
 @keyframes si{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .task-item:hover{background:var(--surface2);}
-.task-check{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:10px;}
+/* Botão grande de marcar (padrão do app, igual à aba Casa): 30px, redondo, fácil de tocar no telemóvel */
+.task-check{width:30px;height:30px;border:2px solid var(--border);border-radius:50%;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:15px;-webkit-tap-highlight-color:transparent;}
+.task-check:active{transform:scale(.92);}
 .task-check:hover{border-color:var(--gold);}
 .task-item.done .task-check{background:var(--green);border-color:var(--green);color:white;}
 .task-item.inprog{background:rgba(90,126,160,.07);border-radius:8px;}
 .task-item.inprog .task-check{border-color:var(--blue);}
 .task-body{flex:1;min-width:0;}
-.task-text{font-size:13px;color:var(--text);line-height:1.4;}
+.task-text{font-size:14px;color:var(--text);line-height:1.4;font-weight:500;}
 .task-item.done .task-text{color:var(--text-dim);text-decoration:line-through;}
 .task-meta{font-size:10px;color:var(--text-muted);margin-top:2px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
 .ttag{font-size:9px;padding:1px 6px;border-radius:20px;font-weight:500;}
@@ -977,7 +980,7 @@ async function saveNote(note){
     await saveIdea(idea);
   }
   async function setIdeaFilter(f){ideaFilter=f;document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-if')===f);});renderIdeas();}
-    function renderIdeas(){var el=document.getElementById('ideaList');if(!el)return;var list=ideas;if(ideaFilter!=='all'){list=list.filter(function(i){return(i.status||'pendente')===ideaFilter;});}if(!list.length){el.innerHTML='<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia por aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: ..."</small></div>';return;}var cls={pendente:'tu',andamento:'tt',feita:'tg'};var lbl={pendente:'Por tratar',andamento:'Em curso',feita:'Feita'};el.innerHTML=list.map(function(i){var st=i.status||'pendente';var iid=String(i.id).replace(/'/g,'');var strike=st==='feita'?'text-decoration:line-through;color:var(--text-muted);':'';return '<div class="task-row" style="align-items:flex-start;"><div style="flex:1;min-width:0;"><div style="'+strike+'">'+esc(i.text||'')+'</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><span class="ttag '+cls[st]+'" style="cursor:pointer;" onclick="cycleIdeaStatus(\''+iid+'\')">'+lbl[st]+'</span></div></div><div class="task-actions"><span onclick="removeIdea(\''+iid+'\')" style="cursor:pointer;opacity:.6;padding:4px;">🗑️</span></div></div>';}).join('');}
+    function renderIdeas(){var el=document.getElementById('ideaList');if(!el)return;var list=ideas;if(ideaFilter!=='all'){list=list.filter(function(i){return(i.status||'pendente')===ideaFilter;});}if(!list.length){el.innerHTML='<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia por aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: ..."</small></div>';return;}var cls={pendente:'tu',andamento:'tt',feita:'tg'};var lbl={pendente:'Por tratar',andamento:'Em curso',feita:'Feita'};el.innerHTML=list.map(function(i){var st=i.status||'pendente';var iid=String(i.id).replace(/'/g,'');var strike=st==='feita'?'text-decoration:line-through;color:var(--text-muted);':'';var chk=st==='feita'?'background:var(--green);border-color:var(--green);color:#fff;':(st==='andamento'?'border-color:var(--blue);color:var(--blue);':'');return '<div class="task-item'+(st==='feita'?' done':'')+'"><div class="task-check" style="'+chk+'" onclick="cycleIdeaStatus(\''+iid+'\')" title="Toque para mudar o estado">'+(st==='feita'?'✓':(st==='andamento'?'◐':''))+'</div><div style="flex:1;min-width:0;"><div class="task-text" style="'+strike+'">'+esc(i.text||'')+'</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><span class="ttag '+cls[st]+'" style="cursor:pointer;" onclick="cycleIdeaStatus(\''+iid+'\')">'+lbl[st]+'</span></div></div><div class="task-actions"><span onclick="removeIdea(\''+iid+'\')" style="cursor:pointer;opacity:.6;padding:4px;">🗑️</span></div></div>';}).join('');}
 async function removeNote(id){
   if(!window.fbSave)return;
   await window.fbDelete(`users/${cu}/notes/${id}`);
@@ -2196,33 +2199,6 @@ function renderNotes(){
       <div class="note-meta">${fd2(n.createdAt)} · ${USERS[n.owner]?.name||'?'}</div>
       <button class="note-del" onclick="deleteNote('${String(n.id)}')">✕</button>
     </div>`).join('');
-  // ── IDEIAS (caixa de despejo de ideias) ───
-  function setIdeaFilter(f){
-      ideaFilter=f;
-      document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.if===f));
-      renderIdeas();
-  }
-  async function deleteIdea(id){await removeIdea(String(id));}
-  const IDEA_STATUS={pendente:{label:'Por tratar',cls:'tu'},andamento:{label:'Em curso',cls:'tt'},feita:{label:'Feita',cls:'tg'}};
-  function renderIdeas(){
-      const el=document.getElementById('ideaList');
-      const bdg=document.getElementById('bdgI');
-      const pendCount=ideas.filter(i=>(i.status||'pendente')!=='feita').length;
-      if(bdg)bdg.textContent=pendCount;
-      const list=ideaFilter==='all'?ideas:ideas.filter(i=>(i.status||'pendente')===ideaFilter);
-      if(!list.length){el.innerHTML=`<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: …"</small></div>`;return;}
-      el.innerHTML=list.map(i=>{
-            const st=IDEA_STATUS[i.status||'pendente'];
-            return`
-                <div class="note-card">
-                      <div class="note-text">${esc(i.text||'')}</div>
-                            <div class="note-meta">
-                                    <span class="ttag ${st.cls}" style="cursor:pointer;" onclick="cycleIdeaStatus('${String(i.id)}')" title="Toque para mudar o estado">${st.label}</span>
-                                            · ${fd2(i.createdAt)} · ${USERS[i.owner]?.name||'?'}
-                                                  </div>
-                                                        <button class="note-del" onclick="deleteIdea('${String(i.id)}')">✕</button>
-                                                            </div>`;}).join('');
-  }
 }
 // ── ROUTINES (recurring habits) ───────────────────
 function openNewRoutine(){
