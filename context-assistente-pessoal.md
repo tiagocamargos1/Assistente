@@ -857,6 +857,24 @@ resolver isso primeiro.
     entrada. A Siri corre atalhos pessoais pelo nome, independentemente
     dos App Shortcuts.
 
+53. **Renovação silenciosa do token do Google — causa real encontrada e
+    corrigida (04/09):** o teste ao vivo do item 25 (token guardado
+    expirado há >1 dia, entrar por PIN no Chrome do Tiago) continuava a
+    dar "Sessão do Google expirada". O iframe escondido chegava a voltar
+    à nossa origem, mas o Google respondia `error=interaction_required`
+    porque o pedido `prompt=none` não indicava a conta e o navegador tem
+    mais do que uma conta Google (o Google quer que se escolha). Com
+    `login_hint=<e-mail>` o mesmo pedido devolve o token sem interação.
+    `getValidToken()` agora lê o e-mail de `gProfile` ou de
+    `localStorage.gprofile_<uid>` e acrescenta `login_hint`; timeout subiu
+    de 4 s para 8 s (a redireção demorou alguns segundos). Confirmado com a
+    versão publicada: PIN → token renovado (58 min) → "1 evento(s) hoje",
+    sem "Conectar Google". Ainda por confirmar no iPhone (ITP do Safari —
+    ver item 25); se falhar lá, próximo passo é OAuth com refresh token +
+    Cloud Function. O projeto iOS (`ios/`) passou a estar no git (commit
+    1194ceb), com `ios/App/App/public/`, `xcuserdata` e `.swiftpm`
+    ignorados.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -887,12 +905,10 @@ resolver isso primeiro.
 - [x] ~~Testar ao vivo as áreas personalizadas (item 28)~~ — CONFIRMADO (item 36): criar, atribuir a uma tarefa, excluir a área e reabrir a tarefa testados com sucesso. Um bug real foi encontrado nesse processo (a exclusão apagava silenciosamente a área da tarefa ao salvar) e corrigido — ver item 36.
 - [x] ~~Testar ao vivo a nova configuração de áreas (item 27)~~ — CONFIRMADO (item 37): desmarquei uma área padrão (Deus) numa conta com tarefa usando essa área, confirmei que sumiu do resumo do topo e do filtro, mas a tarefa continuou aparecendo normalmente com a tag visível e editável sem perder o valor da área. Área padrão nunca fica órfã (ao contrário da personalizada — ver item 36), porque `AREAS` é um dicionário fixo no código.
 
-- [ ] Testar ao vivo a correção da renovação silenciosa do token do
-      Google (item 25): deixar o token expirar (ou simular) e ver se a
-      agenda carrega sozinha ao entrar pelo PIN, sem precisar tocar em
-      "Conectar Google" — testar tanto no navegador/desktop quanto no
-      iPhone (esperado: funciona melhor no Chrome/desktop; no iPhone pode
-      ainda pedir reconexão às vezes, por limitação do próprio Safari).
+- [x] ~~Testar ao vivo a renovação silenciosa do token (item 25)~~ —
+      TESTADO e CORRIGIDO no Chrome/desktop (item 53: faltava
+      `login_hint`). Falta só o Tiago confirmar no iPhone: sair, esperar
+      >1 h, entrar por PIN e ver se a agenda aparece sem "Conectar Google".
 - [ ] Se a reconexão no iPhone continuar incomodando mesmo após o item 25,
       considerar a solução definitiva: trocar o login do Google Calendar
       para OAuth com refresh token + um pequeno backend (ex: Firebase
