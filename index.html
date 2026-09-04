@@ -438,17 +438,16 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)">📋 <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
       <div class="tab tab-more" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
       <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
-      <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
-      <div class="tab tab-more" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
+      <div class="tab" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab tab-more" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
       <div class="tab tab-more" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
-      <div class="tab tab-more" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
       <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
-      <div class="mais-item" onclick="switchTab(&#39;routines&#39;);closeMaisMenu()">🔁 Rotinas</div>
+      <div class="mais-item" onclick="switchTab(&#39;notes&#39;);closeMaisMenu()">📝 Notas</div>
       <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()">💡 Ideias</div>
-      <div class="mais-item" data-mais="casa" onclick="switchTab('casa');closeMaisMenu()" style="display:none;">🏡 Casa</div>
       <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
     </div>
     <div class="tab-content active" id="tab-hoje">
@@ -1758,12 +1757,31 @@ function toggleMic(){
   if(isListening){stopMic();return;}
   startMic();
 }
+// Voz: além do "resultado final" do motor (que no iOS/WebView muitas vezes
+// nunca chega), há um temporizador de silêncio — 2 s sem palavras novas e a
+// escuta pára sozinha; ao parar, o que foi ouvido é EXECUTADO (processInput),
+// não só escrito no campo. A flag micSubmitted evita executar duas vezes.
+const MIC_SILENCE_MS=2000;
+let micSilenceTimer=null,micSubmitted=false;
+function micArmSilence(){
+  if(micSilenceTimer)clearTimeout(micSilenceTimer);
+  micSilenceTimer=setTimeout(()=>{if(recognition)try{recognition.stop();}catch(e){}},MIC_SILENCE_MS);
+}
+function micSubmitIfPending(){
+  if(micSubmitted)return;
+  const txt=(document.getElementById('userInput').value||'').trim();
+  if(!txt)return;
+  micSubmitted=true;
+  document.getElementById('thinkMsg').textContent='Processando…';
+  setTimeout(()=>processInput(),150);
+}
 function startMic(){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   recognition=new SpeechRecognition();
   recognition.lang='pt-PT'; // Portuguese Portugal (works for BR too)
   recognition.continuous=false;
   recognition.interimResults=true;
+  micSubmitted=false;
   recognition.onstart=()=>{
     isListening=true;
     document.getElementById('micBtn').classList.add('listening');
@@ -1772,26 +1790,36 @@ function startMic(){
     document.getElementById('thinkMsg').textContent='Ouvindo… fale agora!';
     document.getElementById('thinking').classList.add('visible');
     document.getElementById('aiResp').classList.remove('visible');
+    micArmSilence();
   };
   recognition.onresult=(e)=>{
     let transcript='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
+    for(let i=0;i<e.results.length;i++){
       transcript+=e.results[i][0].transcript;
     }
     document.getElementById('userInput').value=transcript;
+    micArmSilence();
     // Auto-submit when final result
     if(e.results[e.results.length-1].isFinal){
-      document.getElementById('thinkMsg').textContent='Processando…';
-      setTimeout(()=>processInput(),400);
+      if(micSilenceTimer)clearTimeout(micSilenceTimer);
+      micSubmitIfPending();
     }
   };
   recognition.onerror=(e)=>{
+    if(micSilenceTimer)clearTimeout(micSilenceTimer);
     stopMic();
     if(e.error==='not-allowed')notify('Permita o acesso ao microfone nas configurações.','error');
     else if(e.error==='no-speech')notify('Nenhuma fala detectada. Tente novamente.','info');
+    else if(e.error==='aborted'){/* parado de propósito (silêncio ou toque) */}
     else notify(`Erro de voz: ${e.error}`,'error');
+    micSubmitIfPending();
   };
-  recognition.onend=()=>{stopMic();};
+  recognition.onend=()=>{
+    if(micSilenceTimer)clearTimeout(micSilenceTimer);
+    stopMic();
+    // O motor parou (silêncio, fim natural ou toque no ⏹): executar o que foi ouvido
+    micSubmitIfPending();
+  };
   recognition.start();
 }
 function stopMic(){
@@ -2568,7 +2596,7 @@ function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('dat
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   const maisTab=document.getElementById('tabMais');
-  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines'||tab==='ideias'||tab==='casa');
+  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='notes'||tab==='ideias');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   if(tab==='hoje')renderHoje();

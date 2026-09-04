@@ -623,6 +623,19 @@ resolver isso primeiro.
     Regra `match /users/{uid}/projects/{projectId} { allow read, write: if
     isMe(uid); }` publicada no Firebase Console em 04/09/2026.
 
+40. **Voz executa sozinha após 2 s de silêncio + barra inferior reorganizada.**
+    (a) O Tiago relatou que, ao falar no microfone, o texto ficava escrito no
+    campo mas a ação (criar tarefa/nota/rotina/ideia) não acontecia. Causa:
+    o auto-submit só disparava no `isFinal` do motor de voz, que no
+    iOS/WebView muitas vezes nunca chega — o `onend` só chamava `stopMic()`.
+    Corrigido em `startMic()`: temporizador de silêncio (`MIC_SILENCE_MS` =
+    2000) rearmado a cada resultado, que pára a escuta; e `onend`/`onerror`
+    passam por `micSubmitIfPending()`, que executa `processInput()` se houver
+    texto e ainda não tiver sido executado (flag `micSubmitted`). Tocar no
+    ⏹ também executa. (b) Barra inferior no telemóvel agora mostra os 4 mais
+    usados — Hoje, Tarefas, Casa, Rotinas — mais 🎤 e ☰ Mais (Semana, Notas,
+    Ideias, Relatório). Casa continua escondida para quem não é membro.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
