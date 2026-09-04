@@ -739,6 +739,11 @@ resolver isso primeiro.
     contentor com scroll horizontal (`.casa-grid-wrap`), que ficou excluído
     do gesto de swipe entre abas para não haver conflito. Só entram as
     tarefas fixas da lista (as "só para este dia" não aparecem na grelha).
+    Dias anteriores à criação da Casa (`casa.createdAt`) ficam esbatidos,
+    não a vermelho — a app ainda não existia. Testado ao vivo em 04/09.
+    Nota de publicação: o upload web do GitHub ficou preso em "Processing
+    your files…" três vezes seguidas; plano B usado: commit no repo do SSD
+    (feito por mim no VM) + `git push` pelo Tiago no Terminal do Mac.
 
 ## Próximos passos (pendentes)
 

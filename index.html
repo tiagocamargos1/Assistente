@@ -2453,6 +2453,8 @@ function renderCasaMonth(){
   const [y,m]=casaMonth.split('-').map(Number);
   const nDays=new Date(y,m,0).getDate();
   const today=todayStr();const nowMin=casaNowMin();
+  // Dias anteriores à criação da Casa não contam como falha (a app ainda não existia)
+  const start=(casa&&casa.createdAt||'').slice(0,10)||today;
   const tasks=casaTasks();
   const monthLabel=new Date(y,m-1,1).toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
   const members=Object.entries((casa&&casa.members)||{});
@@ -2470,6 +2472,7 @@ function renderCasaMonth(){
       const day=casaMonthDays[ds];const dn=day&&day.done&&day.done[t.id];
       let cls='cell',inner='';
       if(dn){cls+=' done';inner=`<span style="background:${esc(casaMemberColor(dn.by))}" title="${esc(dn.name||dn.by||'')} · ${casaFmtTime(dn.at)}">${esc((dn.name||dn.by||'?').charAt(0).toUpperCase())}</span>`;stats[dn.by]=(stats[dn.by]||0)+1;}
+      else if(ds<start){cls+=' future';}
       else if(ds<today||(ds===today&&t.time&&casaMinutes(t.time)<nowMin)){cls+=' miss';}
       else{cls+=' future';}
       if(ds===today)cls+=' today';
