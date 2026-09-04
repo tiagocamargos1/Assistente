@@ -759,6 +759,15 @@ resolver isso primeiro.
     telemóvel dela, o cartão do Tiago atualiza-se sozinho. Quem não é
     membro da Casa não vê nada disto (o bloco devolve vazio).
 
+47. **Corrigido "Invalid Date" em tarefas com matrícula.** Quatro tarefas
+    ("MAE - peças Clio (91-29-TB)", "…(37-40-XZ)", "…(00-46-UP)",
+    "…(22-27-VT)") apareciam no Hoje com "Invalid Date": o parser local
+    apanhava a matrícula portuguesa como data DD-MM e gravava
+    `date: "2026-29-91"`. Corrigido em `parseInput`: a regex de DD/MM só
+    aceita números que não estejam colados a outra letra/dígito/hífen (uma
+    matrícula tem sempre um terceiro bloco) e valida dia 1–31 / mês 1–12.
+    As 4 tarefas afetadas foram limpas ao vivo (`date: null`).
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
