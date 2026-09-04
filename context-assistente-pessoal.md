@@ -900,20 +900,24 @@ resolver isso primeiro.
 - [ ] Compras: testar com a Monique/Lu a acrescentar do telemóvel delas
       (v2 com categorias/partilha/quantidades já feita — item 49).
 
-- [ ] O Tiago precisa criar a conta no Google Play Console
-      (https://play.google.com/console/signup, taxa única de US$ 25) —
-      isso não pode ser feito por mim (regra de segurança: nunca criar
-      contas ou inserir pagamento em nome do usuário).
+- [x] ~~Criar a conta no Google Play Console~~ — JÁ EXISTE (conta
+      pessoal do Tiago; a app está em teste fechado na Play Store). Item
+      estava desatualizado; corrigido em 04/09.
 - [ ] Siri: App Shortcuts não aparecem por causa da beta do iOS 27 (nem
       no WhatsApp) — projeto já corrigido, ver item 52. Voltar a testar
       "Nova tarefa no Assistente Pessoal" após atualização do iOS; até lá
       usar o atalho pessoal na app Atalhos (item 52).
-- [ ] Depois que os testes acima forem confirmados, ajudar com: texto e
-      ficha da loja (descrição, categoria), política de privacidade
-      publicada (posso gerar e hospedar no GitHub Pages), prints de tela
-      pra loja, e o processo de submissão em si (App Store Connect) — o
-      Tiago quem precisa clicar em "Enviar"/"Publicar", eu só preparo o
-      material.
+- [ ] Lojas (App Store + passagem do Play de teste fechado para
+      produção): falta o material de submissão — descrição e categoria da
+      ficha, capturas de ecrã iPhone/Android (idealmente com a Casa e as
+      Compras já com dados reais das testadoras) e o processo no App Store
+      Connect. A política de privacidade já está publicada
+      (`privacidade.html`). Eu preparo tudo; o clique final de
+      "Enviar"/"Publicar" é do Tiago.
+- [ ] Calendar no iPhone: confirmar que, com o token expirado, entrar por
+      PIN carrega a agenda sem "Conectar Google" (item 53). Se falhar
+      (ITP do Safari), fazer a solução definitiva: OAuth com refresh token
+      + Cloud Function — único desenvolvimento de peso ainda em aberto.
 
 - [x] ~~Testar ao vivo as áreas personalizadas (item 28)~~ — CONFIRMADO (item 36): criar, atribuir a uma tarefa, excluir a área e reabrir a tarefa testados com sucesso. Um bug real foi encontrado nesse processo (a exclusão apagava silenciosamente a área da tarefa ao salvar) e corrigido — ver item 36.
 - [x] ~~Testar ao vivo a nova configuração de áreas (item 27)~~ — CONFIRMADO (item 37): desmarquei uma área padrão (Deus) numa conta com tarefa usando essa área, confirmei que sumiu do resumo do topo e do filtro, mas a tarefa continuou aparecendo normalmente com a tag visível e editável sem perder o valor da área. Área padrão nunca fica órfã (ao contrário da personalizada — ver item 36), porque `AREAS` é um dicionário fixo no código.
