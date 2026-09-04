@@ -164,7 +164,7 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 /* TABS */
 .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surface);}
 .tab{padding:9px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,.14);border-radius:10px 10px 0 0;}
 .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;background:var(--gold);color:var(--bg);border-radius:8px;font-size:9px;font-weight:700;margin-left:4px;padding:0 3px;}
 .tab-mic-inline{display:none;}
 .tab-mais{display:none;}
@@ -360,15 +360,17 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
   .main{grid-template-columns:1fr;height:auto;max-height:none;overflow:hidden;}
   .right-panel{display:none;}
   .left-panel{height:100%;}
-  .tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.4);padding:6px 4px;justify-content:space-around;align-items:center;}
-  .tab{flex:1;text-align:center;font-size:9px;padding:7px 2px;border-bottom:none;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:2px;}
-  .tab.tab-more{display:none;}
+  /* Barra inferior: todas as abas numa linha que rola para o lado (sem menu "Mais", sem mic flutuante) */
+  .tabs{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;border:1px solid var(--border);border-radius:26px;background:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.4);padding:6px 6px;justify-content:flex-start;align-items:center;gap:4px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{flex:0 0 auto;min-width:68px;text-align:center;font-size:9px;padding:8px 10px;border-bottom:none;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:18px;scroll-snap-align:center;transition:background .2s,color .2s,transform .2s;}
+  .tab.active{background:var(--gold);color:var(--bg);font-weight:700;transform:scale(1.04);box-shadow:0 2px 10px rgba(201,168,76,.45);}
+  .tab.tab-more{display:flex;}
   .tab-badge{display:none;}
   .tab-content{padding-bottom:96px;}
-  .tab-mic-inline{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--gold);color:var(--bg);border:3px solid var(--surface);font-size:19px;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;flex-shrink:0;transform:translateY(-8px);transition:transform .15s;}
-  .tab-mic-inline:active{transform:translateY(-8px) scale(.93);}
-  .tab-mic-inline.listening{background:var(--red);animation:micPulse 1s ease-in-out infinite;}
-  .tab-mais{display:flex;}
+  .tab-mic-inline{display:none !important;}
+  .tab-mais{display:none !important;}
   .mais-menu{bottom:calc(78px + env(safe-area-inset-bottom));}
   header{padding:10px 12px;padding-top:max(50px, calc(env(safe-area-inset-top) + 8px));gap:6px;flex-wrap:nowrap;}
   .logo-text{display:none;}
@@ -450,17 +452,17 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div class="thinking" id="thinking"><div class="thinking-dots"><span></span><span></span><span></span></div><span id="thinkMsg">Processando…</span></div>
       <div class="ai-resp" id="aiResp"></div>
     </div>
-    <div class="tabs">
+    <div class="tabs" id="tabsBar">
       <div class="tab active" data-tab="hoje" onclick="switchTab(&#39;hoje&#39;)">🏠 <span class="tab-lbl">Hoje</span></div>
       <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)">📋 <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
-      <div class="tab tab-more" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
-      <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
       <div class="tab" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
       <div class="tab" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
-      <div class="tab tab-more" data-tab="compras" onclick="switchTab('compras')" style="display:none;">🛒 <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
-      <div class="tab tab-more" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
-      <div class="tab tab-more" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
-      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
+      <div class="tab" data-tab="compras" onclick="switchTab('compras')" style="display:none;">🛒 <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
+      <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
+      <div class="tab" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
+      <div class="tab" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
+      <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa" style="display:none;">🎤</button>
+      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()" style="display:none;">☰ <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
@@ -1418,10 +1420,19 @@ async function getValidToken(){
     }
     window.addEventListener('message',onMsg);
     const redirect='https://tiagocamargos1.github.io/Assistente';
-    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none`;
+    // login_hint é essencial: sem ele, num navegador com mais do que uma
+    // conta Google, o pedido silencioso volta com "interaction_required"
+    // (o Google quer que se escolha a conta) e a renovação falhava sempre —
+    // testado ao vivo em 04/09. O e-mail vem do perfil guardado no login.
+    let hint='';
+    try{
+      const p=gProfile||JSON.parse(localStorage.getItem(`gprofile_${cu}`)||'null');
+      if(p&&p.email)hint='&login_hint='+encodeURIComponent(p.email);
+    }catch(e){}
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none${hint}`;
     iframe.src=url;
     document.body.appendChild(iframe);
-    setTimeout(()=>finish(null),4000);
+    setTimeout(()=>finish(null),8000);
   });
 }
 async function enterApp(){
@@ -1503,16 +1514,62 @@ function urlBase64ToUint8Array(base64String){
   for(let i=0;i<rawData.length;i++)outputArray[i]=rawData.charCodeAt(i);
   return outputArray;
 }
+// Banner de notificações: sem o "✕" de dispensa rápida — as opções são
+// "Ativar" ou "Agora não" (que só esconde até ao próximo login). Sem isto os
+// lembretes da Casa não chegam a ninguém. No app nativo (iPhone) não existe
+// Web Push dentro da WKWebView: aí o pedido é o de notificações locais
+// (@capacitor/local-notifications), que é o que os lembretes da Casa usam.
 function pushBannerHTML(){
-  return `<div class="push-banner"><p>🔔 Receber o briefing do dia por notificação, mesmo com o app fechado?<br><span style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;">Horário: <input type="time" id="briefingTimeInput" value="07:00" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-family:'DM Sans',sans-serif;font-size:12px;"></span></p><button class="push-yes" onclick="reqPush()">Ativar</button><button class="push-no" onclick="this.closest('.push-banner').remove()">✕</button></div>`;
+  const casaLine=(typeof casaMember!=='undefined'&&casaMember)?' Sem isto, os <strong>lembretes da Casa</strong> (horas-limite) não chegam a ti.':'';
+  if(isNativeApp()){
+    return `<div class="push-banner"><p>🔔 Ativar notificações neste iPhone?${casaLine}</p><button class="push-yes" onclick="reqNativeNotif()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
+  }
+  return `<div class="push-banner"><p>🔔 Receber o briefing do dia e os lembretes por notificação, mesmo com o app fechado?${casaLine}<br><span style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;">Briefing às <input type="time" id="briefingTimeInput" value="07:00" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-family:'DM Sans',sans-serif;font-size:12px;"></span></p><button class="push-yes" onclick="reqPush()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
 }
-function showPushBanner(){
-  if(!('Notification' in window)||Notification.permission!=='default')return;
+function pushLater(){try{sessionStorage.setItem('pushLater','1');}catch(e){}document.getElementById('pushBanner').innerHTML='';}
+async function showPushBanner(){
+  try{if(sessionStorage.getItem('pushLater'))return;}catch(e){}
+  if(isNativeApp()){
+    const plugin=localNotifPlugin();if(!plugin)return;
+    try{const perm=await plugin.checkPermissions();if(perm.display==='granted'){syncNotifStatusToCasa('native');return;}}catch(e){return;}
+    document.getElementById('pushBanner').innerHTML=pushBannerHTML();
+    return;
+  }
+  if(!('Notification' in window))return;
+  if(Notification.permission==='granted'){
+    // já autorizado: garantir que a subscrição existe (pode ter sido perdida) e registar estado
+    // (com timeout: sem service worker ativo, .ready nunca resolve e o banner nunca apareceria)
+    try{const reg=await Promise.race([navigator.serviceWorker.ready,new Promise((_,rej)=>setTimeout(()=>rej(new Error('sw-timeout')),3000))]);const sub=await reg.pushManager.getSubscription();if(sub){syncNotifStatusToCasa('web');return;}}catch(e){}
+  }
+  if(Notification.permission==='denied')return;
   document.getElementById('pushBanner').innerHTML=pushBannerHTML();
 }
 function openPushSettings(){
-  if(!('Notification' in window)){notify('Notificações não são suportadas neste navegador.','error');return;}
+  if(!isNativeApp()&&!('Notification' in window)){notify('Notificações não são suportadas neste navegador.','error');return;}
+  try{sessionStorage.removeItem('pushLater');}catch(e){}
   document.getElementById('pushBanner').innerHTML=pushBannerHTML();
+}
+async function reqNativeNotif(){
+  const plugin=localNotifPlugin();
+  document.getElementById('pushBanner').innerHTML='';
+  if(!plugin){notify('Plugin de notificações indisponível.','error');return;}
+  try{
+    const req=await plugin.requestPermissions();
+    if(req.display!=='granted'){notify('Permite notificações em Definições → Assistente Pessoal → Notificações.','error');return;}
+    await ensureReminderActionsRegistered();
+    notify('🔔 Notificações ativadas neste iPhone!','success');
+    syncNotifStatusToCasa('native');
+    if(typeof syncCasaLocalNotifs==='function')syncCasaLocalNotifs();
+  }catch(e){notify('Não foi possível ativar: '+(e&&e.message||e),'error');}
+}
+// Regista na Casa se esta pessoa tem lembretes ativos ('web' | 'native'), para os outros verem quem falta
+async function syncNotifStatusToCasa(kind){
+  try{
+    if(typeof casaMember==='undefined'||!casaMember||!casa||!cu||!window.fbSave)return;
+    const m=(casa.members||{})[cu]||{};
+    if(m.notif===kind)return;
+    await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{notif:kind,notifAt:new Date().toISOString()}}});
+  }catch(e){}
 }
 async function reqPush(){
   const time=document.getElementById('briefingTimeInput')?.value||'07:00';
@@ -1529,6 +1586,7 @@ async function reqPush(){
     const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Lisbon';
     await window.fbSave(`push_subscriptions/${cu}`,{uid:cu,name:USERS[cu]?.name||'',subscription:sub.toJSON(),briefingTime:time,timezone:tz,lastSent:null});
     notify(`🔔 Notificações ativadas! Briefing às ${time}.`,'success');
+    syncNotifStatusToCasa('web');
   }catch(e){
     notify('Não foi possível ativar notificações neste navegador.','error');
   }
@@ -1735,10 +1793,13 @@ function parseInput(inp, today){
       }
     }
     // DD/MM or DD de Mês
-    const dmMatch=inp.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+    // Data DD/MM ou DD-MM — mas NÃO matrículas portuguesas ("91-29-TB",
+    // "00-46-UP", "AA-12-34"): exige que não haja letra/dígito colado antes
+    // ou depois, e que dia e mês sejam válidos (senão dava "2026-29-91").
+    const dmMatch=inp.match(/(?<![\w-])(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?(?![\w-])/);
     if(dmMatch){
       const day=parseInt(dmMatch[1]),mon=parseInt(dmMatch[2]),yr=dmMatch[3]?parseInt(dmMatch[3]):today.getFullYear();
-      date=`${yr<100?2000+yr:yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      if(day>=1&&day<=31&&mon>=1&&mon<=12)date=`${yr<100?2000+yr:yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     }
     const deMatch=inp.match(/(\d{1,2})\s+de\s+(\w+)/i);
     if(deMatch&&months[deMatch[2].toLowerCase()]){
@@ -2376,9 +2437,9 @@ const CASA_DEFAULT_TASKS=[
   {id:'jantar',label:'Jantar das crianças',time:'20:00'},
   {id:'pacoca_noite',label:'Paçoca – Comida',time:'20:00'}
 ].map((t,i)=>({...t,order:i}));
-let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMonth=null,casaMonthDays={},fbUnsubCasaMonth=null;
+let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMonth=null,casaMonthDays={},fbUnsubCasaMonth=null,casaTodayDay=null,fbUnsubCasaToday=null;
 let fbUnsubCasa=null,fbUnsubCasaDay=null,casaMidnightTimer=null;
-let casaDraftTasks=[];
+let casaDraftTasks=[],casaNotifChecked=false;
 function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`gemail_${cu}`)||'').toLowerCase();}
 function casaIsOwner(){return cu==='tiago'||casaEmail()===CASA_OWNER_EMAIL;}
 function casaTasks(){return((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));}
@@ -2389,7 +2450,8 @@ function startCasaListener(){
   if(fbUnsubCasa)fbUnsubCasa();
   if(fbUnsubCasaDay)fbUnsubCasaDay();
   if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};casaView='day';casaMonth=null;
-  casa=null;casaDay=null;casaMember=false;casaDate=todayStr();
+  if(fbUnsubCasaToday)fbUnsubCasaToday();fbUnsubCasaToday=null;casaTodayDay=null;casaTodayListenedFor=null;
+  casa=null;casaDay=null;casaMember=false;casaDate=todayStr();casaNotifChecked=false;
   casaSetTabVisible(false);
   if(!window.fbListenDoc)return;
   fbUnsubCasa=window.fbListenDoc(`household/${CASA_ID}`,async data=>{
@@ -2408,8 +2470,11 @@ function startCasaListener(){
       try{await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{name:me.name||cu,color:me.color||'#c9a84c',email:casaEmail()||null}}});}catch(e){}
     }
     listenCasaDay();
+    listenCasaToday();
     if(!fbUnsubShopping)startShoppingListener();
     renderCasa();
+    renderHoje();
+    if(!casaNotifChecked){casaNotifChecked=true;setTimeout(()=>{showPushBanner();},800);}
   },err=>{
     // permission-denied = esta conta não pertence à casa → aba escondida, sem erro visível
     casa=null;casaMember=false;casaSetTabVisible(false);stopShoppingListener();
@@ -2433,13 +2498,74 @@ function listenCasaMonth(){
   if(fbUnsubCasaMonth||!casaMember||!window.fbListenCol)return;
   fbUnsubCasaMonth=window.fbListenCol(`household/${CASA_ID}/days`,list=>{
     casaMonthDays={};for(const d of list)casaMonthDays[d.id]=d;
-    if(casaView==='month')renderCasa();
+    if(casaView==='month'||casaView==='feed')renderCasa();
   });
 }
 function casaSetView(v){
   casaView=v;
-  if(v==='month'){if(!casaMonth)casaMonth=todayStr().slice(0,7);listenCasaMonth();}
+  if(v==='month'||v==='feed'){if(!casaMonth)casaMonth=todayStr().slice(0,7);listenCasaMonth();}
   renderCasa();
+}
+// ── Feed de atividade: derivado do que já existe (marcações dos dias + compras), sem coleção nova
+function casaFeedEvents(){
+  const ev=[];
+  const labelOf={};for(const t of casaTasks())labelOf[t.id]=t.label;
+  for(const [ds,day] of Object.entries(casaMonthDays)){
+    const extras={};for(const e of (day.extras||[]))extras[e.id]=e.label;
+    for(const [tid,dn] of Object.entries(day.done||{})){
+      if(!dn||!dn.at)continue;
+      ev.push({at:dn.at,who:dn.name||dn.by||'?',uid:dn.by,icon:'🏡',text:`fez: ${labelOf[tid]||extras[tid]||tid}`});
+    }
+  }
+  for(const i of shopping){
+    if(i.addedAt)ev.push({at:i.addedAt,who:i.addedByName||i.addedBy||'?',uid:i.addedBy,icon:'🛒',text:`acrescentou à lista: ${i.label}${i.qty?' ('+i.qty+')':''}`});
+    if(i.bought&&i.boughtAt)ev.push({at:i.boughtAt,who:i.boughtByName||i.boughtBy||'?',uid:i.boughtBy,icon:'✅',text:`comprou: ${i.label}`});
+  }
+  return ev.sort((a,b)=>a.at<b.at?1:-1).slice(0,150);
+}
+function casaFeedDayLabel(ds){
+  const t=todayStr();
+  if(ds===t)return 'Hoje';
+  const y=new Date();y.setDate(y.getDate()-1);
+  const ys=`${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+  if(ds===ys)return 'Ontem';
+  return casaFmtDate(ds);
+}
+function renderCasaFeed(){
+  const ev=casaFeedEvents();
+  const members=Object.entries((casa&&casa.members)||{});
+  const week=Date.now()-7*86400000;
+  const counts={};for(const e of ev){if(new Date(e.at).getTime()>=week)counts[e.uid]=(counts[e.uid]||0)+1;}
+  const stats=members.map(([uid,m])=>`<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="casa-av" style="background:${esc(m.color||'#c9a84c')};width:20px;height:20px;font-size:9px;">${esc((m.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(m.name||uid)}: <strong>${counts[uid]||0}</strong></span></span>`).join('');
+  let html='';let lastDay='';
+  for(const e of ev){
+    const ds=e.at.slice(0,10);
+    if(ds!==lastDay){html+=`<div class="sdiv" style="margin-top:10px;">${esc(casaFeedDayLabel(ds))}</div>`;lastDay=ds;}
+    html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);font-size:13px;">
+      <span class="casa-av" style="background:${esc(casaMemberColor(e.uid))};width:26px;height:26px;font-size:11px;flex-shrink:0;">${esc(e.who.charAt(0).toUpperCase())}</span>
+      <div style="flex:1;min-width:0;"><strong>${esc(e.who)}</strong> ${esc(e.text)}</div>
+      <span style="font-size:11px;color:var(--text-dim);white-space:nowrap;">${e.icon} ${casaFmtTime(e.at)}</span>
+    </div>`;
+  }
+  return `
+    <div class="casa-hdr">
+      <div class="casa-date">Atividade</div>
+      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button><button class="active" onclick="casaSetView('feed')">Atividade</button></div>
+    </div>
+    <div style="margin:-4px 0 6px;display:flex;flex-wrap:wrap;align-items:center;"><span style="font-size:11px;color:var(--text-dim);margin-right:8px;">Últimos 7 dias —</span>${stats}</div>
+    ${html||'<div class="empty-state"><div class="icon">🏡</div>Ainda não há atividade registada.</div>'}`;
+}
+// Aviso in-app quando OUTRO membro marca algo (a app está aberta; sem push extra)
+let casaSeenDone=null;
+function casaAnnounceChanges(day){
+  const done=(day&&day.done)||{};
+  if(casaSeenDone===null){casaSeenDone=new Set(Object.keys(done));return;}
+  const labelOf={};for(const t of casaTasks())labelOf[t.id]=t.label;
+  for(const [tid,dn] of Object.entries(done)){
+    if(casaSeenDone.has(tid))continue;
+    if(dn&&dn.by&&dn.by!==cu)notify(`🏡 ${dn.name||dn.by} fez: ${labelOf[tid]||tid}`,'success');
+  }
+  casaSeenDone=new Set(Object.keys(done));
 }
 function casaShiftMonth(delta){
   const [y,m]=(casaMonth||todayStr().slice(0,7)).split('-').map(Number);
@@ -2453,6 +2579,8 @@ function renderCasaMonth(){
   const [y,m]=casaMonth.split('-').map(Number);
   const nDays=new Date(y,m,0).getDate();
   const today=todayStr();const nowMin=casaNowMin();
+  // Dias anteriores à criação da Casa não contam como falha (a app ainda não existia)
+  const start=(casa&&casa.createdAt||'').slice(0,10)||today;
   const tasks=casaTasks();
   const monthLabel=new Date(y,m-1,1).toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
   const members=Object.entries((casa&&casa.members)||{});
@@ -2470,6 +2598,7 @@ function renderCasaMonth(){
       const day=casaMonthDays[ds];const dn=day&&day.done&&day.done[t.id];
       let cls='cell',inner='';
       if(dn){cls+=' done';inner=`<span style="background:${esc(casaMemberColor(dn.by))}" title="${esc(dn.name||dn.by||'')} · ${casaFmtTime(dn.at)}">${esc((dn.name||dn.by||'?').charAt(0).toUpperCase())}</span>`;stats[dn.by]=(stats[dn.by]||0)+1;}
+      else if(ds<start){cls+=' future';}
       else if(ds<today||(ds===today&&t.time&&casaMinutes(t.time)<nowMin)){cls+=' miss';}
       else{cls+=' future';}
       if(ds===today)cls+=' today';
@@ -2482,14 +2611,47 @@ function renderCasaMonth(){
     <div class="casa-hdr">
       <div class="casa-nav"><button onclick="casaShiftMonth(-1)">‹</button><button onclick="casaMonth=todayStr().slice(0,7);renderCasa()" ${casaMonth===today.slice(0,7)?'disabled':''}>Este mês</button><button onclick="casaShiftMonth(1)">›</button></div>
       <div class="casa-date" style="text-transform:capitalize">${esc(monthLabel)}</div>
-      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button class="active" onclick="casaSetView('month')">Mês</button></div>
+      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button class="active" onclick="casaSetView('month')">Mês</button><button onclick="casaSetView('feed')">Atividade</button></div>
     </div>
     <div style="margin:-4px 0 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${legend}</div>
     <div class="casa-grid-wrap"><table class="casa-grid"><thead>${head}</thead><tbody>${body||'<tr><td colspan="32" style="text-align:center;color:var(--text-dim);padding:16px">Sem tarefas</td></tr>'}</tbody></table></div>
     <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Marcações no mês — ${totals||'—'}. Toca num dia para o abrir.</div>`;
 }
+// Documento de HOJE sempre ligado (independente do dia que a aba Casa está a mostrar) — alimenta o cartão no ecrã Hoje
+let casaTodayListenedFor=null;
+function listenCasaToday(){
+  const t=todayStr();
+  if(fbUnsubCasaToday&&casaTodayListenedFor===t)return;
+  if(fbUnsubCasaToday)fbUnsubCasaToday();
+  casaTodayListenedFor=t;
+  casaSeenDone=null;
+  fbUnsubCasaToday=window.fbListenDoc(`household/${CASA_ID}/days/${t}`,d=>{casaTodayDay=d||{};casaAnnounceChanges(casaTodayDay);renderHoje();},()=>{});
+}
+function casaHojeHTML(){
+  if(!casaMember||!casa)return'';
+  listenCasaToday();
+  const done=(casaTodayDay&&casaTodayDay.done)||{};
+  const extras=((casaTodayDay&&casaTodayDay.extras)||[]).map(e=>({...e,extra:true}));
+  const items=[...casaTasks(),...extras];
+  if(!items.length)return'';
+  const pend=items.filter(t=>!done[t.id]);
+  const nowMin=casaNowMin();const today=todayStr();
+  const next=pend.filter(t=>t.time&&casaMinutes(t.time)>=nowMin).sort((a,b)=>casaMinutes(a.time)-casaMinutes(b.time))[0];
+  const late=pend.filter(t=>t.time&&casaMinutes(t.time)<nowMin);
+  const shopN=(typeof shoppingPending==='function')?shoppingPending().length:0;
+  const rows=pend.map(t=>{const isLate=t.time&&casaMinutes(t.time)<nowMin;return `<div class="casa-item${isLate?' late':''}" onclick="casaToggle('${esc(t.id)}','${today}')">
+      <div class="casa-check"></div>
+      <div class="casa-lbl"><div>${esc(t.label)}</div>${isLate?'<div class="casa-sub">em atraso</div>':''}</div>
+      ${t.time?`<div class="casa-time">${isLate?'⚠️ ':'até '}${esc(t.time)}</div>`:''}
+    </div>`;}).join('');
+  const sub=pend.length?(late.length?`<span style="color:var(--red)">${late.length} em atraso</span>`:(next?`próxima: ${esc(next.label)} até ${esc(next.time)}`:`${pend.length} por fazer`)):'<span style="color:var(--green)">✓ tudo feito hoje</span>';
+  return `<div class="sdiv" style="cursor:pointer;" onclick="switchTab('casa')">🏡 Casa · ${items.length-pend.length}/${items.length} feitas · ${sub}</div>
+    ${rows}
+    ${shopN?`<button class="filter-btn" style="margin:2px 0 6px;" onclick="switchTab('compras')">🛒 ${shopN} ${shopN===1?'item':'itens'} na lista de compras →</button>`:''}`;
+}
 function stopCasaListeners(){
   if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};
+  if(fbUnsubCasaToday)fbUnsubCasaToday();fbUnsubCasaToday=null;casaTodayDay=null;casaTodayListenedFor=null;
   fbUnsubCasa=null;fbUnsubCasaDay=null;casa=null;casaDay=null;casaMember=false;
   stopShoppingListener();
 }
@@ -2526,6 +2688,7 @@ function renderCasa(){
   if(bdg&&casaDate===todayStr())bdg.textContent=casaPendingToday();
   if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🏡</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
   if(casaView==='month'){el.innerHTML=renderCasaMonth();return;}
+  if(casaView==='feed'){el.innerHTML=renderCasaFeed();return;}
   const items=casaAllItems();
   const done=(casaDay&&casaDay.done)||{};
   const isToday=casaDate===todayStr();
@@ -2533,7 +2696,9 @@ function renderCasa(){
   const doneCount=items.filter(t=>done[t.id]).length;
   const pct=items.length?Math.round(doneCount/items.length*100):0;
   const members=Object.entries((casa&&casa.members)||{});
-  const avs=members.map(([uid,m])=>`<div class="casa-av" title="${esc(m.name||uid)}" style="background:${esc(m.color||'#c9a84c')}">${esc((m.name||uid).charAt(0).toUpperCase())}</div>`).join('');
+  const avs=members.map(([uid,m])=>`<div class="casa-av" title="${esc(m.name||uid)}${m.notif?' · lembretes ativos':' · sem lembretes'}" style="background:${esc(m.color||'#c9a84c')};position:relative;">${esc((m.name||uid).charAt(0).toUpperCase())}<span style="position:absolute;right:-5px;bottom:-5px;font-size:10px;line-height:1;">${m.notif?'🔔':'🔕'}</span></div>`).join('');
+  const semNotif=members.filter(([uid,m])=>!m.notif).map(([uid,m])=>m.name||uid);
+  const notifLine=semNotif.length?`<div style="font-size:11px;color:var(--text-muted);margin:-4px 0 10px;">🔕 Sem lembretes: <strong>${esc(semNotif.join(', '))}</strong> — ${semNotif.includes((USERS[cu]||{}).name)?`<a href="#" onclick="openPushSettings();return false;" style="color:var(--gold)">ativa aqui</a>`:'cada um ativa no próprio telemóvel'}</div>`:'';
   const rows=items.map(t=>{
     const dn=done[t.id];
     const tMin=casaMinutes(t.time);
@@ -2551,26 +2716,28 @@ function renderCasa(){
     <div class="casa-hdr">
       <div class="casa-nav"><button onclick="casaShiftDate(-1)">‹</button><button onclick="casaGoToday()" ${isToday?'disabled':''}>Hoje</button><button onclick="casaShiftDate(1)">›</button></div>
       <div class="casa-date">${casaFmtDate(casaDate)}</div>
-      <div style="display:flex;align-items:center;gap:8px;"><div class="casa-avs">${avs}</div><div class="casa-view"><button class="active" onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button></div></div>
+      <div style="display:flex;align-items:center;gap:8px;"><div class="casa-avs">${avs}</div><div class="casa-view"><button class="active" onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button><button onclick="casaSetView('feed')">Atividade</button></div></div>
     </div>
     <div class="casa-prog"><div style="width:${pct}%"></div></div>
     <div style="font-size:11px;color:var(--text-dim);margin:-6px 0 10px;text-align:right;">${doneCount}/${items.length} feitas</div>
+    ${notifLine}
     ${rows||`<div class="empty-state"><div class="icon">🏡</div>Sem tarefas. Toque em "Editar tarefas" para começar.</div>`}
     <div style="display:flex;gap:8px;margin-top:10px;">
       <button class="rep-btn" style="margin-top:0;" onclick="casaAddExtra()">+ Tarefa só para este dia</button>
       <button class="rep-btn" style="margin-top:0;" onclick="openCasaEdit()">⚙️ Editar tarefas</button>
     </div>`;
 }
-async function casaToggle(id){
+async function casaToggle(id,ds){
   if(!casaMember||!window.fbSave)return;
-  const path=`household/${CASA_ID}/days/${casaDate}`;
-  const done=(casaDay&&casaDay.done)||{};
+  const date=ds||casaDate;
+  const path=`household/${CASA_ID}/days/${date}`;
+  const done=((date===casaDate?casaDay:(date===todayStr()?casaTodayDay:null))||{}).done||{};
   try{
     if(done[id]){
       await window.fbUpdate(path,{[`done.${id}`]:window.fbDeleteField()});
     }else{
       const me=USERS[cu]||{};
-      await window.fbSave(path,{date:casaDate,done:{[id]:{by:cu,name:me.name||cu,at:new Date().toISOString()}}});
+      await window.fbSave(path,{date,done:{[id]:{by:cu,name:me.name||cu,at:new Date().toISOString()}}});
     }
   }catch(e){console.error('casaToggle',e);notify('Não foi possível guardar: '+(e.code||e.message),'error');}
 }
@@ -2662,6 +2829,43 @@ async function syncCasaLocalNotifs(){
 // Mesma pertença por e-mail da Casa (regras do Firestore: household/{hid}/{sub}/{doc}).
 let shopping=[],fbUnsubShopping=null,shoppingShowBought=false;
 function normLabel(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ');}
+// Categorias: atribuídas sozinhas por palavra-chave ao acrescentar (pode-se mudar com um toque na etiqueta)
+const SHOP_CATS=[
+  {key:'frescos',label:'🥦 Frescos',words:['fruta','maçã','maca','banana','laranja','pera','uva','morango','legume','alface','tomate','cebola','alho','batata','cenoura','courgette','pepino','couve','brócolo','brocolo','espinafre','salsa','coentro','limão','limao','abacate','manga','melancia','melão','melao','carne','frango','peru','vaca','porco','bife','peixe','salmão','salmao','bacalhau','atum','sardinha','camarão','camarao','fiambre','queijo','ovo','ovos','leite','iogurte','manteiga','natas','pão','pao','broa']},
+  {key:'mercearia',label:'🛒 Mercearia',words:['arroz','massa','esparguete','farinha','açúcar','acucar','sal','azeite','óleo','oleo','vinagre','café','cafe','chá','cha','cereal','cereais','bolacha','bolachas','chocolate','feijão','feijao','grão','grao','lentilha','atum','conserva','molho','ketchup','maionese','mostarda','água','agua','sumo','refrigerante','cerveja','vinho','leite condensado','mel','compota','tosta','tostas','aveia','papas','fralda','fraldas','toalhita','toalhitas','ração','racao','areia']},
+  {key:'farmacia',label:'💊 Farmácia',words:['farmácia','farmacia','remédio','remedio','medicamento','comprimido','xarope','vitamina','pomada','penso','pensos','álcool','alcool','soro','termómetro','termometro','ben-u-ron','brufen','paracetamol','ibuprofeno']},
+  {key:'casa',label:'🧴 Casa e higiene',words:['detergente','lixívia','lixivia','amaciador','esfregão','esfregao','esponja','saco','sacos','lixo','papel','higiénico','higienico','guardanapo','guardanapos','rolo','cozinha','champô','champo','shampoo','gel','banho','sabonete','pasta','dentes','escova','desodorizante','lâmina','lamina','algodão','algodao','pilha','pilhas','lâmpada','lampada','vela','velas']},
+  {key:'outros',label:'📦 Outros',words:[]}
+];
+function shopCatFor(label){
+  const l=normLabel(label);
+  for(const c of SHOP_CATS){if(c.words.some(w=>l===w||l.includes(w)))return c.key;}
+  return 'outros';
+}
+function shopCatDef(key){return SHOP_CATS.find(c=>c.key===key)||SHOP_CATS[SHOP_CATS.length-1];}
+async function cycleShopCat(id){
+  const it=shopping.find(i=>String(i.id)===String(id));if(!it||!window.fbSave)return;
+  const i=SHOP_CATS.findIndex(c=>c.key===(it.cat||'outros'));
+  const next=SHOP_CATS[(i+1)%SHOP_CATS.length].key;
+  try{await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{cat:next});}catch(e){}
+}
+// Quantidades ditas por voz: "dois pacotes de leite", "3 kg de batatas", "meia dúzia de ovos", "leite x2"
+const NUM_WORDS={um:1,uma:1,dois:2,duas:2,três:3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,'meia dúzia':6,'meia duzia':6,'uma dúzia':12,'uma duzia':12,dúzia:12,duzia:12};
+const UNIT_WORDS='(pacotes?|caixas?|garrafas?|latas?|sacos?|kg|quilos?|kilos?|g|gramas?|l|litros?|ml|unidades?|embalagens?|frascos?|rolos?|dúzias?|duzias?|pares?|peças?|pecas?|cabeças?|cabecas?|molhos?|ramos?|barras?|tabletes?|potes?|iogurtes?|garrafões?|garrafoes?)';
+function parseShopItem(raw){
+  let t=String(raw||'').trim().replace(/\s+/g,' ');
+  let qty='',label=t;
+  const numRe=new RegExp('^(\\d+[\\d.,]*|'+Object.keys(NUM_WORDS).sort((a,b)=>b.length-a.length).join('|')+')\\s+(?:'+UNIT_WORDS+'\\s+)?(?:de\\s+|d[eo]s?\\s+)?(.+)$','i');
+  const m=t.match(numRe);
+  const m2=t.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
+  if(m){
+    const nRaw=m[1].toLowerCase();const n=NUM_WORDS[nRaw]!==undefined?NUM_WORDS[nRaw]:nRaw;
+    const unit=m[2]?m[2].toLowerCase():'';
+    qty=unit?`${n} ${unit}`:String(n);label=m[3].trim();
+  }else if(m2){label=m2[1].trim();qty=m2[2];}
+  label=label.charAt(0).toUpperCase()+label.slice(1);
+  return {label,qty};
+}
 function startShoppingListener(){
   if(fbUnsubShopping)fbUnsubShopping();
   shopping=[];
@@ -2669,6 +2873,8 @@ function startShoppingListener(){
   fbUnsubShopping=window.fbListenCol(`household/${CASA_ID}/shopping`,items=>{
     shopping=items;
     renderShopping();
+    if(currentTab()==='hoje')renderHoje();
+    if(casaView==='feed')renderCasa();
   });
 }
 function stopShoppingListener(){if(fbUnsubShopping)fbUnsubShopping();fbUnsubShopping=null;shopping=[];}
@@ -2690,16 +2896,14 @@ async function addShoppingItem(text){
   if(!casaMember||!window.fbSave)return false;
   const raw=String(text||'').trim();
   if(!raw)return false;
-  // "3 pacotes de leite" / "leite x2" → quantidade opcional
-  let label=raw,qty='';
-  const m1=raw.match(/^(\d+[\w.,]*)\s+(.+)$/);const m2=raw.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
-  if(m2){label=m2[1].trim();qty=m2[2];}else if(m1){qty=m1[1];label=m1[2].trim();}
+  const {label,qty}=parseShopItem(raw);
+  const cat=shopCatFor(label);
   const key=normLabel(label);
   if(shoppingPending().some(i=>normLabel(i.label)===key)){notify(`"${label}" já está na lista.`,'info');return true;}
   const me=USERS[cu]||{};
   const id=Date.now().toString()+Math.random().toString(36).slice(2,6);
   try{
-    await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{id,label,qty,addedBy:cu,addedByName:me.name||cu,addedAt:new Date().toISOString(),bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
+    await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{id,label,qty,cat,addedBy:cu,addedByName:me.name||cu,addedAt:new Date().toISOString(),bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
     return true;
   }catch(e){notify('Erro ao guardar: '+(e.code||e.message),'error');return false;}
 }
@@ -2723,6 +2927,22 @@ async function addShoppingFromField(){
   if(ok){inp.value='';inp.focus();}
 }
 function shopKey(e){if(e.key==='Enter'){e.preventDefault();addShoppingFromField();}}
+function shoppingAsText(){
+  const pend=shoppingPending();
+  if(!pend.length)return '';
+  const groups={};for(const i of pend){const k=i.cat||shopCatFor(i.label);(groups[k]=groups[k]||[]).push(i);}
+  let out='🛒 Lista de compras — '+new Date().toLocaleDateString('pt-PT')+'\n';
+  for(const c of SHOP_CATS){const g=groups[c.key];if(!g)continue;out+='\n'+c.label+'\n'+g.map(i=>`• ${i.label}${i.qty?' ('+i.qty+')':''}`).join('\n')+'\n';}
+  return out.trim();
+}
+async function shareShopping(){
+  const text=shoppingAsText();
+  if(!text){notify('A lista está vazia.','info');return;}
+  try{
+    if(navigator.share){await navigator.share({text});return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
 async function clearBoughtOld(){
   // Limpa comprados com mais de 60 dias (o histórico recente chega para as sugestões)
   const cutoff=new Date(Date.now()-60*86400000).toISOString();
@@ -2738,11 +2958,14 @@ function renderShopping(){
   const pend=shoppingPending();
   const bdg=document.getElementById('bdgS');if(bdg)bdg.textContent=pend.length;
   if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🛒</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
-  const rows=pend.map(i=>`<div class="task-item" onclick="toggleShoppingItem('${esc(i.id)}')">
+  const groups={};for(const i of pend){const k=i.cat||shopCatFor(i.label);(groups[k]=groups[k]||[]).push(i);}
+  const rowHTML=i=>`<div class="task-item" onclick="toggleShoppingItem('${esc(i.id)}')">
       <div class="task-check"></div>
-      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''}</div></div>
+      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''} · <span class="ttag ts" style="cursor:pointer;" title="Toca para mudar a categoria" onclick="event.stopPropagation();cycleShopCat('${esc(i.id)}')">${esc(shopCatDef(i.cat||shopCatFor(i.label)).label)}</span></div></div>
       <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();removeShoppingItem('${esc(i.id)}')">✕</button>
-    </div>`).join('');
+    </div>`;
+  const rows=SHOP_CATS.filter(c=>groups[c.key]).map(c=>`<div class="sdiv" style="margin-top:6px;">${esc(c.label)} · ${groups[c.key].length}</div>`+groups[c.key].map(rowHTML).join('')).join('');
+  const shareBtn=pend.length?`<button class="rep-btn" style="margin:4px 0 10px;" onclick="shareShopping()">📤 Partilhar lista (WhatsApp, …)</button>`:'';
   const sugg=shoppingSuggestions();
   const suggHtml=sugg.length?`<div class="sdiv">Sugestões — já compraram antes</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${sugg.map(s=>`<button class="filter-btn" onclick="addShoppingItem('${esc(s.label).replace(/'/g,'&#39;')}')">+ ${esc(s.label)}${s.n>1?` <span style="opacity:.6">×${s.n}</span>`:''}</button>`).join('')}</div>`:'';
   const bought=shoppingBought();
@@ -2750,14 +2973,14 @@ function renderShopping(){
       <div class="task-check">✓</div>
       <div class="task-body"><div class="task-text">${esc(i.label)}</div><div class="note-meta" style="color:var(--green)">✓ ${esc(i.boughtByName||'')}${i.boughtAt?` · ${fd2(i.boughtAt)}`:''}</div></div>
     </div>`).join('')+`<button class="rep-btn" onclick="clearBoughtOld()">🧹 Limpar comprados há mais de 60 dias</button>`:''):'';
-  el.innerHTML=(rows||`<div class="empty-state"><div class="icon">🛒</div>Lista vazia<br><small style="font-size:11px;margin-top:6px;display:block;">Escreve aqui em cima, ou diz "Comprar: leite" no campo de voz.</small></div>`)+suggHtml+boughtHtml;
+  el.innerHTML=(rows||`<div class="empty-state"><div class="icon">🛒</div>Lista vazia<br><small style="font-size:11px;margin-top:6px;display:block;">Escreve aqui em cima, ou diz "Comprar: leite" no campo de voz.</small></div>`)+shareBtn+suggHtml+boughtHtml;
 }
 // ── SWIPE ENTRE ABAS (telemóvel) ─────────────────
 // Deslizar o conteúdo para a esquerda/direita passa para a aba seguinte/
 // anterior, pela ordem abaixo (só as abas visíveis — Casa é ignorada para
 // quem não é membro). Não dispara quando o gesto começa num campo de texto,
 // quando é mais vertical do que horizontal (scroll normal) ou é muito curto.
-const SWIPE_ORDER=['hoje','tasks','casa','compras','routines','notes','ideias','week'];
+const SWIPE_ORDER=['hoje','tasks','casa','routines','compras','notes','week','ideias'];
 function swipeTabs(){
   return SWIPE_ORDER.filter(t=>{const el=document.querySelector(`.tab[data-tab="${t}"]`);return el&&el.style.display!=='none';});
 }
@@ -2780,7 +3003,7 @@ function swipeToTab(dir){
   area.addEventListener('touchstart',e=>{
     const t=e.touches[0];
     const tag=(e.target.tagName||'').toLowerCase();
-    active=!(tag==='input'||tag==='textarea'||tag==='select'||e.target.closest('.modal-ov,.week-grid,.casa-nav,.casa-view,.casa-grid-wrap'));
+    active=!(tag==='input'||tag==='textarea'||tag==='select'||e.target.closest('.modal-ov,.week-grid,.casa-nav,.casa-view,.casa-grid-wrap,.tabs'));
     sx=t.clientX;sy=t.clientY;st=Date.now();
   },{passive:true});
   area.addEventListener('touchend',e=>{
@@ -2848,6 +3071,8 @@ function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('dat
 // ── UI ───────────────────────────────────────────
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  // Barra inferior rolável: trazer a aba ativa para o centro
+  try{const at=document.querySelector(`.tab[data-tab="${tab}"]`);if(at&&window.innerWidth<=680)at.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});}catch(e){}
   const maisTab=document.getElementById('tabMais');
   if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='notes'||tab==='ideias'||tab==='compras');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
@@ -3071,8 +3296,10 @@ function renderHoje(){
   const doneToday=tasks.filter(t=>t.done&&t.doneAt&&t.doneAt.slice(0,10)===today).length;
   const overdue=tasks.filter(t=>!t.done&&t.date&&t.date<today).length;
   const pendingToday=todayTasks.length;
+  const casaCard=(typeof casaHojeHTML==='function')?casaHojeHTML():'';
   el.innerHTML=`
-    <div class="sdiv">📅 Hoje · ${fd(today)}</div>
+    ${casaCard}
+    <div class="sdiv"${casaCard?' style="margin-top:14px;"':''}>📅 Hoje · ${fd(today)}</div>
     ${todayTasks.length?todayTasks.map(taskHTML).join(''):`<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>${advFiltersActive()?'Nada aqui pra esse filtro':'Nada marcado pra hoje'}</div>`}
     ${upcoming.length?`<div class="sdiv" style="margin-top:14px;">Próximos</div>${upcoming.map(taskHTML).join('')}`:''}
     <button class="filter-btn" style="margin-top:10px;" onclick="switchTab('tasks')">Ver todas as tarefas →</button>

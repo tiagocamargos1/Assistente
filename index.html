@@ -1420,10 +1420,19 @@ async function getValidToken(){
     }
     window.addEventListener('message',onMsg);
     const redirect='https://tiagocamargos1.github.io/Assistente';
-    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none`;
+    // login_hint é essencial: sem ele, num navegador com mais do que uma
+    // conta Google, o pedido silencioso volta com "interaction_required"
+    // (o Google quer que se escolha a conta) e a renovação falhava sempre —
+    // testado ao vivo em 04/09. O e-mail vem do perfil guardado no login.
+    let hint='';
+    try{
+      const p=gProfile||JSON.parse(localStorage.getItem(`gprofile_${cu}`)||'null');
+      if(p&&p.email)hint='&login_hint='+encodeURIComponent(p.email);
+    }catch(e){}
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none${hint}`;
     iframe.src=url;
     document.body.appendChild(iframe);
-    setTimeout(()=>finish(null),4000);
+    setTimeout(()=>finish(null),8000);
   });
 }
 async function enterApp(){
