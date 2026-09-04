@@ -1527,7 +1527,8 @@ async function showPushBanner(){
   if(!('Notification' in window))return;
   if(Notification.permission==='granted'){
     // já autorizado: garantir que a subscrição existe (pode ter sido perdida) e registar estado
-    try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){syncNotifStatusToCasa('web');return;}}catch(e){}
+    // (com timeout: sem service worker ativo, .ready nunca resolve e o banner nunca apareceria)
+    try{const reg=await Promise.race([navigator.serviceWorker.ready,new Promise((_,rej)=>setTimeout(()=>rej(new Error('sw-timeout')),3000))]);const sub=await reg.pushManager.getSubscription();if(sub){syncNotifStatusToCasa('web');return;}}catch(e){}
   }
   if(Notification.permission==='denied')return;
   document.getElementById('pushBanner').innerHTML=pushBannerHTML();
