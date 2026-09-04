@@ -444,12 +444,14 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
       <div class="tab" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
       <div class="tab" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab tab-more" data-tab="compras" onclick="switchTab('compras')" style="display:none;">🛒 <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
       <div class="tab tab-more" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
       <div class="tab tab-more" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
       <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
+      <div class="mais-item" data-mais="compras" onclick="switchTab('compras');closeMaisMenu()" style="display:none;">🛒 Compras</div>
       <div class="mais-item" onclick="switchTab(&#39;notes&#39;);closeMaisMenu()">📝 Notas</div>
       <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()">💡 Ideias</div>
       <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
@@ -488,6 +490,13 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
 </div>
 <div class="tab-content" id="tab-casa">
   <div id="casaContent"></div>
+</div>
+<div class="tab-content" id="tab-compras">
+  <div class="input-row" style="margin-bottom:12px;">
+    <input type="text" id="shopInput" placeholder="Acrescentar à lista… (ex.: leite, 2 pão)" onkeydown="shopKey(event)" style="flex:1;min-width:0;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:8px 10px;outline:none;">
+    <button class="send-btn" onclick="addShoppingFromField()" title="Acrescentar">+</button>
+  </div>
+  <div id="shopList"></div>
 </div>
   </div>
   <!-- RIGHT -->
@@ -1636,6 +1645,15 @@ async function processInput(){
       notify('📝 Nota salva!','success');
       switchTab('notes');
     }
+    else if(parsed.type==='buy'){
+      if(!casaMember){notify('A lista de compras é da Casa — esta conta não faz parte de nenhuma.','error');}
+      else{
+        const parts=parsed.title.split(/\s*,\s*|\s+e\s+/i).map(x=>x.trim()).filter(Boolean);
+        for(const p of parts)await addShoppingItem(p);
+        notify(`🛒 ${parts.length>1?parts.length+' itens acrescentados':'Acrescentado'} à lista de compras!`,'success');
+        switchTab('compras');
+      }
+    }
     else if(parsed.type==='idea'){
       const idea={id:Date.now().toString(),text:parsed.title,status:'pendente',owner:cu,area:currentArea||null,createdAt:new Date().toISOString()};
       await saveIdea(idea);
@@ -1659,8 +1677,9 @@ function parseInput(inp, today){
   const low=inp.toLowerCase().trim();
   const todayStr=today.toISOString().split('T')[0];
   // ── Detect type ──
-  const isIdea=/^(ideia|idéia)\b[:\-–—,]?\s*/i.test(low);
-  const isNote=!isIdea&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
+  const isBuy=/^(comprar|compras?|lista de compras)\b[:\-–—,]?\s*/i.test(low);
+  const isIdea=!isBuy&&/^(ideia|idéia)\b[:\-–—,]?\s*/i.test(low);
+  const isNote=!isIdea&&!isBuy&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
   const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
     || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
@@ -1716,6 +1735,7 @@ function parseInput(inp, today){
   }
   // ── Clean title ──
     let title=inp
+          .replace(/^(comprar|compras?|lista de compras)\b[:\-–—,]?\s*/i,'')
           .replace(/^(ideia|idéia)\b[:\-–—,]?\s*/i,'')
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
     .replace(/\b(às|as|ás)\s*\d{1,2}[h:]?\d{0,2}\s*(am|pm)?\b/gi,'')
@@ -1727,12 +1747,13 @@ function parseInput(inp, today){
   const dateLabel=date?` para ${fd(date)}`:'';
   const timeLabel=time?` às ${time}`:'';
   let response='';
-  if(isIdea)response=`Ideia guardada na Caixa de Ideias! 💡`;
+  if(isBuy)response=`"${title}" acrescentado à lista de compras! 🛒`;
+  else if(isIdea)response=`Ideia guardada na Caixa de Ideias! 💡`;
     else if(isNote)response=`Nota salva! ✏️`;
   else if(isEvent)response=`Compromisso "${title}" agendado${dateLabel}${timeLabel}. ✅`;
   else response=`Tarefa "${title}" adicionada${dateLabel}. ✅`;
   return{
-    type:  isIdea?'idea':isNote?'note': isEvent?'event':'task',
+    type:  isBuy?'buy':isIdea?'idea':isNote?'note': isEvent?'event':'task',
     title,
     description:null,
     urgency: isUrgent?'urgent':'normal',
@@ -2349,7 +2370,7 @@ function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`ge
 function casaIsOwner(){return cu==='tiago'||casaEmail()===CASA_OWNER_EMAIL;}
 function casaTasks(){return((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));}
 function casaSetTabVisible(on){
-  document.querySelectorAll('[data-tab="casa"],[data-mais="casa"]').forEach(el=>el.style.display=on?'':'none');
+  document.querySelectorAll('[data-tab="casa"],[data-mais="casa"],[data-tab="compras"],[data-mais="compras"]').forEach(el=>el.style.display=on?'':'none');
 }
 function startCasaListener(){
   if(fbUnsubCasa)fbUnsubCasa();
@@ -2373,10 +2394,11 @@ function startCasaListener(){
       try{await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{name:me.name||cu,color:me.color||'#c9a84c',email:casaEmail()||null}}});}catch(e){}
     }
     listenCasaDay();
+    if(!fbUnsubShopping)startShoppingListener();
     renderCasa();
   },err=>{
     // permission-denied = esta conta não pertence à casa → aba escondida, sem erro visível
-    casa=null;casaMember=false;casaSetTabVisible(false);
+    casa=null;casaMember=false;casaSetTabVisible(false);stopShoppingListener();
     if(!(err&&/permission/i.test(err.code||err.message||'')))console.error('casa listen',err);
   });
   if(casaMidnightTimer)clearTimeout(casaMidnightTimer);
@@ -2395,6 +2417,7 @@ function listenCasaDay(){
 function stopCasaListeners(){
   if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();
   fbUnsubCasa=null;fbUnsubCasaDay=null;casa=null;casaDay=null;casaMember=false;
+  stopShoppingListener();
 }
 function casaShiftDate(delta){
   const [y,m,d]=casaDate.split('-').map(Number);
@@ -2553,12 +2576,113 @@ async function syncCasaLocalNotifs(){
     }
   }catch(e){}
 }
+// ── COMPRAS (lista de compras partilhada do lar) ───────────
+// Segunda funcionalidade da Casa: uma lista única de compras para todos os
+// membros. Qualquer um acrescenta (no campo de cima com "Comprar: leite",
+// por voz, ou na própria aba), qualquer um marca como comprado com um toque
+// — fica registado quem e quando. O histórico do que já foi comprado vira
+// "Sugestões" (um toque volta a pôr na lista), que é o que substitui a lista
+// de papel que se reescreve todas as semanas.
+//   household/casa/shopping/{id} → {label, qty, addedBy, addedByName, addedAt, bought, boughtBy, boughtByName, boughtAt}
+// Mesma pertença por e-mail da Casa (regras do Firestore: household/{hid}/{sub}/{doc}).
+let shopping=[],fbUnsubShopping=null,shoppingShowBought=false;
+function normLabel(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ');}
+function startShoppingListener(){
+  if(fbUnsubShopping)fbUnsubShopping();
+  shopping=[];
+  if(!casaMember||!window.fbListenCol)return;
+  fbUnsubShopping=window.fbListenCol(`household/${CASA_ID}/shopping`,items=>{
+    shopping=items;
+    renderShopping();
+  });
+}
+function stopShoppingListener(){if(fbUnsubShopping)fbUnsubShopping();fbUnsubShopping=null;shopping=[];}
+function shoppingPending(){return shopping.filter(i=>!i.bought).sort((a,b)=>(a.addedAt||'')<(b.addedAt||'')?-1:1);}
+function shoppingBought(){return shopping.filter(i=>i.bought).sort((a,b)=>(a.boughtAt||'')>(b.boughtAt||'')?-1:1);}
+// Sugestões: rótulos já comprados alguma vez que não estão na lista agora,
+// ordenados por quantas vezes foram comprados (o que se compra sempre vem primeiro).
+function shoppingSuggestions(){
+  const pending=new Set(shoppingPending().map(i=>normLabel(i.label)));
+  const count={},label={};
+  for(const i of shopping){
+    if(!i.bought)continue;
+    const k=normLabel(i.label);if(!k||pending.has(k))continue;
+    count[k]=(count[k]||0)+1;label[k]=label[k]||i.label;
+  }
+  return Object.keys(count).sort((a,b)=>count[b]-count[a]||a.localeCompare(b)).slice(0,24).map(k=>({key:k,label:label[k],n:count[k]}));
+}
+async function addShoppingItem(text){
+  if(!casaMember||!window.fbSave)return false;
+  const raw=String(text||'').trim();
+  if(!raw)return false;
+  // "3 pacotes de leite" / "leite x2" → quantidade opcional
+  let label=raw,qty='';
+  const m1=raw.match(/^(\d+[\w.,]*)\s+(.+)$/);const m2=raw.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
+  if(m2){label=m2[1].trim();qty=m2[2];}else if(m1){qty=m1[1];label=m1[2].trim();}
+  const key=normLabel(label);
+  if(shoppingPending().some(i=>normLabel(i.label)===key)){notify(`"${label}" já está na lista.`,'info');return true;}
+  const me=USERS[cu]||{};
+  const id=Date.now().toString()+Math.random().toString(36).slice(2,6);
+  try{
+    await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{id,label,qty,addedBy:cu,addedByName:me.name||cu,addedAt:new Date().toISOString(),bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
+    return true;
+  }catch(e){notify('Erro ao guardar: '+(e.code||e.message),'error');return false;}
+}
+async function toggleShoppingItem(id){
+  const it=shopping.find(i=>String(i.id)===String(id));
+  if(!it||!window.fbSave)return;
+  const me=USERS[cu]||{};
+  try{
+    if(it.bought)await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
+    else await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{bought:true,boughtBy:cu,boughtByName:me.name||cu,boughtAt:new Date().toISOString()});
+  }catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+async function removeShoppingItem(id){
+  if(!window.fbDelete)return;
+  try{await window.fbDelete(`household/${CASA_ID}/shopping/${id}`);}catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+async function addShoppingFromField(){
+  const inp=document.getElementById('shopInput');
+  if(!inp)return;
+  const ok=await addShoppingItem(inp.value);
+  if(ok){inp.value='';inp.focus();}
+}
+function shopKey(e){if(e.key==='Enter'){e.preventDefault();addShoppingFromField();}}
+async function clearBoughtOld(){
+  // Limpa comprados com mais de 60 dias (o histórico recente chega para as sugestões)
+  const cutoff=new Date(Date.now()-60*86400000).toISOString();
+  const old=shopping.filter(i=>i.bought&&i.boughtAt&&i.boughtAt<cutoff);
+  if(!old.length){notify('Nada com mais de 60 dias para limpar.','info');return;}
+  if(!confirm(`Apagar ${old.length} item(ns) comprados há mais de 60 dias?`))return;
+  for(const i of old){try{await window.fbDelete(`household/${CASA_ID}/shopping/${i.id}`);}catch(e){}}
+  notify('✓ Histórico limpo.','success');
+}
+function renderShopping(){
+  const el=document.getElementById('shopList');
+  if(!el)return;
+  const pend=shoppingPending();
+  const bdg=document.getElementById('bdgS');if(bdg)bdg.textContent=pend.length;
+  if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🛒</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
+  const rows=pend.map(i=>`<div class="task-item" onclick="toggleShoppingItem('${esc(i.id)}')">
+      <div class="task-check"></div>
+      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''}</div></div>
+      <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();removeShoppingItem('${esc(i.id)}')">✕</button>
+    </div>`).join('');
+  const sugg=shoppingSuggestions();
+  const suggHtml=sugg.length?`<div class="sdiv">Sugestões — já compraram antes</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${sugg.map(s=>`<button class="filter-btn" onclick="addShoppingItem('${esc(s.label).replace(/'/g,'&#39;')}')">+ ${esc(s.label)}${s.n>1?` <span style="opacity:.6">×${s.n}</span>`:''}</button>`).join('')}</div>`:'';
+  const bought=shoppingBought();
+  const boughtHtml=bought.length?`<div class="sdiv" style="cursor:pointer;" onclick="shoppingShowBought=!shoppingShowBought;renderShopping()">${shoppingShowBought?'▾':'▸'} Comprados (${bought.length})</div>`+(shoppingShowBought?bought.slice(0,40).map(i=>`<div class="task-item done" onclick="toggleShoppingItem('${esc(i.id)}')">
+      <div class="task-check">✓</div>
+      <div class="task-body"><div class="task-text">${esc(i.label)}</div><div class="note-meta" style="color:var(--green)">✓ ${esc(i.boughtByName||'')}${i.boughtAt?` · ${fd2(i.boughtAt)}`:''}</div></div>
+    </div>`).join('')+`<button class="rep-btn" onclick="clearBoughtOld()">🧹 Limpar comprados há mais de 60 dias</button>`:''):'';
+  el.innerHTML=(rows||`<div class="empty-state"><div class="icon">🛒</div>Lista vazia<br><small style="font-size:11px;margin-top:6px;display:block;">Escreve aqui em cima, ou diz "Comprar: leite" no campo de voz.</small></div>`)+suggHtml+boughtHtml;
+}
 // ── SWIPE ENTRE ABAS (telemóvel) ─────────────────
 // Deslizar o conteúdo para a esquerda/direita passa para a aba seguinte/
 // anterior, pela ordem abaixo (só as abas visíveis — Casa é ignorada para
 // quem não é membro). Não dispara quando o gesto começa num campo de texto,
 // quando é mais vertical do que horizontal (scroll normal) ou é muito curto.
-const SWIPE_ORDER=['hoje','tasks','casa','routines','notes','ideias','week'];
+const SWIPE_ORDER=['hoje','tasks','casa','compras','routines','notes','ideias','week'];
 function swipeTabs(){
   return SWIPE_ORDER.filter(t=>{const el=document.querySelector(`.tab[data-tab="${t}"]`);return el&&el.style.display!=='none';});
 }
@@ -2650,7 +2774,7 @@ function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('dat
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   const maisTab=document.getElementById('tabMais');
-  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='notes'||tab==='ideias');
+  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='notes'||tab==='ideias'||tab==='compras');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   if(tab==='hoje')renderHoje();
@@ -2658,6 +2782,7 @@ function switchTab(tab){
   if(tab==='routines')renderRoutines();
   if(tab==='ideias')renderIdeas();
   if(tab==='casa')renderCasa();
+  if(tab==='compras')renderShopping();
 }
 function toggleMaisMenu(){
   const m=document.getElementById('maisMenu');

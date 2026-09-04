@@ -702,6 +702,28 @@ resolver isso primeiro.
     terminar e executar. Se a escuta acabar sem texto nenhum, o app diz
     "Não percebi nada…" em vez de ficar mudo.
 
+44. **Nova aba "🛒 Compras" — lista de compras partilhada do lar (o módulo
+    já planeado, agora em cima da Casa).** Uma lista única para os membros
+    da Casa (mesma pertença por e-mail, item 38). Acrescentar: campo próprio
+    na aba (Enter ou +), ou no campo de voz/texto do topo com o prefixo
+    **"Comprar: …"** / "Compras: …" (o parser local ganhou `type:'buy'`;
+    "Comprar: leite, ovos e pão" cria três itens — separa por vírgula e
+    " e "). Quantidade opcional: "2 pão" ou "leite x2" → tag azul. Marcar
+    como comprado: um toque no botão grande (regista quem e quando);
+    secção "Comprados" recolhida, com um toque para desmarcar. **Histórico
+    → Sugestões**: tudo o que já foi comprado alguma vez e não está na lista
+    aparece como botões "+ leite ×5", ordenados por quantas vezes foi
+    comprado — um toque volta a pôr na lista (substitui a lista de papel
+    que se reescreve todas as semanas). Botão "Limpar comprados há mais de
+    60 dias" para o histórico não crescer sem fim. Contador de pendentes no
+    ícone (`bdgS`); no telemóvel fica em ☰ Mais e no swipe logo a seguir à
+    Casa. Dados: `household/casa/shopping/{id}` → `{label, qty, addedBy,
+    addedByName, addedAt, bought, boughtBy, boughtByName, boughtAt}`; regra
+    `match /shopping/{itemId}` (membros da casa) publicada no Firebase
+    Console em 04/09/2026 04:39. O listener arranca/pára junto com o da
+    Casa (`startShoppingListener`/`stopShoppingListener`), por isso quem
+    não é membro não vê a aba nem toca na coleção.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -712,6 +734,10 @@ resolver isso primeiro.
 - [ ] Casa: vista mensal em grelha (tarefas × dias, igual ao papel) ficou
       de fora da v1 por decisão do Tiago — candidata a v2, junto com um
       resumo da Casa no ecrã "Hoje".
+- [ ] Compras (item 44): testar com a Monique/Lu a acrescentar do telemóvel
+      delas; ideias de v2 — categorias (mercearia/farmácia), partilhar a
+      lista por WhatsApp como texto, e "Comprar:" a reconhecer quantidades
+      ditas por voz ("dois pacotes de leite").
 
 - [ ] O Tiago precisa criar a conta no Google Play Console
       (https://play.google.com/console/signup, taxa única de US$ 25) —
