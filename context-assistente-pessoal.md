@@ -646,6 +646,38 @@ resolver isso primeiro.
     mais horizontal do que vertical (para não interferir com o scroll).
     Animação curta de entrada (`swipe-left`/`swipe-right`).
 
+41. **App nativa passa a carregar a versão publicada (server.url) — fim dos
+    rebuilds no Xcode a cada alteração.** O Tiago tentou correr `git pull` /
+    `npm run cap:sync` na pasta pessoal (`~`) em vez da do repositório e
+    apanhou `not a git repository` / `ENOENT package.json`. Esclarecido: o
+    repositório real vive no SSD em `/Volumes/MAC WORKSPACE/CLAUDE/projetos/
+    assistente` (a pasta `~/Assistente` no disco interno está vazia). O SSD
+    foi ligado à sessão Cowork (com permissão de apagar, necessária para os
+    `.lock` do git e para o npm), e a partir daqui trabalho lá diretamente.
+    Estado encontrado no repo local: HEAD antigo com alterações locais nunca
+    publicadas — `package.json` com `@capacitor/browser` e
+    `@capacitor/local-notifications` (essenciais ao app nativo, item 32),
+    `capacitor.config.json` com `allowNavigation`, `.gitignore` (chaves de
+    assinatura, `.env`, builds) e um `sw.js` **network-first** (cache v2:
+    cada abertura vai à rede primeiro e só usa cache se estiver offline — é a
+    correção definitiva do "as atualizações nunca chegam"). Reset para
+    `origin/main` mantendo exatamente essas alterações locais; `www/`
+    regenerado; `npm install` e `npx cap sync ios` feitos no SSD.
+    **Decisão do Tiago**: `capacitor.config.json` ganhou
+    `server.url = https://tiagocamargos1.github.io/Assistente/` — a app
+    nativa iOS/Android passa a abrir a página publicada em vez da cópia em
+    `www/`, por isso qualquer publicação no GitHub Pages chega ao iPhone na
+    abertura seguinte, sem Xcode. Consequências: (1) precisa de rede na
+    primeira abertura (na prática já precisava, tudo vive no Firestore);
+    (2) a origem muda de `capacitor://localhost` para `github.io`, logo o
+    login Google + PIN têm de ser feitos uma vez de novo no iPhone;
+    (3) o service worker não corre dentro da WKWebView remota — irrelevante,
+    porque no nativo as notificações são `LocalNotifications`; (4) `www/`
+    fica só como fallback/Android e continua a ser regenerado pelo
+    `cap:sync`. Foi necessário um último rebuild no Xcode para instalar esta
+    configuração no iPhone. Publicados no GitHub: `capacitor.config.json`,
+    `package.json`, `sw.js`, `.gitignore`, este ficheiro.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba

@@ -3,6 +3,8 @@
   "appName": "Assistente Pessoal",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "url": "https://tiagocamargos1.github.io/Assistente/",
+    "androidScheme": "https",
+    "allowNavigation": ["accounts.google.com", "tiagocamargos1.github.io"]
   }
 }

@@ -1,0 +1,39 @@
+# Dependências
+node_modules/
+
+# Segredos e chaves de assinatura — NUNCA commitar
+*.jks
+*.keystore
+*.p12
+*.pem
+*.mobileprovision
+key.properties
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+
+# Builds nativos
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+ios/App/build/
+ios/App/Pods/
+ios/DerivedData/
+
+# macOS
+.DS_Store
+
+# Notas com palavras-passe — nunca commitar
+*PALAVRA-PASSE*
+*SENHA*
+*PASSWORD*
+VERIFICACAO*
+
+# Saídas de build
+android/app/build/
+android/.gradle/
+android/local.properties
+!.env.assinatura
