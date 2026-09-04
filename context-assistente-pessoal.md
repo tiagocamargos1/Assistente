@@ -604,6 +604,25 @@ resolver isso primeiro.
       notificações no banner (ver pendente antigo) — a Monique e a Lu
       precisam de tocar em "Ativar" uma vez.
 
+39. **Botões grandes de marcar em todo o app + regra do Firestore que faltava.**
+    Depois de usar a aba Casa, o Tiago pediu que o botão grande (30px, redondo)
+    passasse a ser o padrão de todos os checkboxes. Feito via CSS em
+    `.task-check` (antes 16px quadrado), que já é reaproveitado pelas abas
+    Hoje, Tarefas (`taskHTML`) e Rotinas; os cards `.task-item` ganharam o
+    mesmo aspeto dos itens da Casa (fundo `surface2`, borda, raio 12px, verde
+    quando feito). Na aba Ideias, que só tinha o rótulo colorido para ciclar o
+    estado, foi acrescentado o mesmo botão redondo à esquerda (vazio = por
+    tratar, ◐ azul = em curso, ✓ verde = feita), que chama `cycleIdeaStatus`.
+    De caminho: removido um bloco morto de `setIdeaFilter`/`renderIdeas`
+    que estava aninhado dentro de `renderNotes()` (sobra do HTML corrompido
+    do item 34/35 — nunca corria; as versões válidas são as globais junto de
+    `saveIdea`). E corrigido um erro antigo descoberto ao testar a Casa: a
+    coleção `users/{uid}/projects` nunca teve regra no Firestore, por isso o
+    listener de projetos dava `permission-denied` em todos os logins (a
+    funcionalidade de projetos nos filtros nunca chegou a gravar nada).
+    Regra `match /users/{uid}/projects/{projectId} { allow read, write: if
+    isMe(uid); }` publicada no Firebase Console em 04/09/2026.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
