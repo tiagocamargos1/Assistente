@@ -642,7 +642,7 @@ resolver isso primeiro.
     `.left-panel` (`swipeToTab`), ordem `SWIPE_ORDER` = Hoje, Tarefas, Casa,
     Rotinas, Notas, Ideias, Semana (salta abas escondidas); ignora gestos que
     começam em campos de texto, no calendário da Semana, na navegação de
-    dias da Casa ou com modal aberto; exige ≥70 px horizontais, <600 ms, e
+    dias da Casa ou com modal aberto; exige ≥70 px horizontais, <900 ms, e
     mais horizontal do que vertical (para não interferir com o scroll).
     Animação curta de entrada (`swipe-left`/`swipe-right`).
 
