@@ -745,6 +745,20 @@ resolver isso primeiro.
     your files…" três vezes seguidas; plano B usado: commit no repo do SSD
     (feito por mim no VM) + `git push` pelo Tiago no Terminal do Mac.
 
+46. **Resumo da Casa no ecrã Hoje.** No topo do Hoje aparece um bloco
+    "🏡 Casa · 3/7 feitas · próxima: Almoço até 13:30" (ou "N em atraso" a
+    vermelho, ou "✓ tudo feito hoje") com as tarefas da casa ainda por
+    fazer em botões grandes — marcar aí é o mesmo que marcar na aba Casa
+    (`casaToggle(id, data)` ganhou um segundo parâmetro com a data, para
+    escrever sempre no documento de hoje mesmo que a aba Casa esteja a
+    mostrar outro dia). Por baixo, se houver compras pendentes, um atalho
+    "🛒 N itens na lista de compras →". Tocar no título abre a aba Casa.
+    Para isso existe um listener permanente do documento de hoje
+    (`listenCasaToday`/`casaTodayDay`), separado do da aba Casa, que
+    re-renderiza o Hoje a cada alteração — quando a Lu marca o almoço no
+    telemóvel dela, o cartão do Tiago atualiza-se sozinho. Quem não é
+    membro da Casa não vê nada disto (o bloco devolve vazio).
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -753,7 +767,7 @@ resolver isso primeiro.
       outro e-mail Google que não `lucyleiaoliveira@gmail.com`, o Tiago
       acrescenta-o em ⚙️ Tarefas da casa → Membros.
 - [x] ~~Casa: vista mensal em grelha~~ — FEITA (item 45).
-- [ ] Casa: resumo no ecrã "Hoje" (pendentes + próxima hora-limite).
+- [x] ~~Casa: resumo no ecrã "Hoje"~~ — FEITO (item 46).
 - [ ] Compras (item 44): testar com a Monique/Lu a acrescentar do telemóvel
       delas; ideias de v2 — categorias (mercearia/farmácia), partilhar a
       lista por WhatsApp como texto, e "Comprar:" a reconhecer quantidades

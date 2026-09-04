@@ -2376,7 +2376,7 @@ const CASA_DEFAULT_TASKS=[
   {id:'jantar',label:'Jantar das crianças',time:'20:00'},
   {id:'pacoca_noite',label:'Paçoca – Comida',time:'20:00'}
 ].map((t,i)=>({...t,order:i}));
-let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMonth=null,casaMonthDays={},fbUnsubCasaMonth=null;
+let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMonth=null,casaMonthDays={},fbUnsubCasaMonth=null,casaTodayDay=null,fbUnsubCasaToday=null;
 let fbUnsubCasa=null,fbUnsubCasaDay=null,casaMidnightTimer=null;
 let casaDraftTasks=[];
 function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`gemail_${cu}`)||'').toLowerCase();}
@@ -2389,6 +2389,7 @@ function startCasaListener(){
   if(fbUnsubCasa)fbUnsubCasa();
   if(fbUnsubCasaDay)fbUnsubCasaDay();
   if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};casaView='day';casaMonth=null;
+  if(fbUnsubCasaToday)fbUnsubCasaToday();fbUnsubCasaToday=null;casaTodayDay=null;casaTodayListenedFor=null;
   casa=null;casaDay=null;casaMember=false;casaDate=todayStr();
   casaSetTabVisible(false);
   if(!window.fbListenDoc)return;
@@ -2408,8 +2409,10 @@ function startCasaListener(){
       try{await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{name:me.name||cu,color:me.color||'#c9a84c',email:casaEmail()||null}}});}catch(e){}
     }
     listenCasaDay();
+    listenCasaToday();
     if(!fbUnsubShopping)startShoppingListener();
     renderCasa();
+    renderHoje();
   },err=>{
     // permission-denied = esta conta não pertence à casa → aba escondida, sem erro visível
     casa=null;casaMember=false;casaSetTabVisible(false);stopShoppingListener();
@@ -2491,8 +2494,40 @@ function renderCasaMonth(){
     <div class="casa-grid-wrap"><table class="casa-grid"><thead>${head}</thead><tbody>${body||'<tr><td colspan="32" style="text-align:center;color:var(--text-dim);padding:16px">Sem tarefas</td></tr>'}</tbody></table></div>
     <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Marcações no mês — ${totals||'—'}. Toca num dia para o abrir.</div>`;
 }
+// Documento de HOJE sempre ligado (independente do dia que a aba Casa está a mostrar) — alimenta o cartão no ecrã Hoje
+let casaTodayListenedFor=null;
+function listenCasaToday(){
+  const t=todayStr();
+  if(fbUnsubCasaToday&&casaTodayListenedFor===t)return;
+  if(fbUnsubCasaToday)fbUnsubCasaToday();
+  casaTodayListenedFor=t;
+  fbUnsubCasaToday=window.fbListenDoc(`household/${CASA_ID}/days/${t}`,d=>{casaTodayDay=d||{};renderHoje();},()=>{});
+}
+function casaHojeHTML(){
+  if(!casaMember||!casa)return'';
+  listenCasaToday();
+  const done=(casaTodayDay&&casaTodayDay.done)||{};
+  const extras=((casaTodayDay&&casaTodayDay.extras)||[]).map(e=>({...e,extra:true}));
+  const items=[...casaTasks(),...extras];
+  if(!items.length)return'';
+  const pend=items.filter(t=>!done[t.id]);
+  const nowMin=casaNowMin();const today=todayStr();
+  const next=pend.filter(t=>t.time&&casaMinutes(t.time)>=nowMin).sort((a,b)=>casaMinutes(a.time)-casaMinutes(b.time))[0];
+  const late=pend.filter(t=>t.time&&casaMinutes(t.time)<nowMin);
+  const shopN=(typeof shoppingPending==='function')?shoppingPending().length:0;
+  const rows=pend.map(t=>{const isLate=t.time&&casaMinutes(t.time)<nowMin;return `<div class="casa-item${isLate?' late':''}" onclick="casaToggle('${esc(t.id)}','${today}')">
+      <div class="casa-check"></div>
+      <div class="casa-lbl"><div>${esc(t.label)}</div>${isLate?'<div class="casa-sub">em atraso</div>':''}</div>
+      ${t.time?`<div class="casa-time">${isLate?'⚠️ ':'até '}${esc(t.time)}</div>`:''}
+    </div>`;}).join('');
+  const sub=pend.length?(late.length?`<span style="color:var(--red)">${late.length} em atraso</span>`:(next?`próxima: ${esc(next.label)} até ${esc(next.time)}`:`${pend.length} por fazer`)):'<span style="color:var(--green)">✓ tudo feito hoje</span>';
+  return `<div class="sdiv" style="cursor:pointer;" onclick="switchTab('casa')">🏡 Casa · ${items.length-pend.length}/${items.length} feitas · ${sub}</div>
+    ${rows}
+    ${shopN?`<button class="filter-btn" style="margin:2px 0 6px;" onclick="switchTab('compras')">🛒 ${shopN} ${shopN===1?'item':'itens'} na lista de compras →</button>`:''}`;
+}
 function stopCasaListeners(){
   if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};
+  if(fbUnsubCasaToday)fbUnsubCasaToday();fbUnsubCasaToday=null;casaTodayDay=null;casaTodayListenedFor=null;
   fbUnsubCasa=null;fbUnsubCasaDay=null;casa=null;casaDay=null;casaMember=false;
   stopShoppingListener();
 }
@@ -2564,16 +2599,17 @@ function renderCasa(){
       <button class="rep-btn" style="margin-top:0;" onclick="openCasaEdit()">⚙️ Editar tarefas</button>
     </div>`;
 }
-async function casaToggle(id){
+async function casaToggle(id,ds){
   if(!casaMember||!window.fbSave)return;
-  const path=`household/${CASA_ID}/days/${casaDate}`;
-  const done=(casaDay&&casaDay.done)||{};
+  const date=ds||casaDate;
+  const path=`household/${CASA_ID}/days/${date}`;
+  const done=((date===casaDate?casaDay:(date===todayStr()?casaTodayDay:null))||{}).done||{};
   try{
     if(done[id]){
       await window.fbUpdate(path,{[`done.${id}`]:window.fbDeleteField()});
     }else{
       const me=USERS[cu]||{};
-      await window.fbSave(path,{date:casaDate,done:{[id]:{by:cu,name:me.name||cu,at:new Date().toISOString()}}});
+      await window.fbSave(path,{date,done:{[id]:{by:cu,name:me.name||cu,at:new Date().toISOString()}}});
     }
   }catch(e){console.error('casaToggle',e);notify('Não foi possível guardar: '+(e.code||e.message),'error');}
 }
@@ -2672,6 +2708,7 @@ function startShoppingListener(){
   fbUnsubShopping=window.fbListenCol(`household/${CASA_ID}/shopping`,items=>{
     shopping=items;
     renderShopping();
+    if(currentTab()==='hoje')renderHoje();
   });
 }
 function stopShoppingListener(){if(fbUnsubShopping)fbUnsubShopping();fbUnsubShopping=null;shopping=[];}
@@ -3074,8 +3111,10 @@ function renderHoje(){
   const doneToday=tasks.filter(t=>t.done&&t.doneAt&&t.doneAt.slice(0,10)===today).length;
   const overdue=tasks.filter(t=>!t.done&&t.date&&t.date<today).length;
   const pendingToday=todayTasks.length;
+  const casaCard=(typeof casaHojeHTML==='function')?casaHojeHTML():'';
   el.innerHTML=`
-    <div class="sdiv">📅 Hoje · ${fd(today)}</div>
+    ${casaCard}
+    <div class="sdiv"${casaCard?' style="margin-top:14px;"':''}>📅 Hoje · ${fd(today)}</div>
     ${todayTasks.length?todayTasks.map(taskHTML).join(''):`<div class="empty-state" style="padding:10px 0;"><div class="icon">✦</div>${advFiltersActive()?'Nada aqui pra esse filtro':'Nada marcado pra hoje'}</div>`}
     ${upcoming.length?`<div class="sdiv" style="margin-top:14px;">Próximos</div>${upcoming.map(taskHTML).join('')}`:''}
     <button class="filter-btn" style="margin-top:10px;" onclick="switchTab('tasks')">Ver todas as tarefas →</button>
