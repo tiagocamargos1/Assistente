@@ -875,6 +875,19 @@ resolver isso primeiro.
     1194ceb), com `ios/App/App/public/`, `xcuserdata` e `.swiftpm`
     ignorados.
 
+54. **Limpeza das coleções antigas do Firestore (04/09):** no console só
+    existia `tasks_tiago` (42 docs) — `tasks_monique`, `notes_*` e
+    `routines_*` nunca foram criadas. Reconfirmei os 42 IDs em
+    `users/tiago/tasks` (185 tarefas, zero em falta) e o Tiago apagou a
+    coleção pelo console (apagar dados é ação que fica sempre com ele).
+    Depois: removidas do `index.html` a função `fbMigrateCollection` e a
+    chamada em `enterApp()` (e o import `getDocs`), e removido das regras o
+    bloco read-only das coleções antigas (regras publicadas às 14:48, 100
+    linhas). Coleções em uso: `authMap`, `calendar_cache`, `household`,
+    `people`, `prefs`, `push_subscriptions`, `users`.
+    Atenção: o projeto Firebase do Assistente é **`assistente-ee1f4`** —
+    `camargos-finance` é outro projeto (controlo financeiro), não confundir.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -946,10 +959,7 @@ e limitações conhecidas aceitas pelo Tiago, ver item 23)
       tarefa por tarefa). Decisão tomada: por enquanto NENHUM
       compartilhamento com testadores — cada um fica isolado até decidirmos
       o contrário.
-- [ ] Opcional/sem urgência: depois de confirmar a migração, pode-se (não é
-      obrigatório) limpar as coleções antigas `tasks_tiago`, `tasks_monique`,
-      `notes_tiago`, `notes_monique`, `routines_tiago`, `routines_monique`
-      no Firestore console — as regras já bloqueiam escrita nelas.
+- [x] ~~Limpar as coleções antigas no Firestore~~ — FEITO (item 54).
 - [ ] Em aberto / não decidido ainda: ideias de integração conceitual entre
       Assistente Pessoal e Setoriza (tratar na conversa própria do Setoriza,
       não aqui).

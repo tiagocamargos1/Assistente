@@ -14,7 +14,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithCredential, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
@@ -55,23 +55,6 @@ window.fbGet = async (path) => {
 };
 window.fbDelete = async (path) => {
   await deleteDoc(doc(db, path));
-};
-// One-time, safe copy from an old flat collection (e.g. "tasks_tiago") into a
-// new per-user subcollection (e.g. "users/tiago/tasks"). Never overwrites and
-// never deletes the source, so it's harmless to call on every login.
-window.fbMigrateCollection = async (oldPath, newPath) => {
-  try {
-    const oldSnap = await getDocs(collection(db, oldPath));
-    if (oldSnap.empty) return 0;
-    const newSnap = await getDocs(collection(db, newPath));
-    if (!newSnap.empty) return 0;
-    let count = 0;
-    for (const d of oldSnap.docs) {
-      await setDoc(doc(db, newPath, d.id), d.data());
-      count++;
-    }
-    return count;
-  } catch (e) { return 0; }
 };
 window.fbListen = (path, cb) => {
   return onSnapshot(doc(db, path), snap => cb(snap.exists() ? snap.data() : null));
@@ -1443,18 +1426,6 @@ async function enterApp(){
   // Wait for firebase
   if(!window.firebaseReady){
     await new Promise(r=>window.addEventListener('firebaseReady',r,{once:true}));
-  }
-  // One-time, harmless copy of any pre-existing data from the old flat
-  // collections into the new per-user subcollections (only runs once per
-  // person — no-ops instantly once migrated).
-  if(window.fbMigrateCollection){
-    try{
-      await Promise.all([
-        window.fbMigrateCollection(`tasks_${cu}`,`users/${cu}/tasks`),
-        window.fbMigrateCollection(`notes_${cu}`,`users/${cu}/notes`),
-        window.fbMigrateCollection(`routines_${cu}`,`users/${cu}/routines`)
-      ]);
-    }catch(e){}
   }
   startListeners();
   startCasaListener();
