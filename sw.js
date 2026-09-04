@@ -1,6 +1,6 @@
 // Assistente Pessoal — service worker
 // Handles: basic app-shell caching (fast/offline opening) + Web Push delivery.
-const CACHE_NAME = 'assistente-shell-v1';
+const CACHE_NAME = 'assistente-shell-v2';
 const SHELL_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -20,23 +20,25 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  const isSameOrigin = event.request.url.startsWith(self.location.origin);
+  // Network-first: every load tries the network first (bypassing the HTTP
+  // cache entirely via cache:'no-store'), so a fresh deploy shows up on the
+  // very next reload. Only falls back to the cached copy if the network
+  // request fails (offline). The old strategy served the cached copy
+  // instantly and only refreshed the cache in the background — correct for
+  // offline support, but it meant every reload was always one version
+  // behind whatever was just published, which is what made updates look
+  // like they "never arrive" on Mac/web.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      // 'reload' forces this fetch to skip the browser's own HTTP cache and
-      // go to the network, so a background update actually picks up a fresh
-      // deploy instead of re-caching whatever GitHub Pages' Cache-Control
-      // (max-age=600) had already stored for this URL.
-      const network = fetch(event.request, { cache: 'reload' })
-        .then((resp) => {
-          if (resp && resp.ok && event.request.url.startsWith(self.location.origin)) {
-            const copy = resp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return resp;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request, { cache: 'no-store' })
+      .then((resp) => {
+        if (resp && resp.ok && isSameOrigin) {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return resp;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
 
