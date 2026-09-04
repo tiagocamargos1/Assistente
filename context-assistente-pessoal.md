@@ -724,6 +724,22 @@ resolver isso primeiro.
     Casa (`startShoppingListener`/`stopShoppingListener`), por isso quem
     não é membro não vê a aba nem toca na coleção.
 
+45. **Vista mensal em grelha na aba Casa ("Dia | Mês").** É a tabela do
+    papel (tarefas nas linhas, dias do mês nas colunas) preenchida sozinha:
+    célula feita mostra a inicial de quem marcou na cor dessa pessoa (toque
+    longo/hover mostra nome e hora), dias passados sem marcação ficam a
+    vermelho, dias futuros esbatidos, coluna de hoje realçada. Setas ‹ › e
+    "Este mês" para navegar; legenda com os membros; rodapé com o total de
+    marcações por pessoa no mês; toque numa célula abre esse dia na vista
+    de dia. Implementação: `casaView` ('day'|'month'), `casaMonth`
+    ('YYYY-MM'), listener `listenCasaMonth()` na coleção inteira
+    `household/casa/days` (um doc por dia, pequeno) só ligado na primeira
+    vez que se abre a vista mensal; `renderCasaMonth()` gera uma tabela com
+    primeira coluna e cabeçalho fixos (`position:sticky`) dentro de um
+    contentor com scroll horizontal (`.casa-grid-wrap`), que ficou excluído
+    do gesto de swipe entre abas para não haver conflito. Só entram as
+    tarefas fixas da lista (as "só para este dia" não aparecem na grelha).
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -731,9 +747,8 @@ resolver isso primeiro.
       no banner para receberem os lembretes das horas-limite. Se a Lu usar
       outro e-mail Google que não `lucyleiaoliveira@gmail.com`, o Tiago
       acrescenta-o em ⚙️ Tarefas da casa → Membros.
-- [ ] Casa: vista mensal em grelha (tarefas × dias, igual ao papel) ficou
-      de fora da v1 por decisão do Tiago — candidata a v2, junto com um
-      resumo da Casa no ecrã "Hoje".
+- [x] ~~Casa: vista mensal em grelha~~ — FEITA (item 45).
+- [ ] Casa: resumo no ecrã "Hoje" (pendentes + próxima hora-limite).
 - [ ] Compras (item 44): testar com a Monique/Lu a acrescentar do telemóvel
       delas; ideias de v2 — categorias (mercearia/farmácia), partilhar a
       lista por WhatsApp como texto, e "Comprar:" a reconhecer quantidades

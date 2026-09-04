@@ -14,7 +14,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithCredential, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
@@ -81,6 +81,13 @@ window.fbListenCol = (path, cb) => {
     cb(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   });
 };
+// Variante de fbListen com callback de erro (necessária para a Casa: uma conta
+// que não é membro recebe permission-denied e a aba simplesmente não aparece).
+window.fbListenDoc = (path, cb, onErr) => {
+  return onSnapshot(doc(db, path), snap => cb(snap.exists() ? snap.data() : null), err => { if (onErr) onErr(err); });
+};
+window.fbUpdate = async (path, data) => { await updateDoc(doc(db, path), data); };
+window.fbDeleteField = () => deleteField();
 window.firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -167,6 +174,10 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .mais-item:active,.mais-item:hover{background:var(--surface2);}
 .tab-content{flex:1;min-height:0;overflow-y:auto;padding:11px 18px;display:none;}
 .tab-content.active{display:block;}
+.tab-content.swipe-left{animation:swl .22s ease;}
+.tab-content.swipe-right{animation:swr .22s ease;}
+@keyframes swl{from{opacity:.4;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes swr{from{opacity:.4;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
 .tab-content::-webkit-scrollbar{width:3px}.tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 /* FILTERS */
 .filter-row{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;}
@@ -174,16 +185,19 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .filter-btn:hover,.filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
 .filter-btn.sf.active{border-color:var(--purple);color:var(--purple);background:rgba(155,111,168,.1);}
 /* TASKS */
-.task-item{display:flex;align-items:flex-start;gap:9px;padding:8px 9px;border-radius:8px;margin-bottom:3px;transition:background .15s;animation:si .25s ease;}
+.task-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);transition:all .15s;animation:si .25s ease;}
+.task-item.done{border-color:rgba(90,158,111,.4);background:rgba(90,158,111,.08);}
 @keyframes si{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .task-item:hover{background:var(--surface2);}
-.task-check{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:10px;}
+/* Botão grande de marcar (padrão do app, igual à aba Casa): 30px, redondo, fácil de tocar no telemóvel */
+.task-check{width:30px;height:30px;border:2px solid var(--border);border-radius:50%;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:15px;-webkit-tap-highlight-color:transparent;}
+.task-check:active{transform:scale(.92);}
 .task-check:hover{border-color:var(--gold);}
 .task-item.done .task-check{background:var(--green);border-color:var(--green);color:white;}
 .task-item.inprog{background:rgba(90,126,160,.07);border-radius:8px;}
 .task-item.inprog .task-check{border-color:var(--blue);}
 .task-body{flex:1;min-width:0;}
-.task-text{font-size:13px;color:var(--text);line-height:1.4;}
+.task-text{font-size:14px;color:var(--text);line-height:1.4;font-weight:500;}
 .task-item.done .task-text{color:var(--text-dim);text-decoration:line-through;}
 .task-meta{font-size:10px;color:var(--text-muted);margin-top:2px;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
 .ttag{font-size:9px;padding:1px 6px;border-radius:20px;font-weight:500;}
@@ -305,6 +319,42 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .fb-status{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;margin-left:8px;}
 .fb-dot{width:5px;height:5px;border-radius:50%;background:var(--text-dim);}
 .fb-dot.on{background:var(--green);}
+/* CASA (tarefas diárias partilhadas) */
+.casa-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.casa-date{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold-light);}
+.casa-nav{display:flex;gap:4px;}
+.casa-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;}
+.casa-nav button:disabled{opacity:.4;cursor:default;}
+.casa-prog{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:12px;}
+.casa-prog div{height:100%;background:var(--green);transition:width .3s;}
+.casa-item{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .15s;}
+.casa-item:active{transform:scale(.99);}
+.casa-item.done{border-color:rgba(90,158,111,.4);background:rgba(90,158,111,.08);}
+.casa-item.late{border-color:rgba(192,96,96,.55);}
+.casa-check{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all .15s;}
+.casa-item.done .casa-check{background:var(--green);border-color:var(--green);color:#fff;}
+.casa-lbl{font-size:14px;font-weight:500;flex:1;min-width:0;}
+.casa-item.done .casa-lbl>div:first-child{color:var(--text-muted);text-decoration:line-through;}
+.casa-sub{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.casa-item.done .casa-sub{color:var(--green);}
+.casa-item.late .casa-sub{color:var(--red);}
+.casa-time{font-size:11px;color:var(--text-muted);white-space:nowrap;}
+.casa-item.late .casa-time{color:var(--red);font-weight:600;}
+.casa-avs{display:flex;gap:4px;}
+.casa-view{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px;}
+.casa-view button{background:transparent;border:none;color:var(--text-muted);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.casa-view button.active{background:var(--gold);color:var(--bg);}
+.casa-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px;background:var(--surface2);}
+.casa-grid{border-collapse:separate;border-spacing:0;font-size:11px;min-width:100%;}
+.casa-grid th,.casa-grid td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:0;text-align:center;height:34px;min-width:30px;}
+.casa-grid th{color:var(--text-dim);font-weight:600;font-size:10px;background:var(--surface2);position:sticky;top:0;z-index:2;}
+.casa-grid th:first-child,.casa-grid td:first-child{position:sticky;left:0;background:var(--surface);z-index:3;text-align:left;padding:0 10px;min-width:130px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:500;}
+.casa-grid th.today,.casa-grid td.today{background:rgba(201,168,76,.10);}
+.casa-grid td.miss{background:rgba(192,96,96,.18);}
+.casa-grid td.done span{display:inline-flex;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bg);}
+.casa-grid td.future{opacity:.35;}
+.casa-grid td.cell{cursor:pointer;}
+.casa-av{width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--bg);}
 @media(max-width:680px){
   html,body{height:100%;overflow:hidden;}
   .main{grid-template-columns:1fr;height:auto;max-height:none;overflow:hidden;}
@@ -405,13 +455,18 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)">📋 <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
       <div class="tab tab-more" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
       <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa">🎤</button>
-      <div class="tab" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
-      <div class="tab tab-more" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
+      <div class="tab" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab tab-more" data-tab="compras" onclick="switchTab('compras')" style="display:none;">🛒 <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
+      <div class="tab tab-more" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
+      <div class="tab tab-more" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
       <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
-      <div class="mais-item" onclick="switchTab(&#39;routines&#39;);closeMaisMenu()">🔁 Rotinas</div>
+      <div class="mais-item" data-mais="compras" onclick="switchTab('compras');closeMaisMenu()" style="display:none;">🛒 Compras</div>
+      <div class="mais-item" onclick="switchTab(&#39;notes&#39;);closeMaisMenu()">📝 Notas</div>
+      <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()">💡 Ideias</div>
       <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
     </div>
     <div class="tab-content active" id="tab-hoje">
@@ -435,16 +490,27 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <button class="rep-btn" style="margin-top:0;margin-bottom:10px;" onclick="openNewRoutine()">+ Nova rotina</button>
       <div id="routineList"></div>
     </div>
-        <div class="tab-content" id="tab-ideias">
-                <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>p>
-              <div class="filter-row" id="i
-                      <button class="filter-btn active" data-if="all" onclick="setIdeaFilter('all')">Todas</button>
-                      <button class="filter-btn" data-if="pendente" onclick="setIdeaFilter('pendente')">Por tratar</button>
-                      <button class="filter-btn" data-if="andamento" onclick="setIdeaFilter('andamento')">Em curso</button>
-                      <button class="filter-btn" data-if="feita" onclick="setIdeaFilter('feita')">Feitas</button>
-              </div>
-              <div id="ideaList"></div>
-        </div></strong>
+<div class="tab-content" id="tab-ideias">        
+  <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Caixa de despejo de ideias — fale ou digite <strong>"Ideia: …"</strong> no campo lá em cima, a qualquer momento, e ela cai aqui pra você tratar depois, com calma.</p>
+  <div class="filter-row" id="ideaFilterRow">
+    <button class="filter-btn active" data-if="all" onclick="setIdeaFilter('all')">Todas</button>
+    <button class="filter-btn" data-if="pendente" onclick="setIdeaFilter('pendente')">Por tratar</button>
+    <button class="filter-btn" data-if="andamento" onclick="setIdeaFilter('andamento')">Em curso</button>
+    <button class="filter-btn" data-if="feita" onclick="setIdeaFilter('feita')">Feitas</button>
+  </div>
+  <div id="ideaList">
+  </div>
+</div>
+<div class="tab-content" id="tab-casa">
+  <div id="casaContent"></div>
+</div>
+<div class="tab-content" id="tab-compras">
+  <div class="input-row" style="margin-bottom:12px;">
+    <input type="text" id="shopInput" placeholder="Acrescentar à lista… (ex.: leite, 2 pão)" onkeydown="shopKey(event)" style="flex:1;min-width:0;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:8px 10px;outline:none;">
+    <button class="send-btn" onclick="addShoppingFromField()" title="Acrescentar">+</button>
+  </div>
+  <div id="shopList"></div>
+</div>
   </div>
   <!-- RIGHT -->
   <div class="right-panel">
@@ -596,6 +662,23 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     <button class="close-btn" onclick="document.getElementById('newRoutineModal').classList.remove('open')">Cancelar</button>
   </div>
 </div>
+<!-- CASA: editar tarefas / membros -->
+<div class="modal-ov" id="casaEditModal">
+  <div class="modal-box">
+    <h2>🏡 Tarefas da casa</h2>
+    <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">Estas tarefas repetem-se todos os dias. A hora é opcional — quando existe, é a hora-limite e serve para os lembretes.</p>
+    <div class="rep-sec">
+      <div id="casaEditList"></div>
+      <button class="rep-btn" onclick="casaDraftAdd()">+ Adicionar tarefa</button>
+    </div>
+    <div class="rep-sec" id="casaEmailsWrap" style="display:none;">
+      <h3>Membros da casa (e-mails Google, um por linha)</h3>
+      <textarea id="casaEmails" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;resize:vertical;"></textarea>
+    </div>
+    <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveCasaEdit()">Guardar</button>
+    <button class="close-btn" onclick="document.getElementById('casaEditModal').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
 <!-- PIN SETUP MODAL -->
 <div class="modal-ov" id="pinSetupModal">
   <div class="modal-box">
@@ -716,7 +799,9 @@ let draftChecked={};
 function areaDef(key){
   if(AREAS[key])return AREAS[key];
   const c=customAreas.find(c=>c.key===key);
-  return c?{label:c.label,emoji:c.emoji||'🔖'}:null;
+   if(c)return{label:c.label,emoji:c.emoji||'🔖'};
+  if(key&&String(key).indexOf('custom_')===0)return{label:'Área removida',emoji:'🔖'};
+  return null;
 }
 function setArea(area,btn){
   currentArea=area;
@@ -919,6 +1004,8 @@ async function saveNote(note){
     idea.status=next;
     await saveIdea(idea);
   }
+  async function setIdeaFilter(f){ideaFilter=f;document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-if')===f);});renderIdeas();}
+    function renderIdeas(){var el=document.getElementById('ideaList');if(!el)return;var list=ideas;if(ideaFilter!=='all'){list=list.filter(function(i){return(i.status||'pendente')===ideaFilter;});}if(!list.length){el.innerHTML='<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia por aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: ..."</small></div>';return;}var cls={pendente:'tu',andamento:'tt',feita:'tg'};var lbl={pendente:'Por tratar',andamento:'Em curso',feita:'Feita'};el.innerHTML=list.map(function(i){var st=i.status||'pendente';var iid=String(i.id).replace(/'/g,'');var strike=st==='feita'?'text-decoration:line-through;color:var(--text-muted);':'';var chk=st==='feita'?'background:var(--green);border-color:var(--green);color:#fff;':(st==='andamento'?'border-color:var(--blue);color:var(--blue);':'');return '<div class="task-item'+(st==='feita'?' done':'')+'"><div class="task-check" style="'+chk+'" onclick="cycleIdeaStatus(\''+iid+'\')" title="Toque para mudar o estado">'+(st==='feita'?'✓':(st==='andamento'?'◐':''))+'</div><div style="flex:1;min-width:0;"><div class="task-text" style="'+strike+'">'+esc(i.text||'')+'</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"><span class="ttag '+cls[st]+'" style="cursor:pointer;" onclick="cycleIdeaStatus(\''+iid+'\')">'+lbl[st]+'</span></div></div><div class="task-actions"><span onclick="removeIdea(\''+iid+'\')" style="cursor:pointer;opacity:.6;padding:4px;">🗑️</span></div></div>';}).join('');}
 async function removeNote(id){
   if(!window.fbSave)return;
   await window.fbDelete(`users/${cu}/notes/${id}`);
@@ -1359,6 +1446,7 @@ async function enterApp(){
     }catch(e){}
   }
   startListeners();
+  startCasaListener();
   // Load prefs
   try{
     const prefs=await window.fbGet(`prefs/${cu}`);
@@ -1373,6 +1461,8 @@ async function enterApp(){
   applyAreaVisibility();
   initWeek();
   applyFamilyUI();
+  // Abrir direto numa aba (ex.: o push da Casa manda para ./?tab=casa)
+  try{const tp=new URLSearchParams(location.search).get('tab');if(tp&&document.getElementById('tab-'+tp))switchTab(tp);}catch(e){}
   focusCaptureIfQuick();
   if(pendingSiriTaskText){
     const t=pendingSiriTaskText;
@@ -1387,6 +1477,7 @@ function logout(){
   if(fbUnsubRoutines)fbUnsubRoutines();
   if(fbUnsubProjects)fbUnsubProjects();
   if(fbUnsubIdeas)fbUnsubIdeas();
+  stopCasaListeners();
   if(cu)clearStoredGoogle(cu);
   if(window.fbSignOut)window.fbSignOut();
   gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];ideas=[];
@@ -1567,6 +1658,15 @@ async function processInput(){
       notify('📝 Nota salva!','success');
       switchTab('notes');
     }
+    else if(parsed.type==='buy'){
+      if(!casaMember){notify('A lista de compras é da Casa — esta conta não faz parte de nenhuma.','error');}
+      else{
+        const parts=parsed.title.split(/\s*,\s*|\s+e\s+/i).map(x=>x.trim()).filter(Boolean);
+        for(const p of parts)await addShoppingItem(p);
+        notify(`🛒 ${parts.length>1?parts.length+' itens acrescentados':'Acrescentado'} à lista de compras!`,'success');
+        switchTab('compras');
+      }
+    }
     else if(parsed.type==='idea'){
       const idea={id:Date.now().toString(),text:parsed.title,status:'pendente',owner:cu,area:currentArea||null,createdAt:new Date().toISOString()};
       await saveIdea(idea);
@@ -1590,8 +1690,9 @@ function parseInput(inp, today){
   const low=inp.toLowerCase().trim();
   const todayStr=today.toISOString().split('T')[0];
   // ── Detect type ──
-  const isIdea=/^(ideia|idéia)\b[:\-–—,]?\s*/i.test(low);
-  const isNote=!isIdea&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
+  const isBuy=/^(comprar|compras?|lista de compras)\b[:\-–—,]?\s*/i.test(low);
+  const isIdea=!isBuy&&/^(ideia|idéia)\b[:\-–—,]?\s*/i.test(low);
+  const isNote=!isIdea&&!isBuy&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
   const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
     || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
@@ -1647,6 +1748,7 @@ function parseInput(inp, today){
   }
   // ── Clean title ──
     let title=inp
+          .replace(/^(comprar|compras?|lista de compras)\b[:\-–—,]?\s*/i,'')
           .replace(/^(ideia|idéia)\b[:\-–—,]?\s*/i,'')
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
     .replace(/\b(às|as|ás)\s*\d{1,2}[h:]?\d{0,2}\s*(am|pm)?\b/gi,'')
@@ -1658,12 +1760,13 @@ function parseInput(inp, today){
   const dateLabel=date?` para ${fd(date)}`:'';
   const timeLabel=time?` às ${time}`:'';
   let response='';
-  if(isIdea)response=`Ideia guardada na Caixa de Ideias! 💡`;
+  if(isBuy)response=`"${title}" acrescentado à lista de compras! 🛒`;
+  else if(isIdea)response=`Ideia guardada na Caixa de Ideias! 💡`;
     else if(isNote)response=`Nota salva! ✏️`;
   else if(isEvent)response=`Compromisso "${title}" agendado${dateLabel}${timeLabel}. ✅`;
   else response=`Tarefa "${title}" adicionada${dateLabel}. ✅`;
   return{
-    type:  isIdea?'idea':isNote?'note': isEvent?'event':'task',
+    type:  isBuy?'buy':isIdea?'idea':isNote?'note': isEvent?'event':'task',
     title,
     description:null,
     urgency: isUrgent?'urgent':'normal',
@@ -1692,12 +1795,36 @@ function toggleMic(){
   if(isListening){stopMic();return;}
   startMic();
 }
+// Voz: além do "resultado final" do motor (que no iOS/WebView muitas vezes
+// nunca chega), há um temporizador de silêncio — 2 s sem palavras novas e a
+// escuta pára sozinha; ao parar, o que foi ouvido é EXECUTADO (processInput),
+// não só escrito no campo. A flag micSubmitted evita executar duas vezes.
+// Dois prazos: antes da primeira palavra reconhecida dá-se mais tempo
+// (MIC_FIRST_MS), porque no iOS o reconhecimento demora alguns segundos a
+// devolver o primeiro resultado — parar aos 2 s aí matava a escuta antes de
+// haver texto ("ouve e volta sem escrever nada"). Depois da primeira palavra,
+// 2 s de silêncio (MIC_SILENCE_MS) terminam e executam.
+const MIC_SILENCE_MS=2000,MIC_FIRST_MS=8000;
+let micSilenceTimer=null,micSubmitted=false,micGotResult=false;
+function micArmSilence(){
+  if(micSilenceTimer)clearTimeout(micSilenceTimer);
+  micSilenceTimer=setTimeout(()=>{if(recognition)try{recognition.stop();}catch(e){}},micGotResult?MIC_SILENCE_MS:MIC_FIRST_MS);
+}
+function micSubmitIfPending(){
+  if(micSubmitted)return;
+  const txt=(document.getElementById('userInput').value||'').trim();
+  if(!txt)return;
+  micSubmitted=true;
+  document.getElementById('thinkMsg').textContent='Processando…';
+  setTimeout(()=>processInput(),150);
+}
 function startMic(){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   recognition=new SpeechRecognition();
   recognition.lang='pt-PT'; // Portuguese Portugal (works for BR too)
   recognition.continuous=false;
   recognition.interimResults=true;
+  micSubmitted=false;micGotResult=false;
   recognition.onstart=()=>{
     isListening=true;
     document.getElementById('micBtn').classList.add('listening');
@@ -1706,26 +1833,39 @@ function startMic(){
     document.getElementById('thinkMsg').textContent='Ouvindo… fale agora!';
     document.getElementById('thinking').classList.add('visible');
     document.getElementById('aiResp').classList.remove('visible');
+    micArmSilence();
   };
   recognition.onresult=(e)=>{
     let transcript='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
+    for(let i=0;i<e.results.length;i++){
       transcript+=e.results[i][0].transcript;
     }
     document.getElementById('userInput').value=transcript;
+    if(transcript.trim())micGotResult=true;
+    micArmSilence();
     // Auto-submit when final result
     if(e.results[e.results.length-1].isFinal){
-      document.getElementById('thinkMsg').textContent='Processando…';
-      setTimeout(()=>processInput(),400);
+      if(micSilenceTimer)clearTimeout(micSilenceTimer);
+      micSubmitIfPending();
     }
   };
   recognition.onerror=(e)=>{
+    if(micSilenceTimer)clearTimeout(micSilenceTimer);
     stopMic();
     if(e.error==='not-allowed')notify('Permita o acesso ao microfone nas configurações.','error');
     else if(e.error==='no-speech')notify('Nenhuma fala detectada. Tente novamente.','info');
+    else if(e.error==='aborted'){/* parado de propósito (silêncio ou toque) */}
     else notify(`Erro de voz: ${e.error}`,'error');
+    micSubmitIfPending();
   };
-  recognition.onend=()=>{stopMic();};
+  recognition.onend=()=>{
+    if(micSilenceTimer)clearTimeout(micSilenceTimer);
+    stopMic();
+    // O motor parou (silêncio, fim natural ou toque no ⏹): executar o que foi ouvido
+    const had=(document.getElementById('userInput').value||'').trim();
+    if(!had&&!micSubmitted)notify('Não percebi nada. Toca no 🎤 e fala logo a seguir.','info');
+    micSubmitIfPending();
+  };
   recognition.start();
 }
 function stopMic(){
@@ -2133,33 +2273,6 @@ function renderNotes(){
       <div class="note-meta">${fd2(n.createdAt)} · ${USERS[n.owner]?.name||'?'}</div>
       <button class="note-del" onclick="deleteNote('${String(n.id)}')">✕</button>
     </div>`).join('');
-  // ── IDEIAS (caixa de despejo de ideias) ───
-  function setIdeaFilter(f){
-      ideaFilter=f;
-      document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.if===f));
-      renderIdeas();
-  }
-  async function deleteIdea(id){await removeIdea(String(id));}
-  const IDEA_STATUS={pendente:{label:'Por tratar',cls:'tu'},andamento:{label:'Em curso',cls:'tt'},feita:{label:'Feita',cls:'tg'}};
-  function renderIdeas(){
-      const el=document.getElementById('ideaList');
-      const bdg=document.getElementById('bdgI');
-      const pendCount=ideas.filter(i=>(i.status||'pendente')!=='feita').length;
-      if(bdg)bdg.textContent=pendCount;
-      const list=ideaFilter==='all'?ideas:ideas.filter(i=>(i.status||'pendente')===ideaFilter);
-      if(!list.length){el.innerHTML=`<div class="empty-state"><div class="icon">💡</div>Nenhuma ideia aqui ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Comece com "Ideia: …"</small></div>`;return;}
-      el.innerHTML=list.map(i=>{
-            const st=IDEA_STATUS[i.status||'pendente'];
-            return`
-                <div class="note-card">
-                      <div class="note-text">${esc(i.text||'')}</div>
-                            <div class="note-meta">
-                                    <span class="ttag ${st.cls}" style="cursor:pointer;" onclick="cycleIdeaStatus('${String(i.id)}')" title="Toque para mudar o estado">${st.label}</span>
-                                            · ${fd2(i.createdAt)} · ${USERS[i.owner]?.name||'?'}
-                                                  </div>
-                                                        <button class="note-del" onclick="deleteIdea('${String(i.id)}')">✕</button>
-                                                            </div>`;}).join('');
-  }
 }
 // ── ROUTINES (recurring habits) ───────────────────
 function openNewRoutine(){
@@ -2241,6 +2354,446 @@ function renderRoutines(){
     </div>`;
   }).join('');
 }
+// ── CASA (tarefas diárias partilhadas do lar) ─────────────
+// Substitui a "Tabela das Férias" em papel: uma lista fixa de tarefas do dia
+// (comida do Paçoca, refeições das crianças, …) que qualquer membro da casa
+// marca com um toque, no próprio telemóvel. Cada marcação guarda QUEM marcou
+// e a HORA. A lista é a mesma todos os dias (renova-se sozinha à meia-noite)
+// e é editável a qualquer momento. Dados em Firestore:
+//   household/casa            → {tasks:[{id,label,time,order}], emails:[…], members:{uid:{name,color}}}
+//   household/casa/days/YYYY-MM-DD → {done:{taskId:{by,name,at}}, extras:[{id,label}], reminded:{…}}
+// A pertença à casa é decidida pelo e-mail Google (lista `emails`), tanto no
+// app como nas regras do Firestore — não depende dos uids fixos tiago/monique.
+const CASA_ID='casa';
+const CASA_OWNER_EMAIL='tiagocamargos@tocsmartgroup.com';
+const CASA_DEFAULT_EMAILS=['tiagocamargos@tocsmartgroup.com','moniqueabril@gmail.com','moniquegcamargos@gmail.com','lucyleiaoliveira@gmail.com'];
+const CASA_DEFAULT_TASKS=[
+  {id:'pacoca_manha',label:'Paçoca – Comida',time:'08:00'},
+  {id:'cafe',label:'Café da manhã das crianças',time:''},
+  {id:'vitamina',label:'Vitamina das crianças',time:''},
+  {id:'almoco',label:'Almoço das crianças',time:'13:30'},
+  {id:'lanche',label:'Lanche das crianças',time:''},
+  {id:'jantar',label:'Jantar das crianças',time:'20:00'},
+  {id:'pacoca_noite',label:'Paçoca – Comida',time:'20:00'}
+].map((t,i)=>({...t,order:i}));
+let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMonth=null,casaMonthDays={},fbUnsubCasaMonth=null;
+let fbUnsubCasa=null,fbUnsubCasaDay=null,casaMidnightTimer=null;
+let casaDraftTasks=[];
+function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`gemail_${cu}`)||'').toLowerCase();}
+function casaIsOwner(){return cu==='tiago'||casaEmail()===CASA_OWNER_EMAIL;}
+function casaTasks(){return((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));}
+function casaSetTabVisible(on){
+  document.querySelectorAll('[data-tab="casa"],[data-mais="casa"],[data-tab="compras"],[data-mais="compras"]').forEach(el=>el.style.display=on?'':'none');
+}
+function startCasaListener(){
+  if(fbUnsubCasa)fbUnsubCasa();
+  if(fbUnsubCasaDay)fbUnsubCasaDay();
+  if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};casaView='day';casaMonth=null;
+  casa=null;casaDay=null;casaMember=false;casaDate=todayStr();
+  casaSetTabVisible(false);
+  if(!window.fbListenDoc)return;
+  fbUnsubCasa=window.fbListenDoc(`household/${CASA_ID}`,async data=>{
+    if(!data){
+      // Ainda não existe: só o dono (Tiago) cria a casa, com a tabela do papel como ponto de partida
+      if(casaIsOwner()){
+        try{await window.fbSave(`household/${CASA_ID}`,{name:'Casa',emails:CASA_DEFAULT_EMAILS,tasks:CASA_DEFAULT_TASKS,members:{},createdAt:new Date().toISOString()});}catch(e){console.error('casa create',e);}
+      }
+      return;
+    }
+    casa=data;casaMember=true;casaSetTabVisible(true);
+    // Regista-me como membro (uid → nome/cor), para os avatares e para o job de lembretes saber a quem enviar push
+    const me=USERS[cu]||{};
+    const m=(data.members||{})[cu];
+    if(!m||m.name!==me.name){
+      try{await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{name:me.name||cu,color:me.color||'#c9a84c',email:casaEmail()||null}}});}catch(e){}
+    }
+    listenCasaDay();
+    if(!fbUnsubShopping)startShoppingListener();
+    renderCasa();
+  },err=>{
+    // permission-denied = esta conta não pertence à casa → aba escondida, sem erro visível
+    casa=null;casaMember=false;casaSetTabVisible(false);stopShoppingListener();
+    if(!(err&&/permission/i.test(err.code||err.message||'')))console.error('casa listen',err);
+  });
+  if(casaMidnightTimer)clearTimeout(casaMidnightTimer);
+  scheduleCasaMidnight();
+}
+function scheduleCasaMidnight(){
+  const n=new Date();const next=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1,0,0,5);
+  casaMidnightTimer=setTimeout(()=>{if(casaDate===todayStr())return;casaDate=todayStr();listenCasaDay();scheduleCasaMidnight();},next-n);
+}
+function listenCasaDay(){
+  if(fbUnsubCasaDay)fbUnsubCasaDay();
+  casaDay=null;
+  if(!casaMember||!window.fbListenDoc)return;
+  fbUnsubCasaDay=window.fbListenDoc(`household/${CASA_ID}/days/${casaDate}`,d=>{casaDay=d||{};renderCasa();syncCasaLocalNotifs();},()=>{});
+}
+// ── Vista mensal: ouve a coleção inteira de dias (é pequena: um doc por dia) e filtra pelo mês no ecrã
+function listenCasaMonth(){
+  if(fbUnsubCasaMonth||!casaMember||!window.fbListenCol)return;
+  fbUnsubCasaMonth=window.fbListenCol(`household/${CASA_ID}/days`,list=>{
+    casaMonthDays={};for(const d of list)casaMonthDays[d.id]=d;
+    if(casaView==='month')renderCasa();
+  });
+}
+function casaSetView(v){
+  casaView=v;
+  if(v==='month'){if(!casaMonth)casaMonth=todayStr().slice(0,7);listenCasaMonth();}
+  renderCasa();
+}
+function casaShiftMonth(delta){
+  const [y,m]=(casaMonth||todayStr().slice(0,7)).split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  casaMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  renderCasa();
+}
+function casaOpenDay(ds){casaDate=ds;casaView='day';listenCasaDay();renderCasa();}
+function casaMemberColor(uid){const m=(casa&&casa.members||{})[uid];return(m&&m.color)||(USERS[uid]&&USERS[uid].color)||'#c9a84c';}
+function renderCasaMonth(){
+  const [y,m]=casaMonth.split('-').map(Number);
+  const nDays=new Date(y,m,0).getDate();
+  const today=todayStr();const nowMin=casaNowMin();
+  const tasks=casaTasks();
+  const monthLabel=new Date(y,m-1,1).toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
+  const members=Object.entries((casa&&casa.members)||{});
+  const legend=members.map(([uid,mm])=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;"><span class="casa-av" style="background:${esc(mm.color||'#c9a84c')};width:18px;height:18px;font-size:9px;">${esc((mm.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(mm.name||uid)}</span></span>`).join('')+`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:rgba(192,96,96,.4)"></span><span style="font-size:11px;color:var(--text-muted)">não feito</span></span>`;
+  let head='<tr><th>Tarefa</th>';
+  for(let d=1;d<=nDays;d++){const ds=`${casaMonth}-${String(d).padStart(2,'0')}`;head+=`<th class="${ds===today?'today':''}">${d}</th>`;}
+  head+='</tr>';
+  // Linha por tarefa + uma linha "Extras" com o total de tarefas só-desse-dia feitas
+  let body='';
+  const stats={};
+  for(const t of tasks){
+    body+=`<tr><td title="${esc(t.label)}">${esc(t.label)}${t.time?` <span style="color:var(--text-dim);font-size:10px">${esc(t.time)}</span>`:''}</td>`;
+    for(let d=1;d<=nDays;d++){
+      const ds=`${casaMonth}-${String(d).padStart(2,'0')}`;
+      const day=casaMonthDays[ds];const dn=day&&day.done&&day.done[t.id];
+      let cls='cell',inner='';
+      if(dn){cls+=' done';inner=`<span style="background:${esc(casaMemberColor(dn.by))}" title="${esc(dn.name||dn.by||'')} · ${casaFmtTime(dn.at)}">${esc((dn.name||dn.by||'?').charAt(0).toUpperCase())}</span>`;stats[dn.by]=(stats[dn.by]||0)+1;}
+      else if(ds<today||(ds===today&&t.time&&casaMinutes(t.time)<nowMin)){cls+=' miss';}
+      else{cls+=' future';}
+      if(ds===today)cls+=' today';
+      body+=`<td class="${cls}" onclick="casaOpenDay('${ds}')">${inner}</td>`;
+    }
+    body+='</tr>';
+  }
+  const totals=members.map(([uid,mm])=>`${esc(mm.name||uid)}: <strong>${stats[uid]||0}</strong>`).join(' · ');
+  return `
+    <div class="casa-hdr">
+      <div class="casa-nav"><button onclick="casaShiftMonth(-1)">‹</button><button onclick="casaMonth=todayStr().slice(0,7);renderCasa()" ${casaMonth===today.slice(0,7)?'disabled':''}>Este mês</button><button onclick="casaShiftMonth(1)">›</button></div>
+      <div class="casa-date" style="text-transform:capitalize">${esc(monthLabel)}</div>
+      <div class="casa-view"><button onclick="casaSetView('day')">Dia</button><button class="active" onclick="casaSetView('month')">Mês</button></div>
+    </div>
+    <div style="margin:-4px 0 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${legend}</div>
+    <div class="casa-grid-wrap"><table class="casa-grid"><thead>${head}</thead><tbody>${body||'<tr><td colspan="32" style="text-align:center;color:var(--text-dim);padding:16px">Sem tarefas</td></tr>'}</tbody></table></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Marcações no mês — ${totals||'—'}. Toca num dia para o abrir.</div>`;
+}
+function stopCasaListeners(){
+  if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};
+  fbUnsubCasa=null;fbUnsubCasaDay=null;casa=null;casaDay=null;casaMember=false;
+  stopShoppingListener();
+}
+function casaShiftDate(delta){
+  const [y,m,d]=casaDate.split('-').map(Number);
+  const n=new Date(y,m-1,d+delta);
+  casaDate=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  listenCasaDay();renderCasa();
+}
+function casaGoToday(){casaDate=todayStr();listenCasaDay();renderCasa();}
+function casaFmtDate(ds){
+  const [y,m,d]=ds.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  const wd=['domingo','segunda','terça','quarta','quinta','sexta','sábado'][dt.getDay()];
+  const label=ds===todayStr()?'Hoje':wd.charAt(0).toUpperCase()+wd.slice(1);
+  return `${label}, ${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}`;
+}
+function casaMinutes(hhmm){if(!hhmm)return null;const [h,m]=hhmm.split(':').map(Number);return h*60+m;}
+function casaNowMin(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function casaFmtTime(iso){try{return new Date(iso).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});}catch(e){return'';}}
+function casaAllItems(){
+  const extras=((casaDay&&casaDay.extras)||[]).map(e=>({...e,extra:true}));
+  return[...casaTasks(),...extras];
+}
+function casaPendingToday(){
+  if(!casaMember)return 0;
+  const done=(casaDay&&casaDay.done)||{};
+  return casaAllItems().filter(t=>!done[t.id]).length;
+}
+function renderCasa(){
+  const el=document.getElementById('casaContent');
+  if(!el)return;
+  const bdg=document.getElementById('bdgC');
+  if(bdg&&casaDate===todayStr())bdg.textContent=casaPendingToday();
+  if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🏡</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
+  if(casaView==='month'){el.innerHTML=renderCasaMonth();return;}
+  const items=casaAllItems();
+  const done=(casaDay&&casaDay.done)||{};
+  const isToday=casaDate===todayStr();
+  const nowMin=casaNowMin();
+  const doneCount=items.filter(t=>done[t.id]).length;
+  const pct=items.length?Math.round(doneCount/items.length*100):0;
+  const members=Object.entries((casa&&casa.members)||{});
+  const avs=members.map(([uid,m])=>`<div class="casa-av" title="${esc(m.name||uid)}" style="background:${esc(m.color||'#c9a84c')}">${esc((m.name||uid).charAt(0).toUpperCase())}</div>`).join('');
+  const rows=items.map(t=>{
+    const dn=done[t.id];
+    const tMin=casaMinutes(t.time);
+    const late=!dn&&isToday&&tMin!==null&&nowMin>tMin;
+    const timeLbl=t.time?(late?`⚠️ ${t.time}`:`até ${t.time}`):'';
+    const sub=dn?`✓ ${esc(dn.name||dn.by||'')} · ${casaFmtTime(dn.at)}`:(late?'em atraso':(t.extra?'só hoje':''));
+    return `<div class="casa-item${dn?' done':''}${late?' late':''}" onclick="casaToggle('${esc(t.id)}')">
+      <div class="casa-check">${dn?'✓':''}</div>
+      <div class="casa-lbl"><div>${esc(t.label)}</div>${sub?`<div class="casa-sub">${sub}</div>`:''}</div>
+      ${timeLbl?`<div class="casa-time">${timeLbl}</div>`:''}
+      ${t.extra?`<button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();casaRemoveExtra('${esc(t.id)}')">✕</button>`:''}
+    </div>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="casa-hdr">
+      <div class="casa-nav"><button onclick="casaShiftDate(-1)">‹</button><button onclick="casaGoToday()" ${isToday?'disabled':''}>Hoje</button><button onclick="casaShiftDate(1)">›</button></div>
+      <div class="casa-date">${casaFmtDate(casaDate)}</div>
+      <div style="display:flex;align-items:center;gap:8px;"><div class="casa-avs">${avs}</div><div class="casa-view"><button class="active" onclick="casaSetView('day')">Dia</button><button onclick="casaSetView('month')">Mês</button></div></div>
+    </div>
+    <div class="casa-prog"><div style="width:${pct}%"></div></div>
+    <div style="font-size:11px;color:var(--text-dim);margin:-6px 0 10px;text-align:right;">${doneCount}/${items.length} feitas</div>
+    ${rows||`<div class="empty-state"><div class="icon">🏡</div>Sem tarefas. Toque em "Editar tarefas" para começar.</div>`}
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="rep-btn" style="margin-top:0;" onclick="casaAddExtra()">+ Tarefa só para este dia</button>
+      <button class="rep-btn" style="margin-top:0;" onclick="openCasaEdit()">⚙️ Editar tarefas</button>
+    </div>`;
+}
+async function casaToggle(id){
+  if(!casaMember||!window.fbSave)return;
+  const path=`household/${CASA_ID}/days/${casaDate}`;
+  const done=(casaDay&&casaDay.done)||{};
+  try{
+    if(done[id]){
+      await window.fbUpdate(path,{[`done.${id}`]:window.fbDeleteField()});
+    }else{
+      const me=USERS[cu]||{};
+      await window.fbSave(path,{date:casaDate,done:{[id]:{by:cu,name:me.name||cu,at:new Date().toISOString()}}});
+    }
+  }catch(e){console.error('casaToggle',e);notify('Não foi possível guardar: '+(e.code||e.message),'error');}
+}
+async function casaAddExtra(){
+  const label=prompt('Tarefa só para este dia:');
+  if(!label||!label.trim())return;
+  const extras=[...(((casaDay&&casaDay.extras)||[])),{id:'x_'+Date.now(),label:label.trim()}];
+  try{await window.fbSave(`household/${CASA_ID}/days/${casaDate}`,{date:casaDate,extras});}catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+async function casaRemoveExtra(id){
+  const extras=((casaDay&&casaDay.extras)||[]).filter(e=>e.id!==id);
+  try{
+    await window.fbSave(`household/${CASA_ID}/days/${casaDate}`,{extras});
+    if(casaDay&&casaDay.done&&casaDay.done[id])await window.fbUpdate(`household/${CASA_ID}/days/${casaDate}`,{[`done.${id}`]:window.fbDeleteField()});
+  }catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+// ── Editar tarefas / membros ──
+function openCasaEdit(){
+  casaDraftTasks=casaTasks().map(t=>({...t}));
+  renderCasaEditList();
+  const emWrap=document.getElementById('casaEmailsWrap');
+  if(emWrap){emWrap.style.display=casaIsOwner()?'':'none';document.getElementById('casaEmails').value=((casa&&casa.emails)||[]).join('\n');}
+  document.getElementById('casaEditModal').classList.add('open');
+}
+function renderCasaEditList(){
+  const el=document.getElementById('casaEditList');
+  if(!el)return;
+  el.innerHTML=casaDraftTasks.map((t,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+    <input type="text" value="${esc(t.label)}" oninput="casaDraftTasks[${i}].label=this.value" placeholder="Tarefa" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+    <input type="time" value="${esc(t.time||'')}" onchange="casaDraftTasks[${i}].time=this.value" title="Hora-limite (opcional)" style="width:92px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 4px;">
+    <button onclick="casaDraftMove(${i},-1)" class="filter-btn" style="padding:6px 8px;">↑</button>
+    <button onclick="casaDraftMove(${i},1)" class="filter-btn" style="padding:6px 8px;">↓</button>
+    <button onclick="casaDraftTasks.splice(${i},1);renderCasaEditList()" class="filter-btn" style="padding:6px 8px;color:var(--red);">✕</button>
+  </div>`).join('')||'<div style="font-size:12px;color:var(--text-dim);">Nenhuma tarefa.</div>';
+}
+function casaDraftMove(i,d){
+  const j=i+d;if(j<0||j>=casaDraftTasks.length)return;
+  [casaDraftTasks[i],casaDraftTasks[j]]=[casaDraftTasks[j],casaDraftTasks[i]];
+  renderCasaEditList();
+}
+function casaDraftAdd(){casaDraftTasks.push({id:'t_'+Date.now(),label:'',time:''});renderCasaEditList();setTimeout(()=>{const inputs=document.querySelectorAll('#casaEditList input[type=text]');if(inputs.length)inputs[inputs.length-1].focus();},50);}
+async function saveCasaEdit(){
+  const tasks=casaDraftTasks.filter(t=>t.label&&t.label.trim()).map((t,i)=>({id:t.id,label:t.label.trim(),time:t.time||'',order:i}));
+  const data={tasks};
+  if(casaIsOwner()){
+    const emails=document.getElementById('casaEmails').value.split(/[\n,;\s]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@'));
+    if(!emails.includes(CASA_OWNER_EMAIL))emails.unshift(CASA_OWNER_EMAIL);
+    data.emails=emails;
+  }
+  try{
+    await window.fbSave(`household/${CASA_ID}`,data);
+    document.getElementById('casaEditModal').classList.remove('open');
+    notify('✓ Tarefas da casa atualizadas!','success');
+  }catch(e){notify('Erro ao guardar: '+(e.code||e.message),'error');}
+}
+// ── Lembretes locais (app nativo): 30 min antes e à hora-limite, só para o que ainda não está feito ──
+// Recalculado a cada alteração do dia (se alguém marcar noutro telemóvel, o aviso é cancelado aqui também).
+const CASA_NOTIF_BASE=777000;
+async function syncCasaLocalNotifs(){
+  const plugin=localNotifPlugin();
+  if(!plugin||!isNativeApp()||casaDate!==todayStr())return;
+  try{
+    const cancel=[];for(let i=0;i<100;i++)cancel.push({id:CASA_NOTIF_BASE+i});
+    await plugin.cancel({notifications:cancel});
+    const done=(casaDay&&casaDay.done)||{};
+    const now=new Date();
+    let idx=0;
+    for(const t of casaTasks()){
+      if(!t.time||done[t.id])continue;
+      const [h,m]=t.time.split(':').map(Number);
+      const at=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0);
+      const pre=new Date(at.getTime()-30*60000);
+      const list=[];
+      if(pre>now)list.push({id:CASA_NOTIF_BASE+idx*2,title:'🏡 Casa — daqui a 30 min',body:`${t.label} (até às ${t.time})`,schedule:{at:pre,allowWhileIdle:true},sound:'default'});
+      if(at>now)list.push({id:CASA_NOTIF_BASE+idx*2+1,title:'🏡 Casa — hora-limite',body:`${t.label} ainda não está marcado (${t.time})`,schedule:{at,allowWhileIdle:true},sound:'default'});
+      for(const n of list){try{await plugin.schedule({notifications:[n]});}catch(e){}}
+      idx++;if(idx>=50)break;
+    }
+  }catch(e){}
+}
+// ── COMPRAS (lista de compras partilhada do lar) ───────────
+// Segunda funcionalidade da Casa: uma lista única de compras para todos os
+// membros. Qualquer um acrescenta (no campo de cima com "Comprar: leite",
+// por voz, ou na própria aba), qualquer um marca como comprado com um toque
+// — fica registado quem e quando. O histórico do que já foi comprado vira
+// "Sugestões" (um toque volta a pôr na lista), que é o que substitui a lista
+// de papel que se reescreve todas as semanas.
+//   household/casa/shopping/{id} → {label, qty, addedBy, addedByName, addedAt, bought, boughtBy, boughtByName, boughtAt}
+// Mesma pertença por e-mail da Casa (regras do Firestore: household/{hid}/{sub}/{doc}).
+let shopping=[],fbUnsubShopping=null,shoppingShowBought=false;
+function normLabel(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ');}
+function startShoppingListener(){
+  if(fbUnsubShopping)fbUnsubShopping();
+  shopping=[];
+  if(!casaMember||!window.fbListenCol)return;
+  fbUnsubShopping=window.fbListenCol(`household/${CASA_ID}/shopping`,items=>{
+    shopping=items;
+    renderShopping();
+  });
+}
+function stopShoppingListener(){if(fbUnsubShopping)fbUnsubShopping();fbUnsubShopping=null;shopping=[];}
+function shoppingPending(){return shopping.filter(i=>!i.bought).sort((a,b)=>(a.addedAt||'')<(b.addedAt||'')?-1:1);}
+function shoppingBought(){return shopping.filter(i=>i.bought).sort((a,b)=>(a.boughtAt||'')>(b.boughtAt||'')?-1:1);}
+// Sugestões: rótulos já comprados alguma vez que não estão na lista agora,
+// ordenados por quantas vezes foram comprados (o que se compra sempre vem primeiro).
+function shoppingSuggestions(){
+  const pending=new Set(shoppingPending().map(i=>normLabel(i.label)));
+  const count={},label={};
+  for(const i of shopping){
+    if(!i.bought)continue;
+    const k=normLabel(i.label);if(!k||pending.has(k))continue;
+    count[k]=(count[k]||0)+1;label[k]=label[k]||i.label;
+  }
+  return Object.keys(count).sort((a,b)=>count[b]-count[a]||a.localeCompare(b)).slice(0,24).map(k=>({key:k,label:label[k],n:count[k]}));
+}
+async function addShoppingItem(text){
+  if(!casaMember||!window.fbSave)return false;
+  const raw=String(text||'').trim();
+  if(!raw)return false;
+  // "3 pacotes de leite" / "leite x2" → quantidade opcional
+  let label=raw,qty='';
+  const m1=raw.match(/^(\d+[\w.,]*)\s+(.+)$/);const m2=raw.match(/^(.+?)\s*[x×]\s*(\d+)$/i);
+  if(m2){label=m2[1].trim();qty=m2[2];}else if(m1){qty=m1[1];label=m1[2].trim();}
+  const key=normLabel(label);
+  if(shoppingPending().some(i=>normLabel(i.label)===key)){notify(`"${label}" já está na lista.`,'info');return true;}
+  const me=USERS[cu]||{};
+  const id=Date.now().toString()+Math.random().toString(36).slice(2,6);
+  try{
+    await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{id,label,qty,addedBy:cu,addedByName:me.name||cu,addedAt:new Date().toISOString(),bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
+    return true;
+  }catch(e){notify('Erro ao guardar: '+(e.code||e.message),'error');return false;}
+}
+async function toggleShoppingItem(id){
+  const it=shopping.find(i=>String(i.id)===String(id));
+  if(!it||!window.fbSave)return;
+  const me=USERS[cu]||{};
+  try{
+    if(it.bought)await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{bought:false,boughtBy:null,boughtByName:null,boughtAt:null});
+    else await window.fbSave(`household/${CASA_ID}/shopping/${id}`,{bought:true,boughtBy:cu,boughtByName:me.name||cu,boughtAt:new Date().toISOString()});
+  }catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+async function removeShoppingItem(id){
+  if(!window.fbDelete)return;
+  try{await window.fbDelete(`household/${CASA_ID}/shopping/${id}`);}catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+async function addShoppingFromField(){
+  const inp=document.getElementById('shopInput');
+  if(!inp)return;
+  const ok=await addShoppingItem(inp.value);
+  if(ok){inp.value='';inp.focus();}
+}
+function shopKey(e){if(e.key==='Enter'){e.preventDefault();addShoppingFromField();}}
+async function clearBoughtOld(){
+  // Limpa comprados com mais de 60 dias (o histórico recente chega para as sugestões)
+  const cutoff=new Date(Date.now()-60*86400000).toISOString();
+  const old=shopping.filter(i=>i.bought&&i.boughtAt&&i.boughtAt<cutoff);
+  if(!old.length){notify('Nada com mais de 60 dias para limpar.','info');return;}
+  if(!confirm(`Apagar ${old.length} item(ns) comprados há mais de 60 dias?`))return;
+  for(const i of old){try{await window.fbDelete(`household/${CASA_ID}/shopping/${i.id}`);}catch(e){}}
+  notify('✓ Histórico limpo.','success');
+}
+function renderShopping(){
+  const el=document.getElementById('shopList');
+  if(!el)return;
+  const pend=shoppingPending();
+  const bdg=document.getElementById('bdgS');if(bdg)bdg.textContent=pend.length;
+  if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🛒</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
+  const rows=pend.map(i=>`<div class="task-item" onclick="toggleShoppingItem('${esc(i.id)}')">
+      <div class="task-check"></div>
+      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''}</div></div>
+      <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();removeShoppingItem('${esc(i.id)}')">✕</button>
+    </div>`).join('');
+  const sugg=shoppingSuggestions();
+  const suggHtml=sugg.length?`<div class="sdiv">Sugestões — já compraram antes</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${sugg.map(s=>`<button class="filter-btn" onclick="addShoppingItem('${esc(s.label).replace(/'/g,'&#39;')}')">+ ${esc(s.label)}${s.n>1?` <span style="opacity:.6">×${s.n}</span>`:''}</button>`).join('')}</div>`:'';
+  const bought=shoppingBought();
+  const boughtHtml=bought.length?`<div class="sdiv" style="cursor:pointer;" onclick="shoppingShowBought=!shoppingShowBought;renderShopping()">${shoppingShowBought?'▾':'▸'} Comprados (${bought.length})</div>`+(shoppingShowBought?bought.slice(0,40).map(i=>`<div class="task-item done" onclick="toggleShoppingItem('${esc(i.id)}')">
+      <div class="task-check">✓</div>
+      <div class="task-body"><div class="task-text">${esc(i.label)}</div><div class="note-meta" style="color:var(--green)">✓ ${esc(i.boughtByName||'')}${i.boughtAt?` · ${fd2(i.boughtAt)}`:''}</div></div>
+    </div>`).join('')+`<button class="rep-btn" onclick="clearBoughtOld()">🧹 Limpar comprados há mais de 60 dias</button>`:''):'';
+  el.innerHTML=(rows||`<div class="empty-state"><div class="icon">🛒</div>Lista vazia<br><small style="font-size:11px;margin-top:6px;display:block;">Escreve aqui em cima, ou diz "Comprar: leite" no campo de voz.</small></div>`)+suggHtml+boughtHtml;
+}
+// ── SWIPE ENTRE ABAS (telemóvel) ─────────────────
+// Deslizar o conteúdo para a esquerda/direita passa para a aba seguinte/
+// anterior, pela ordem abaixo (só as abas visíveis — Casa é ignorada para
+// quem não é membro). Não dispara quando o gesto começa num campo de texto,
+// quando é mais vertical do que horizontal (scroll normal) ou é muito curto.
+const SWIPE_ORDER=['hoje','tasks','casa','compras','routines','notes','ideias','week'];
+function swipeTabs(){
+  return SWIPE_ORDER.filter(t=>{const el=document.querySelector(`.tab[data-tab="${t}"]`);return el&&el.style.display!=='none';});
+}
+function currentTab(){const c=document.querySelector('.tab-content.active');return c?c.id.replace('tab-',''):'hoje';}
+function swipeToTab(dir){
+  const order=swipeTabs();
+  const i=order.indexOf(currentTab());
+  if(i<0)return;
+  const j=i+dir;
+  if(j<0||j>=order.length)return;
+  closeMaisMenu();
+  switchTab(order[j]);
+  const c=document.getElementById('tab-'+order[j]);
+  if(c){c.classList.remove('swipe-left','swipe-right');void c.offsetWidth;c.classList.add(dir>0?'swipe-left':'swipe-right');}
+}
+(function(){
+  const area=document.querySelector('.left-panel');
+  if(!area)return;
+  let sx=0,sy=0,st=0,active=false;
+  area.addEventListener('touchstart',e=>{
+    const t=e.touches[0];
+    const tag=(e.target.tagName||'').toLowerCase();
+    active=!(tag==='input'||tag==='textarea'||tag==='select'||e.target.closest('.modal-ov,.week-grid,.casa-nav,.casa-view,.casa-grid-wrap'));
+    sx=t.clientX;sy=t.clientY;st=Date.now();
+  },{passive:true});
+  area.addEventListener('touchend',e=>{
+    if(!active)return;active=false;
+    const t=e.changedTouches[0];
+    const dx=t.clientX-sx,dy=t.clientY-sy,dt=Date.now()-st;
+    if(dt>900)return;                       // arrasto lento = não é swipe
+    if(Math.abs(dx)<70)return;              // demasiado curto
+    if(Math.abs(dy)>Math.abs(dx)*0.6)return; // mais vertical do que horizontal = scroll
+    if(document.querySelector('.modal-ov.open'))return;
+    swipeToTab(dx<0?1:-1);
+  },{passive:true});
+})();
 // ── BRIEFING ─────────────────────────────────────
 function renderCalBriefing(){
   const today=new Date().toISOString().split('T')[0];
@@ -2296,13 +2849,15 @@ function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('dat
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   const maisTab=document.getElementById('tabMais');
-  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='routines'||tab==='ideias');
+  if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='notes'||tab==='ideias'||tab==='compras');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   if(tab==='hoje')renderHoje();
   if(tab==='week')renderWeek();
   if(tab==='routines')renderRoutines();
   if(tab==='ideias')renderIdeas();
+  if(tab==='casa')renderCasa();
+  if(tab==='compras')renderShopping();
 }
 function toggleMaisMenu(){
   const m=document.getElementById('maisMenu');
