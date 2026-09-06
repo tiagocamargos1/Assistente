@@ -74,6 +74,12 @@
 				<string>assistentepessoal</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.150189154211-rk2nslqrvo3o3q6q7s2553osqfan3o3v</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>O Assistente usa o microfone para criar tarefas, notas e ideias por voz.</string>
