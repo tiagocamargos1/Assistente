@@ -933,6 +933,42 @@ resolver isso primeiro.
       está aprovado e ligado; se um dia o browser limpar os dados, aparece
       um código novo e basta aprovar outra vez.
 
+56. **TestFlight — primeiro build submetido (06/09).**
+    - **Contas Apple**: o Apple ID com o Developer Program (e o que o Xcode
+      usa, equipa `CZ2956VY73`) é **tiagocamargos@tocsmartgroup.com**; a
+      conta pessoal `tio…@icloud.com` NÃO está inscrita — foi a causa do
+      "Sua conta Apple não está ativada para o App Store Connect". O Tiago
+      aceitou os Termos do App Store Connect e o Program License Agreement
+      atualizado (ambos obrigatórios para upload).
+    - **App Store Connect**: app "Assistente Pessoal" criada — ID
+      **6809151015**, bundle `com.tocsmartgroup.assistente`, idioma pt-PT,
+      SKU `assistente-pessoal-ios`. Informações de teste preenchidas
+      (descrição beta, e-mail de feedback, URL de marketing, URL da
+      política de privacidade, contacto de revisão com telefone, conta de
+      demonstração Google para o revisor — escrita pelo Tiago —, notas
+      para a revisão a explicar o OAuth em modo teste e o PIN).
+      Conformidade de exportação: "Nenhum dos algoritmos" (só HTTPS).
+    - **Xcode**: só o Tiago pode usar menus (o meu acesso ao Xcode é só de
+      clique) → ele fez destino "Any iOS Device (arm64)" + Product →
+      Archive; eu cliquei Distribute App → App Store Connect → Upload.
+      Build **1.0 (1)** carregado e processado. Menu Integrate abre o
+      assistente do Xcode Cloud — não é isso; cancelar.
+    - **Grupo externo "Família"** criado (via API interna do ASC, porque a
+      secção "Testes externos" só apareceu na barra lateral depois de
+      existir um grupo): link público
+      **https://testflight.apple.com/join/VYmRpKGC**, sem limite de
+      testadores, feedback ativado. Build 1 adicionado ao grupo com o
+      texto "O que testar" → estado **"Aguardando revisão"** (revisão beta
+      da Apple, normalmente < 1 dia). Depois de aprovado, a Monique e a Lu
+      instalam a app TestFlight e abrem o link.
+    - **Manutenção**: cada build de TestFlight expira em 90 dias — como a
+      app carrega o GitHub Pages (server.url), o conteúdo está sempre
+      atualizado; basta repetir Archive + upload a cada ~3 meses (subir
+      `CURRENT_PROJECT_VERSION`). Alternativa sem cabo nem revisão: grupo
+      interno com a Monique adicionada em "Usuários e acesso".
+    - Pendente relacionado: aviso do DSA (status de comerciante na UE) —
+      só é preciso para publicar na App Store, não para o TestFlight.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -952,6 +988,9 @@ resolver isso primeiro.
       no WhatsApp) — projeto já corrigido, ver item 52. Voltar a testar
       "Nova tarefa no Assistente Pessoal" após atualização do iOS; até lá
       usar o atalho pessoal na app Atalhos (item 52).
+- [ ] TestFlight: esperar a aprovação da revisão beta (build 1.0 (1),
+      item 56) e enviar o link https://testflight.apple.com/join/VYmRpKGC
+      à Monique e à Lu; confirmar que instalam e fazem login.
 - [ ] Lojas (App Store + passagem do Play de teste fechado para
       produção): falta o material de submissão — descrição e categoria da
       ficha, capturas de ecrã iPhone/Android (idealmente com a Casa e as
