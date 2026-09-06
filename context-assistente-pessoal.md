@@ -1075,10 +1075,18 @@ resolver isso primeiro.
     - Decisão do Tiago: ecrã de consentimento fica em **"Teste"** → os
       refresh tokens expiram ao fim de 7 dias (reconectar 1×/semana no
       iPhone). Passar a "Em produção" (sem verificação) tiraria o limite.
-    - **Falta**: novo Archive no Xcode (o Info.plist mudou → a app da
-      loja/TestFlight só apanha o esquema novo com build novo) e teste
-      real no iPhone: login → fechar app → esperar >1 h → abrir → agenda
-      sem "Conectar Google". A parte web já está publicada com o push.
+    - Build **1.0 (2)** (CURRENT_PROJECT_VERSION=2 no pbxproj) arquivado
+      pelo Tiago e carregado por mim (Organizer → Distribute App → App
+      Store Connect); processado às 14:3x. Adicionado ao grupo Família,
+      mas a Apple recusou a submissão à revisão beta
+      (`ANOTHER_BUILD_IN_REVIEW`: o build 1 ainda está em revisão) →
+      criei o grupo **interno "Equipa"** (id 8c449476-…, acesso a todos
+      os builds) com o Tiago como testador interno: builds internos não
+      passam por revisão, por isso o build 2 fica disponível de imediato
+      na app TestFlight do iPhone dele. Quando o build 1 sair da revisão,
+      submeter o 2 (POST betaAppReviewSubmissions) para a Família.
+    - **Falta**: teste real no iPhone com o build 2: login → fechar app →
+      esperar >1 h → abrir por PIN → agenda sem "Conectar Google".
 
 ## Próximos passos (pendentes)
 
