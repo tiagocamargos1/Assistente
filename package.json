@@ -4,7 +4,7 @@
   "private": true,
   "description": "Empacotamento nativo (Capacitor) do Assistente Pessoal para iOS e Android, em cima do PWA já existente (index.html/manifest.json/sw.js na raiz do repositório).",
   "scripts": {
-    "sync-www": "cp index.html manifest.json sw.js icon-192.png icon-512.png www/",
+    "sync-www": "cp index.html ecra.html manifest.json sw.js icon-192.png icon-512.png www/",
     "cap:sync": "npm run sync-www && npx cap sync"
   },
   "dependencies": {
