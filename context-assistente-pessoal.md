@@ -1013,6 +1013,12 @@ resolver isso primeiro.
     por isso seria um mini-app à parte: marcar tarefas da Casa e ver a
     lista do dia, sincronizado via Firestore REST/URLSession. Guardar como
     projeto futuro, depois da publicação.
+    **SUBMETIDA (06/09 13:50):** tipo de lançamento mudado para **manual**
+    (a pedido do Tiago — a app só fica pública quando ele carregar em
+    "Lançar esta versão" depois da aprovação) e "Enviar para revisão"
+    feito pelo Tiago → estado **"Aguardando revisão"** (até 48 h). Em
+    paralelo o build 1.0 (1) continua "Aguardando revisão" no TestFlight
+    (grupo Família).
 
 ## Próximos passos (pendentes)
 
@@ -1036,8 +1042,9 @@ resolver isso primeiro.
 - [ ] TestFlight: esperar a aprovação da revisão beta (build 1.0 (1),
       item 56) e enviar o link https://testflight.apple.com/join/VYmRpKGC
       à Monique e à Lu; confirmar que instalam e fazem login.
-- [ ] App Store: ficha pronta, iPad incluído (item 57). Tiago: carregar
-      em "Adicionar para revisão" → "Enviar para revisão".
+- [ ] App Store: versão 1.0 **em revisão** desde 06/09 (item 57).
+      Quando aprovada: Tiago carrega em "Lançar esta versão" (lançamento
+      manual). Se a Apple rejeitar, responder pelo Resolution Center.
 - [ ] Apple Watch: app nativa watchOS (mini-app da Casa) — projeto futuro
       pedido pelo Tiago (item 57).
 - [ ] Play Store: passar de teste fechado para produção — reutilizar
