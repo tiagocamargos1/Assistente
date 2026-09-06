@@ -1085,8 +1085,12 @@ resolver isso primeiro.
       passam por revisão, por isso o build 2 fica disponível de imediato
       na app TestFlight do iPhone dele. Quando o build 1 sair da revisão,
       submeter o 2 (POST betaAppReviewSubmissions) para a Família.
-    - **Falta**: teste real no iPhone com o build 2: login → fechar app →
-      esperar >1 h → abrir por PIN → agenda sem "Conectar Google".
+    - Tiago instalou o build 2 pelo grupo interno e confirmou às 14:5x:
+      o login Google voltou à app e a agenda carregou (esquema de URL +
+      troca do code OK). **Falta** o teste da renovação: abrir por PIN
+      >1 h depois → agenda sem "Conectar Google". Há um lembrete
+      agendado (send_later) para ~15:56 de 06/09 nesta sessão; se o
+      build 1 já tiver saído da revisão beta, submeter o 2 à Família.
 
 ## Próximos passos (pendentes)
 
@@ -1115,10 +1119,10 @@ resolver isso primeiro.
       manual). Se a Apple rejeitar, responder pelo Resolution Center.
 - [ ] Apple Watch: app nativa watchOS (mini-app da Casa) — projeto futuro
       pedido pelo Tiago (item 57).
-- [ ] Play Store (item 58): (a) Tiago envia a ficha atualizada para
-      revisão em "Visão geral da publicação"; (b) conseguir o 12.º
-      testador do teste fechado; (c) esperar 14 dias; (d) "Solicitar a
-      produção" e promover a versão.
+- [ ] Play Store (item 58): (a) ~~ficha enviada para revisão~~ FEITO
+      06/09 15:01 ("Alterações em análise": descrição + capturas);
+      (b) conseguir o 12.º testador do teste fechado; (c) esperar 14
+      dias; (d) "Solicitar a produção" e promover a versão.
 - [x] ~~Calendar iPhone: implementar OAuth code + PKCE com cliente iOS~~
       — FEITO (item 59).
 - [ ] Calendar iPhone (item 59): Tiago faz Product → Archive no Xcode e
