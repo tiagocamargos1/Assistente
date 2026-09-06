@@ -720,6 +720,16 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
 <script>
 const CLIENT_ID='150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com';
 const SCOPES='https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+// Cliente OAuth do tipo "iOS" (Google Cloud, projeto Assistente TOC). Só o
+// app nativo iOS o usa, no fluxo authorization-code + PKCE: o Safari do
+// iPhone (ITP) bloqueia a renovação silenciosa por iframe que funciona no
+// Chrome, por isso no iOS guardamos um refresh token e renovamos por POST
+// direto ao endpoint de token — sem segredo de cliente (PKCE dispensa-o).
+const IOS_CLIENT_ID='150189154211-rk2nslqrvo3o3q6q7s2553osqfan3o3v.apps.googleusercontent.com';
+const IOS_REDIRECT='com.googleusercontent.apps.150189154211-rk2nslqrvo3o3q6q7s2553osqfan3o3v:/oauth2redirect';
+function isIosNative(){
+  try{return isNativeApp()&&window.Capacitor.getPlatform()==='ios';}catch(e){return false;}
+}
 const USERS={tiago:{name:'Tiago',emoji:'T',color:'#c9a84c'},monique:{name:'Monique',emoji:'M',color:'#9b6fa8'}};
 // ── LOGIN DEBUG TRAIL ──────────────────────────────
 // The Google login was looping back to the login screen with zero visible
@@ -1181,6 +1191,7 @@ function clearStoredGoogle(uid){
   localStorage.removeItem(`gtoken_${uid}`);
   localStorage.removeItem(`gtoken_expiry_${uid}`);
   localStorage.removeItem(`gprofile_${uid}`);
+  localStorage.removeItem(`grefresh_${uid}`);
 }
 // ── DYNAMIC PROFILES (sign-up beyond Tiago/Monique) ──
 const PALETTE=['#c9a84c','#9b6fa8','#5a9e6f','#5a7ea0','#c06060','#3fa7a3','#a87f4c','#7a6cc7'];
@@ -1298,6 +1309,10 @@ function startGoogleAuth(){
   // back to the app via the assistentepessoal:// custom scheme — see the
   // 'appUrlOpen' listener below, which is where onToken() actually runs
   // for this path.
+  if(isIosNative()){
+    startIosPkceAuth();
+    return;
+  }
   if(isNativeApp()){
     const bridge='https://tiagocamargos1.github.io/Assistente/oauth-bridge.html';
     const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(bridge)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
@@ -1315,6 +1330,75 @@ function startGoogleAuth(){
   const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
   dbg('startGoogleAuth: redirecting to accounts.google.com now');
   window.location.href=url;
+}
+// ── PKCE (app nativo iOS) ────────────────────────
+function b64url(bytes){
+  let str='';for(const b of bytes)str+=String.fromCharCode(b);
+  return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function startIosPkceAuth(){
+  const verifier=b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
+  const challenge=b64url(new Uint8Array(digest));
+  try{localStorage.setItem('pkce_verifier',verifier);}catch(e){}
+  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${IOS_CLIENT_ID}&redirect_uri=${encodeURIComponent(IOS_REDIRECT)}&response_type=code&scope=${encodeURIComponent(SCOPES)}&code_challenge=${challenge}&code_challenge_method=S256&prompt=select_account`;
+  const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+  dbg('startIosPkceAuth: opening system browser (code+PKCE)');
+  if(browser)browser.open({url});else window.location.href=url;
+}
+async function googleTokenRequest(params){
+  const body=new URLSearchParams(params).toString();
+  const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+  return j;
+}
+// Recebe o ?code= devolvido pelo Google via o esquema invertido do cliente
+// iOS, troca-o por access+refresh token e segue pelo onToken() normal.
+async function handleIosPkceCallback(rawUrl){
+  const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+  if(browser&&browser.close)browser.close().catch(()=>{});
+  let code=null,err=null;
+  try{
+    const q=rawUrl.split('?')[1]||'';
+    const p=new URLSearchParams(q.split('#')[0]);
+    code=p.get('code');err=p.get('error');
+  }catch(e){}
+  dbg(`handleIosPkceCallback: code=${!!code} error=${err||'none'}`);
+  if(!code){notify('Login com Google cancelado ou recusado.','info');return;}
+  let verifier='';
+  try{verifier=localStorage.getItem('pkce_verifier')||'';localStorage.removeItem('pkce_verifier');}catch(e){}
+  let pendingUid=null;
+  try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
+  if(pendingUid)cu=pendingUid;
+  try{
+    const j=await googleTokenRequest({client_id:IOS_CLIENT_ID,code,code_verifier:verifier,grant_type:'authorization_code',redirect_uri:IOS_REDIRECT});
+    if(j.refresh_token&&cu){try{localStorage.setItem(`grefresh_${cu}`,j.refresh_token);}catch(e){}}
+    dbg(`handleIosPkceCallback: exchange ok, refresh=${!!j.refresh_token}`);
+    onToken(j.access_token);
+  }catch(e){
+    dbg(`handleIosPkceCallback: exchange FAILED — ${e&&e.message||e}`);
+    notify('Não foi possível concluir o login com o Google: '+(e&&e.message||e),'error');
+  }
+}
+// Renovação no iOS: usa o refresh token guardado (dura ~7 dias enquanto o
+// ecrã de consentimento estiver em modo "Teste"; sem limite em produção).
+async function refreshIosToken(){
+  let rt=null;
+  try{rt=localStorage.getItem(`grefresh_${cu}`);}catch(e){}
+  if(!rt)return null;
+  try{
+    const j=await googleTokenRequest({client_id:IOS_CLIENT_ID,refresh_token:rt,grant_type:'refresh_token'});
+    gToken=j.access_token;
+    gTokenExpiry=Date.now()+((j.expires_in||3500)-60)*1000;
+    if(cu)persistGoogle(cu);
+    dbg('refreshIosToken: ok');
+    return gToken;
+  }catch(e){
+    dbg(`refreshIosToken: FAILED — ${e&&e.message||e}`);
+    if(/invalid_grant/.test(String(e&&e.message))){try{localStorage.removeItem(`grefresh_${cu}`);}catch(x){}}
+    return null;
+  }
 }
 async function onToken(tk){
   dbg('onToken: started');
@@ -1387,6 +1471,11 @@ let gTokenExpiry=0;
 // just times out below and falls back to asking to reconnect manually.
 async function getValidToken(){
   if(gToken&&Date.now()<gTokenExpiry)return gToken;
+  if(isIosNative()){
+    const tk=await refreshIosToken();
+    if(!tk)notify('Sessão do Google expirada. Toque em "Conectar Google" para ver a agenda.','info');
+    return tk;
+  }
   return new Promise(resolve=>{
     let done=false;
     const iframe=document.createElement('iframe');
@@ -3413,7 +3502,8 @@ if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
     if(!data||!data.url)return;
     let host='';
     try{host=new URL(data.url).hostname;}catch(e){}
-    if(host==='oauthcallback'){handleOAuthCallbackUrl(data.url);}
+    if(data.url.indexOf('com.googleusercontent.apps.')===0){handleIosPkceCallback(data.url);}
+    else if(host==='oauthcallback'){handleOAuthCallbackUrl(data.url);}
     else{handleSiriUrl(data.url);}
   });
 }

@@ -1045,6 +1045,41 @@ resolver isso primeiro.
     Apple Watch: notificações da app já chegam ao relógio via espelhamento
     do iPhone; ações só com app watchOS própria (projeto futuro).
 
+59. **Calendar no iPhone — OAuth code + PKCE (06/09).** Implementado para
+    o app nativo iOS (`isIosNative()` = Capacitor + plataforma "ios"; o
+    Android e a PWA continuam no fluxo implícito de sempre).
+    - Google Cloud (projeto Assistente TOC): novo cliente OAuth do tipo
+      **iOS** "Assistente iOS", bundle `com.tocsmartgroup.assistente`,
+      App Store ID 6809151015, Team CZ2956VY73 → `IOS_CLIENT_ID` =
+      `150189154211-rk2nslqrvo3o3q6q7s2553osqfan3o3v.apps.googleusercontent.com`.
+      Redirect = esquema invertido
+      `com.googleusercontent.apps.150189154211-rk2n…3o3v:/oauth2redirect`
+      (`IOS_REDIRECT`), registado em `ios/App/App/Info.plist`
+      (CFBundleURLTypes, ao lado de `assistentepessoal`).
+    - Firebase Auth → Google → "IDs de cliente de projetos externos": o
+      cliente iOS foi adicionado à lista (o web já lá estava); o botão
+      Salvar só ativa depois de expandir "Configuração do SDK da Web".
+      Nome público do projeto passou a "Assistente Pessoal".
+    - `index.html`: `startGoogleAuth()` → `startIosPkceAuth()` (verifier
+      48 bytes base64url em `localStorage.pkce_verifier`, challenge S256,
+      `response_type=code`, abre no SFSafariViewController via
+      @capacitor/browser). O `appUrlOpen` reconhece URLs que começam por
+      `com.googleusercontent.apps.` → `handleIosPkceCallback()`: troca o
+      `code` em `https://oauth2.googleapis.com/token` (client_id +
+      code_verifier, sem segredo), guarda `grefresh_<uid>` e segue pelo
+      `onToken()` normal (Firebase `signInWithCredential` com o access
+      token). `getValidToken()` no iOS chama `refreshIosToken()`
+      (grant_type=refresh_token) em vez do iframe `prompt=none`;
+      `invalid_grant` apaga o refresh token e pede "Conectar Google".
+      `clearStoredGoogle()` também limpa `grefresh_<uid>`.
+    - Decisão do Tiago: ecrã de consentimento fica em **"Teste"** → os
+      refresh tokens expiram ao fim de 7 dias (reconectar 1×/semana no
+      iPhone). Passar a "Em produção" (sem verificação) tiraria o limite.
+    - **Falta**: novo Archive no Xcode (o Info.plist mudou → a app da
+      loja/TestFlight só apanha o esquema novo com build novo) e teste
+      real no iPhone: login → fechar app → esperar >1 h → abrir → agenda
+      sem "Conectar Google". A parte web já está publicada com o push.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -1076,12 +1111,13 @@ resolver isso primeiro.
       revisão em "Visão geral da publicação"; (b) conseguir o 12.º
       testador do teste fechado; (c) esperar 14 dias; (d) "Solicitar a
       produção" e promover a versão.
-- [ ] Calendar iPhone: implementar OAuth code + PKCE com cliente iOS
-      (refresh token no aparelho) — item 58.
-- [ ] Calendar no iPhone: confirmar que, com o token expirado, entrar por
-      PIN carrega a agenda sem "Conectar Google" (item 53). Se falhar
-      (ITP do Safari), fazer a solução definitiva: OAuth com refresh token
-      + Cloud Function — único desenvolvimento de peso ainda em aberto.
+- [x] ~~Calendar iPhone: implementar OAuth code + PKCE com cliente iOS~~
+      — FEITO (item 59).
+- [ ] Calendar iPhone (item 59): Tiago faz Product → Archive no Xcode e
+      sobe o build 1.0 (2) ao TestFlight (Info.plist ganhou o esquema
+      `com.googleusercontent.apps.…`); depois testar no iPhone: login
+      Google → esperar >1 h → abrir por PIN → agenda carrega sem
+      "Conectar Google". Lembrar: em modo "Teste" reconecta 1×/semana.
 
 - [x] ~~Testar ao vivo as áreas personalizadas (item 28)~~ — CONFIRMADO (item 36): criar, atribuir a uma tarefa, excluir a área e reabrir a tarefa testados com sucesso. Um bug real foi encontrado nesse processo (a exclusão apagava silenciosamente a área da tarefa ao salvar) e corrigido — ver item 36.
 - [x] ~~Testar ao vivo a nova configuração de áreas (item 27)~~ — CONFIRMADO (item 37): desmarquei uma área padrão (Deus) numa conta com tarefa usando essa área, confirmei que sumiu do resumo do topo e do filtro, mas a tarefa continuou aparecendo normalmente com a tag visível e editável sem perder o valor da área. Área padrão nunca fica órfã (ao contrário da personalizada — ver item 36), porque `AREAS` é um dicionário fixo no código.
