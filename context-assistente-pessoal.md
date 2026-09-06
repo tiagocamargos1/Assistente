@@ -888,6 +888,50 @@ resolver isso primeiro.
     Atenção: o projeto Firebase do Assistente é **`assistente-ee1f4`** —
     `camargos-finance` é outro projeto (controlo financeiro), não confundir.
 
+55. **"Ecrã da casa" (`ecra.html`) — modo frigorífico/tablet (06/09).** O
+    Tiago tem um Samsung Family Hub (RS90F66BETEF, ecrã grande com browser)
+    e quer que qualquer pessoa em casa marque as tarefas do dia ali, sem
+    login de ninguém. Implementado como página à parte, publicada no mesmo
+    GitHub Pages: `https://tiagocamargos1.github.io/Assistente/ecra.html`.
+    - **Ligação sem conta**: a página entra com **Firebase Anonymous Auth**
+      (provedor "Anônimo" ativado no Console em 06/09, SEM "limpeza
+      automática" — essa opção apagaria a conta do frigorífico ao fim de 30
+      dias). Usa `initializeApp(config,'ecra')` (instância com nome próprio)
+      para a sessão anónima não colidir com a sessão Google do Assistente
+      quando as duas páginas abrem no mesmo browser.
+    - **Aprovação por código**: o ecrã cria `household/casa/devices/{uid}`
+      → `{code, name, ua, approved:false, createdAt}` (código de 6 letras
+      derivado do uid, sem 0/O/1/I) e mostra-o em grande. Um membro abre o
+      Assistente → Casa → ⚙️ → secção **"📺 Ecrãs da casa"** (visível a
+      todos os membros; listener `startCasaDevicesListener`, botões
+      Aprovar/✕) → `approved:true`. O ecrã reage em tempo real. Se for
+      removido, volta sozinho ao estado "à espera" e recria o pedido.
+    - **Regras** (publicadas 06/09 08:43, 115 linhas): `isHouseDevice(hid)`
+      = signedIn && `exists`/`get` de `devices/{request.auth.uid}` com
+      `approved == true`; `household/{hid}` read para membros/dono/ecrã,
+      update só membros/dono; `days` e `shopping` read/write também para
+      ecrã aprovado; `devices/{devUid}`: o próprio uid só pode `create` com
+      `approved:false` e ler o seu doc; membros/dono leem, atualizam e
+      apagam. O ecrã **nunca** chega a `users/*`, `prefs`, agenda, etc.
+    - **UI**: relógio e data grandes, duas colunas (tarefas de hoje com
+      barra de progresso e atraso a vermelho; lista de compras por
+      categoria com campo para acrescentar), botões enormes. Marcar abre
+      "Quem fez?" com um botão por membro (`casa.members`, cores) + "Outro";
+      grava `done[id]={by:<memberKey>,name,at,via:'ecra'}` — por isso a
+      grelha mensal, o feed e as estatísticas por pessoa funcionam como se
+      tivesse sido marcado no telemóvel. Tocar numa tarefa feita pergunta
+      "Desmarcar?". Comprar → "Quem comprou?". Itens acrescentados no ecrã
+      ficam com `addedByName:'Ecrã da casa'`, categoria "outros". Recarrega
+      sozinho às 04:00 (apanha versões novas); muda de dia sozinho.
+    - **Testado ao vivo** no Chrome do Tiago: pedido → código 3VNJYV →
+      aprovado no modal → tarefas/compras apareceram → marcar como "Outro"
+      → visto no Firestore (`via:'ecra'`) → desmarcar → remover o ecrã de
+      teste (voltou ao overlay de aprovação). `sync-www` passou a copiar
+      também `ecra.html`.
+    - **No frigorífico**: abrir a app Internet do Family Hub, ir ao link
+      acima, aprovar o código no telemóvel, e guardar a página nos
+      favoritos/ecrã inicial do frigorífico.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
