@@ -928,9 +928,10 @@ resolver isso primeiro.
       → visto no Firestore (`via:'ecra'`) → desmarcar → remover o ecrã de
       teste (voltou ao overlay de aprovação). `sync-www` passou a copiar
       também `ecra.html`.
-    - **No frigorífico**: abrir a app Internet do Family Hub, ir ao link
-      acima, aprovar o código no telemóvel, e guardar a página nos
-      favoritos/ecrã inicial do frigorífico.
+    - **Confirmado no frigorífico pelo Tiago (06/09): "Funcionou lindão"** —
+      o browser do Family Hub corre o SDK do Firebase sem problema. O ecrã
+      está aprovado e ligado; se um dia o browser limpar os dados, aparece
+      um código novo e basta aprovar outra vez.
 
 ## Próximos passos (pendentes)
 
