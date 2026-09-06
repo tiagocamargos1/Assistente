@@ -1020,6 +1020,31 @@ resolver isso primeiro.
     paralelo o build 1.0 (1) continua "Aguardando revisão" no TestFlight
     (grupo Família).
 
+58. **Play Store — estado e ficha atualizada (06/09).** Produção está
+    **bloqueada pela regra da Google para contas pessoais**: teste fechado
+    com ≥12 testadores aceites durante ≥14 dias antes de poder pedir
+    acesso de produção. Estado no Painel: 11/12 testadores; o relógio dos
+    14 dias só conta a partir do 12.º. → falta **1 testador** aceitar o
+    convite do teste fechado (a Lu/Monique com outra conta, a Annie, um
+    amigo…). Depois dos 14 dias: "Solicitar a produção" (questionário) e
+    promover a versão do teste fechado para produção.
+    Ficha ("Página Detalhes do app", pt-BR, já "No ar" para o teste
+    fechado): substituídas as 4 capturas antigas (ecrãs escuros de
+    login/PIN) por `loja/play-0*.png` (1080×1920, 9:16 — a captura de
+    iPhone dentro de um cartão com fundo escuro, porque o Play exige 9:16
+    exato) e descrição completa reescrita com Casa/Compras/Ecrã da casa.
+    Guardado; **falta enviar para revisão** em "Visão geral da
+    publicação" (clique do Tiago). Nota técnica: o uploader do Play não
+    tem `<input type=file>` no DOM — só aparece depois de clicar em
+    "Adicionar recursos" (abre o diálogo nativo, que se ignora) e aí o
+    `file_upload` funciona no input criado; os ficheiros vão para a
+    biblioteca de recursos e "Adicionar" mete-os na ficha.
+    Calendar no iPhone: o Tiago confirmou que **não** reconectou sozinho
+    (ITP) → próximo desenvolvimento: fluxo de código + PKCE com cliente
+    OAuth do tipo iOS (refresh token guardado no aparelho, sem backend).
+    Apple Watch: notificações da app já chegam ao relógio via espelhamento
+    do iPhone; ações só com app watchOS própria (projeto futuro).
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -1047,9 +1072,12 @@ resolver isso primeiro.
       manual). Se a Apple rejeitar, responder pelo Resolution Center.
 - [ ] Apple Watch: app nativa watchOS (mini-app da Casa) — projeto futuro
       pedido pelo Tiago (item 57).
-- [ ] Play Store: passar de teste fechado para produção — reutilizar
-      textos e capturas de `loja/` (Play aceita 1284×2778? exige 16:9 a
-      2:1 → 1284×2778 é 2,16:1, redimensionar para 1080×2340 ou cortar).
+- [ ] Play Store (item 58): (a) Tiago envia a ficha atualizada para
+      revisão em "Visão geral da publicação"; (b) conseguir o 12.º
+      testador do teste fechado; (c) esperar 14 dias; (d) "Solicitar a
+      produção" e promover a versão.
+- [ ] Calendar iPhone: implementar OAuth code + PKCE com cliente iOS
+      (refresh token no aparelho) — item 58.
 - [ ] Calendar no iPhone: confirmar que, com o token expirado, entrar por
       PIN carrega a agenda sem "Conectar Google" (item 53). Se falhar
       (ITP do Safari), fazer a solução definitiva: OAuth com refresh token
