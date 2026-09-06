@@ -660,6 +660,9 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <h3>📺 Ecrãs da casa (frigorífico, tablet)</h3>
       <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px;">Abre <b>tiagocamargos1.github.io/Assistente/ecra.html</b> no ecrã, lê o código que aparece lá e aprova-o aqui. O ecrã só vê as tarefas do dia e a lista de compras.</p>
       <div id="casaDevicesList" style="font-size:13px;color:var(--text-dim);">Nenhum ecrã pediu ligação.</div>
+      <h3 style="margin-top:12px;">Outras pessoas que marcam no ecrã</h3>
+      <input type="text" id="casaExtraNames" placeholder="Ex.: TJ, Bella" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <p style="font-size:11px;color:var(--text-dim);margin-top:4px;">Aparecem como botões no "Quem fez?" do ecrã, ao lado dos membros. Separa por vírgula. "Outro…" pede sempre o nome.</p>
     </div>
     <div class="rep-sec" id="casaEmailsWrap" style="display:none;">
       <h3>Membros da casa (e-mails Google, um por linha)</h3>
@@ -2757,6 +2760,7 @@ async function casaDeviceRemove(id){
 // ── Editar tarefas / membros ──
 function openCasaEdit(){
   startCasaDevicesListener();renderCasaDevices();
+  const exn=document.getElementById('casaExtraNames');if(exn)exn.value=((casa&&casa.extraNames)||[]).join(', ');
   casaDraftTasks=casaTasks().map(t=>({...t}));
   renderCasaEditList();
   const emWrap=document.getElementById('casaEmailsWrap');
@@ -2783,6 +2787,8 @@ function casaDraftAdd(){casaDraftTasks.push({id:'t_'+Date.now(),label:'',time:''
 async function saveCasaEdit(){
   const tasks=casaDraftTasks.filter(t=>t.label&&t.label.trim()).map((t,i)=>({id:t.id,label:t.label.trim(),time:t.time||'',order:i}));
   const data={tasks};
+  const exn=document.getElementById('casaExtraNames');
+  if(exn)data.extraNames=exn.value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,12);
   if(casaIsOwner()){
     const emails=document.getElementById('casaEmails').value.split(/[\n,;\s]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@'));
     if(!emails.includes(CASA_OWNER_EMAIL))emails.unshift(CASA_OWNER_EMAIL);
