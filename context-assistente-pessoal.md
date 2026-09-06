@@ -969,6 +969,35 @@ resolver isso primeiro.
     - Pendente relacionado: aviso do DSA (status de comerciante na UE) —
       só é preciso para publicar na App Store, não para o TestFlight.
 
+57. **Ficha da App Store preenchida (06/09) — falta só o que é do Tiago.**
+    No App Store Connect (app 6809151015): subtítulo "Tarefas, casa e
+    agenda"; categorias Produtividade + Estilo de vida; classificação
+    etária respondida (tudo "não/nenhum" → 4+); privacidade publicada
+    (URL `privacidade.html`; dados recolhidos: nome, e-mail, ID de
+    utilizador, outros conteúdos do utilizador — finalidade "funcionalidade
+    da app", ligados à identidade, sem rastreio); versão 1.0: texto
+    promocional, descrição completa, palavras-chave (≤100 caracteres — com
+    102 o botão Salvar fica desativado sem aviso), URL de suporte e de
+    marketing, copyright, contacto de revisão, notas para o revisor; build
+    1.0 (1) associado à versão; preço **grátis** em todos os 175 países;
+    4 capturas de ecrã 6,5" (1284×2778) em `loja/` — Hoje, Casa (dia),
+    Casa (mês), Compras. (A aba Tarefas ficou de fora de propósito: tem
+    tarefas pessoais reais.)
+    **Como as capturas foram feitas** (sem simulador): na página do app no
+    Chrome injetei um `<iframe src="./index.html?tab=…">` de 428×926 css
+    com `zoom:3` (renderiza 1284×2778), login por PIN temporário dentro do
+    iframe, 3 screenshots do viewport a scroll 0/900/1603 (a extensão grava
+    em /tmp a 1316×898) e `stitch.py` cola e redimensiona para 1284×2778.
+    A barra inferior fica em branco se o screenshot apanhar a animação do
+    `scrollIntoView` — esperar ~1 s e pôr `tabsBar.scrollLeft=0`.
+    **Falta (Tiago):** (1) na versão 1.0 → "Informações para iniciar
+    sessão": marcar "Início de sessão obrigatório" e escrever a conta de
+    demonstração Google + palavra-passe (mesma do TestFlight); (2) App
+    Store Connect → Negócios/Conformidade: declarar o **status de
+    comerciante (DSA/UE)** — sem isto a app não é distribuída na UE;
+    (3) carregar em **"Adicionar para revisão"** e depois "Enviar para
+    revisão". Tipo de lançamento ficou em automático após aprovação.
+
 ## Próximos passos (pendentes)
 
 - [ ] Casa (item 38): a Monique e a Lu abrirem o app, confirmar que a aba
@@ -991,13 +1020,11 @@ resolver isso primeiro.
 - [ ] TestFlight: esperar a aprovação da revisão beta (build 1.0 (1),
       item 56) e enviar o link https://testflight.apple.com/join/VYmRpKGC
       à Monique e à Lu; confirmar que instalam e fazem login.
-- [ ] Lojas (App Store + passagem do Play de teste fechado para
-      produção): falta o material de submissão — descrição e categoria da
-      ficha, capturas de ecrã iPhone/Android (idealmente com a Casa e as
-      Compras já com dados reais das testadoras) e o processo no App Store
-      Connect. A política de privacidade já está publicada
-      (`privacidade.html`). Eu preparo tudo; o clique final de
-      "Enviar"/"Publicar" é do Tiago.
+- [ ] App Store: ficha pronta (item 57). Tiago: conta de demonstração na
+      versão 1.0, status de comerciante (DSA) e "Adicionar para revisão".
+- [ ] Play Store: passar de teste fechado para produção — reutilizar
+      textos e capturas de `loja/` (Play aceita 1284×2778? exige 16:9 a
+      2:1 → 1284×2778 é 2,16:1, redimensionar para 1080×2340 ou cortar).
 - [ ] Calendar no iPhone: confirmar que, com o token expirado, entrar por
       PIN carrega a agenda sem "Conectar Google" (item 53). Se falhar
       (ITP do Safari), fazer a solução definitiva: OAuth com refresh token
