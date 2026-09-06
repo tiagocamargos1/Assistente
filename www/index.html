@@ -656,6 +656,11 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div id="casaEditList"></div>
       <button class="rep-btn" onclick="casaDraftAdd()">+ Adicionar tarefa</button>
     </div>
+    <div class="rep-sec" id="casaDevicesWrap">
+      <h3>📺 Ecrãs da casa (frigorífico, tablet)</h3>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px;">Abre <b>tiagocamargos1.github.io/Assistente/ecra.html</b> no ecrã, lê o código que aparece lá e aprova-o aqui. O ecrã só vê as tarefas do dia e a lista de compras.</p>
+      <div id="casaDevicesList" style="font-size:13px;color:var(--text-dim);">Nenhum ecrã pediu ligação.</div>
+    </div>
     <div class="rep-sec" id="casaEmailsWrap" style="display:none;">
       <h3>Membros da casa (e-mails Google, um por linha)</h3>
       <textarea id="casaEmails" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;resize:vertical;"></textarea>
@@ -2621,6 +2626,7 @@ function casaHojeHTML(){
     ${shopN?`<button class="filter-btn" style="margin:2px 0 6px;" onclick="switchTab('compras')">🛒 ${shopN} ${shopN===1?'item':'itens'} na lista de compras →</button>`:''}`;
 }
 function stopCasaListeners(){
+  if(fbUnsubCasaDevices)fbUnsubCasaDevices();fbUnsubCasaDevices=null;casaDevices=[];
   if(fbUnsubCasa)fbUnsubCasa();if(fbUnsubCasaDay)fbUnsubCasaDay();if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};
   if(fbUnsubCasaToday)fbUnsubCasaToday();fbUnsubCasaToday=null;casaTodayDay=null;casaTodayListenedFor=null;
   fbUnsubCasa=null;fbUnsubCasaDay=null;casa=null;casaDay=null;casaMember=false;
@@ -2725,8 +2731,32 @@ async function casaRemoveExtra(id){
     if(casaDay&&casaDay.done&&casaDay.done[id])await window.fbUpdate(`household/${CASA_ID}/days/${casaDate}`,{[`done.${id}`]:window.fbDeleteField()});
   }catch(e){notify('Erro: '+(e.code||e.message),'error');}
 }
+// ── Ecrãs da casa (frigorífico/tablet): sessões anónimas aprovadas por um membro ──
+let casaDevices=[],fbUnsubCasaDevices=null;
+function startCasaDevicesListener(){
+  if(fbUnsubCasaDevices||!window.fbListenCol)return;
+  fbUnsubCasaDevices=window.fbListenCol(`household/${CASA_ID}/devices`,list=>{casaDevices=list;renderCasaDevices();});
+}
+function renderCasaDevices(){
+  const el=document.getElementById('casaDevicesList');if(!el)return;
+  if(!casaDevices.length){el.innerHTML='Nenhum ecrã pediu ligação.';return;}
+  el.innerHTML=casaDevices.sort((a,b)=>(a.approved?1:0)-(b.approved?1:0)).map(d=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
+    <div style="flex:1;min-width:0;"><b style="letter-spacing:2px;color:var(--gold-light);">${esc(d.code||'')}</b> · ${esc(d.name||'Ecrã')}<div style="font-size:11px;color:var(--text-dim);">${d.approved?'✓ ligado':'⏳ à espera de aprovação'}${d.createdAt?' · '+fd2(d.createdAt):''}</div></div>
+    ${d.approved?'':`<button class="filter-btn" style="background:var(--green);color:#fff;border-color:var(--green);" onclick="casaDeviceApprove('${esc(d.id)}')">Aprovar</button>`}
+    <button class="filter-btn" style="color:var(--red);" onclick="casaDeviceRemove('${esc(d.id)}')">✕</button>
+  </div>`).join('');
+}
+async function casaDeviceApprove(id){
+  try{await window.fbUpdate(`household/${CASA_ID}/devices/${id}`,{approved:true,approvedBy:cu,approvedAt:new Date().toISOString()});notify('✓ Ecrã ligado à casa.','success');}
+  catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
+async function casaDeviceRemove(id){
+  if(!confirm('Desligar este ecrã da casa?'))return;
+  try{await window.fbDelete(`household/${CASA_ID}/devices/${id}`);}catch(e){notify('Erro: '+(e.code||e.message),'error');}
+}
 // ── Editar tarefas / membros ──
 function openCasaEdit(){
+  startCasaDevicesListener();renderCasaDevices();
   casaDraftTasks=casaTasks().map(t=>({...t}));
   renderCasaEditList();
   const emWrap=document.getElementById('casaEmailsWrap');
