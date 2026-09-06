@@ -997,6 +997,22 @@ resolver isso primeiro.
     comerciante (DSA/UE)** — sem isto a app não é distribuída na UE;
     (3) carregar em **"Adicionar para revisão"** e depois "Enviar para
     revisão". Tipo de lançamento ficou em automático após aprovação.
+    **Adenda (13:30):** o Tiago preencheu a conta de demonstração e o
+    status de comerciante ficou "Em revisão" na Apple. O primeiro
+    "Adicionar para revisão" falhou por faltarem (a) **direitos de
+    conteúdo** (Informações do app → "Não contém conteúdo de terceiros" —
+    feito) e (b) **capturas de iPad 13"** (o build suporta iPad, família
+    de dispositivos 1,2) — feitas com o mesmo truque do iframe a 1032×1376
+    css × zoom 1,6667 e redimensionadas para 2064×2752 (`loja/ipad-*.png`,
+    Hoje e Casa em layout de tablet). Faltará só carregar de novo em
+    "Adicionar para revisão".
+    **Intenção do Tiago:** ter a app também no **Apple Watch** (além do
+    iPad, que a Apple já sugere). O iPad já funciona com o build atual
+    (layout desktop/tablet da web app). O Watch exige um target watchOS
+    nativo em Swift (WatchKit/SwiftUI) — a WKWebView não existe no Watch —,
+    por isso seria um mini-app à parte: marcar tarefas da Casa e ver a
+    lista do dia, sincronizado via Firestore REST/URLSession. Guardar como
+    projeto futuro, depois da publicação.
 
 ## Próximos passos (pendentes)
 
@@ -1020,8 +1036,10 @@ resolver isso primeiro.
 - [ ] TestFlight: esperar a aprovação da revisão beta (build 1.0 (1),
       item 56) e enviar o link https://testflight.apple.com/join/VYmRpKGC
       à Monique e à Lu; confirmar que instalam e fazem login.
-- [ ] App Store: ficha pronta (item 57). Tiago: conta de demonstração na
-      versão 1.0, status de comerciante (DSA) e "Adicionar para revisão".
+- [ ] App Store: ficha pronta, iPad incluído (item 57). Tiago: carregar
+      em "Adicionar para revisão" → "Enviar para revisão".
+- [ ] Apple Watch: app nativa watchOS (mini-app da Casa) — projeto futuro
+      pedido pelo Tiago (item 57).
 - [ ] Play Store: passar de teste fechado para produção — reutilizar
       textos e capturas de `loja/` (Play aceita 1284×2778? exige 16:9 a
       2:1 → 1284×2778 é 2,16:1, redimensionar para 1080×2340 ou cortar).
