@@ -92,6 +92,14 @@ h2 .cnt{background:var(--gold);color:var(--bg);border-radius:999px;padding:2px 1
   <button class="cancel" onclick="closeWho()">Cancelar</button>
 </div></div>
 
+<div class="ov" id="nameOv"><div class="box">
+  <h3>Quem foi?</h3>
+  <p id="nameSub"></p>
+  <input id="nameInput" placeholder="Escreve o nome…" autocomplete="off" style="width:100%;font:inherit;font-size:28px;padding:16px 20px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);color:var(--text);margin-bottom:18px;text-align:center;">
+  <button class="danger" style="background:var(--gold);color:var(--bg);" onclick="confirmName()">Confirmar</button>
+  <button class="cancel" onclick="closeName()">Cancelar</button>
+</div></div>
+
 <div class="ov" id="undoOv"><div class="box">
   <h3>Desmarcar?</h3>
   <p id="undoSub"></p>
@@ -187,6 +195,8 @@ function listenDay(){
   unsubDay=onSnapshot(doc(db,`household/${HID}/days/${dayKey}`), s=>{ day=s.exists()?s.data():null; renderTasks(); }, e=>console.error(e));
 }
 function members(){ return Object.entries((casa&&casa.members)||{}).map(([k,m])=>({key:k,name:m.name||k,color:m.color||'#c9a84c'})); }
+// Nomes extra definidos no Assistente (⚙️ Tarefas da casa → "Outras pessoas que marcam no ecrã"), ex.: TJ, Bella
+function extraPeople(){ return ((casa&&casa.extraNames)||[]).filter(Boolean).map(n=>({key:'x_'+String(n).toLowerCase().replace(/[^a-z0-9]+/g,'_'),name:String(n),color:'#8a8070'})); }
 function renderWho(){
   $('who').innerHTML=members().map(m=>`<span><i style="background:${esc(m.color)}"></i>${esc(m.name)}</span>`).join('');
 }
@@ -235,14 +245,27 @@ function openWho(p){
   pending=p;
   $('whoTitle').textContent=p.kind==='buy'?'Quem comprou?':'Quem fez?';
   $('whoSub').textContent=p.label;
-  const ppl=members();
-  $('people').innerHTML=ppl.map(m=>`<button data-key="${esc(m.key)}" data-name="${esc(m.name)}" style="border-color:${esc(m.color)}">${esc(m.name)}</button>`).join('')+`<button data-key="outro" data-name="Outro">Outro</button>`;
+  const ppl=[...members(),...extraPeople()];
+  $('people').innerHTML=ppl.map(m=>`<button data-key="${esc(m.key)}" data-name="${esc(m.name)}" style="border-color:${esc(m.color)}">${esc(m.name)}</button>`).join('')+`<button data-key="outro" data-name="Outro">Outro…</button>`;
   $('whoOv').classList.add('open');
 }
 window.closeWho=()=>{ $('whoOv').classList.remove('open'); pending=null; };
 $('people').addEventListener('click', async e=>{
   const b=e.target.closest('button'); if(!b||!pending)return;
-  const by=b.dataset.key, name=b.dataset.name, at=new Date().toISOString(), p=pending; closeWho();
+  if(b.dataset.key==='outro'){ const p=pending; $('whoOv').classList.remove('open'); pending=p; $('nameSub').textContent=p.label; $('nameInput').value=''; $('nameOv').classList.add('open'); setTimeout(()=>$('nameInput').focus(),50); return; }
+  $('whoOv').classList.remove('open');
+  await commitWho(b.dataset.key,b.dataset.name);
+});
+window.closeName=()=>{ $('nameOv').classList.remove('open'); pending=null; };
+window.confirmName=async()=>{
+  const n=$('nameInput').value.trim(); if(!n){ $('nameInput').focus(); return; }
+  $('nameOv').classList.remove('open');
+  await commitWho('x_'+n.toLowerCase().replace(/[^a-z0-9]+/g,'_'), n.charAt(0).toUpperCase()+n.slice(1));
+};
+$('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); confirmName(); } });
+async function commitWho(by,name){
+  const at=new Date().toISOString(), p=pending; pending=null;
+  if(!p)return;
   try{
     if(p.kind==='task'){
       await setDoc(doc(db,`household/${HID}/days/${dayKey}`),{date:dayKey,done:{[p.id]:{by,name,at,via:'ecra'}}},{merge:true});
@@ -252,7 +275,7 @@ $('people').addEventListener('click', async e=>{
       toast(`✓ Comprado: ${p.label}`);
     }
   }catch(err){ toast('Não foi possível guardar: '+(err.code||err.message)); }
-});
+}
 window.doUndo=async()=>{
   const p=pending; $('undoOv').classList.remove('open'); pending=null; if(!p)return;
   try{ await updateDoc(doc(db,`household/${HID}/days/${dayKey}`),{[`done.${p.id}`]:deleteField()}); toast('Desmarcado: '+p.label); }
