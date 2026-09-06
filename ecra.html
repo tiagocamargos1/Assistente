@@ -118,7 +118,7 @@ const app = initializeApp({
   storageBucket: "assistente-ee1f4.firebasestorage.app",
   messagingSenderId: "611661253806",
   appId: "1:611661253806:web:d5358f3ec3ccada1f0313f"
-});
+}, 'ecra'); // nome próprio: sessão anónima separada da do Assistente no mesmo browser
 const db = getFirestore(app), auth = getAuth(app);
 const HID = 'casa';
 const $ = id => document.getElementById(id);
