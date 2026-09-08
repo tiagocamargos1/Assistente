@@ -15,7 +15,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithCredential, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithCredential, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
   authDomain: "assistente-ee1f4.firebaseapp.com",
@@ -34,6 +34,13 @@ window.fbSignInWithGoogleToken = async (accessToken) => {
   return result.user.uid;
 };
 window.fbSignOut = () => signOut(auth).catch(() => {});
+// Apaga o utilizador no Firebase Auth (conta eliminada pelo próprio). Se o
+// Firebase exigir login recente (auth/requires-recent-login), faz apenas signOut:
+// os dados no Firestore já foram apagados e o utilizador Auth órfão não dá acesso a nada.
+window.fbDeleteAuthUser = async () => {
+  if (!auth.currentUser) return;
+  try { await deleteUser(auth.currentUser); } catch (e) { await signOut(auth).catch(() => {}); throw e; }
+};
 let authInitDone = false;
 const authReadyPromise = new Promise((resolve) => {
   const unsub = onAuthStateChanged(auth, (user) => { unsub(); authInitDone = true; resolve(user ? user.uid : null); });
@@ -409,7 +416,7 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
     <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
     <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
-    <div class="user-chip" onclick="logout()" title="Sair">
+    <div class="user-chip" onclick="openAccountModal()" title="Conta">
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
     </div>
@@ -673,6 +680,19 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
   </div>
 </div>
 <!-- PIN SETUP MODAL -->
+<div class="modal-ov" id="accountModal">
+  <div class="modal-box">
+    <h2>👤 A minha conta</h2>
+    <p id="accountInfo" style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;"></p>
+    <button class="close-btn" onclick="closeAccountModal();logout()">Sair</button>
+    <button class="close-btn" onclick="closeAccountModal()">Fechar</button>
+    <div class="rep-sec" style="margin-top:18px;">
+      <h3>Eliminar conta</h3>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">Apaga definitivamente a tua conta e todos os teus dados no Assistente (tarefas, notas, ideias, rotinas, projetos, preferências e subscrição de notificações). As marcações partilhadas da casa e da lista de compras ficam, sem ligação à tua conta. Não é possível anular.</p>
+      <button class="close-btn" style="border-color:#c06060;color:#c06060;" onclick="deleteAccount()">Eliminar a minha conta e os dados</button>
+    </div>
+  </div>
+</div>
 <div class="modal-ov" id="pinSetupModal">
   <div class="modal-box">
     <h2>🔒 Criar PIN de acesso rápido</h2>
@@ -1548,6 +1568,47 @@ async function enterApp(){
     pendingSiriTaskText=null;
     setTimeout(()=>runSiriTask(t),300);
   }
+}
+function openAccountModal(){
+  const u=USERS[cu]||{};
+  const email=(gProfile&&gProfile.email)||(()=>{try{return (JSON.parse(localStorage.getItem(`gprofile_${cu}`)||'null')||{}).email||'';}catch(e){return '';}})();
+  document.getElementById('accountInfo').textContent=`${u.name||cu}${email?' · '+email:''}`;
+  document.getElementById('accountModal').classList.add('open');
+}
+function closeAccountModal(){document.getElementById('accountModal').classList.remove('open');}
+// Eliminação de conta (exigida pela App Store para apps com registo):
+// apaga os documentos do utilizador em users/{cu}/*, prefs, push_subscriptions,
+// calendar_cache, people/{googleId}, authMap/{authUid}, a entrada em
+// household/casa.members, o utilizador no Firebase Auth e os dados locais.
+async function deleteAccount(){
+  if(!cu)return;
+  if(!confirm('Eliminar a conta e TODOS os dados? Esta ação não pode ser anulada.'))return;
+  const typed=prompt('Para confirmar, escreve ELIMINAR:');
+  if((typed||'').trim().toUpperCase()!=='ELIMINAR'){notify('Eliminação cancelada.','info');return;}
+  notify('A eliminar a conta…','info');
+  try{
+    if(fbUnsubTasks)fbUnsubTasks();if(fbUnsubNotes)fbUnsubNotes();if(fbUnsubRoutines)fbUnsubRoutines();if(fbUnsubProjects)fbUnsubProjects();if(fbUnsubIdeas)fbUnsubIdeas();
+    stopCasaListeners();
+    const cols={tasks,notes,routines,projects,ideas};
+    for(const [col,arr] of Object.entries(cols)){
+      for(const it of (arr||[])){ if(it&&it.id){ try{await window.fbDelete(`users/${cu}/${col}/${it.id}`);}catch(e){} } }
+    }
+    for(const path of [`users/${cu}`,`prefs/${cu}`,`push_subscriptions/${cu}`,`calendar_cache/${cu}`]){ try{await window.fbDelete(path);}catch(e){} }
+    try{ if(gProfile&&gProfile.id)await window.fbDelete(`people/${gProfile.id}`); }catch(e){}
+    try{ await window.fbUpdate(`household/${CASA_ID}`,{[`members.${cu}`]:window.fbDeleteField()}); }catch(e){}
+    try{ const au=await window.fbGetAuthUid(); if(au)await window.fbDelete(`authMap/${au}`); }catch(e){}
+    try{ await window.fbDeleteAuthUser(); }catch(e){ console.warn('deleteAuthUser',e); }
+  }catch(e){ console.error(e); }
+  try{
+    const keys=Object.keys(localStorage).filter(k=>k.endsWith(`_${cu}`)||k===`pin_${cu}`);
+    keys.forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  closeAccountModal();
+  gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];ideas=[];
+  document.getElementById('pinScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('fbDot').classList.remove('on');
+  notify('Conta eliminada. Até um dia!','success');
 }
 function logout(){
   if(!confirm('Sair?'))return;
