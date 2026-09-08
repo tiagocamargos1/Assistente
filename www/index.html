@@ -2495,7 +2495,8 @@ function renderRoutines(){
 // app como nas regras do Firestore — não depende dos uids fixos tiago/monique.
 const CASA_ID='casa';
 const CASA_OWNER_EMAIL='tiagocamargos@tocsmartgroup.com';
-const CASA_DEFAULT_EMAILS=['tiagocamargos@tocsmartgroup.com','membro2@example.com','membro3@example.com','membro1@example.com'];
+// Só o dono: os restantes membros são adicionados em ⚙️ Tarefas da casa → Membros (a casa já existe no Firestore).
+const CASA_DEFAULT_EMAILS=[CASA_OWNER_EMAIL];
 const CASA_DEFAULT_TASKS=[
   {id:'pacoca_manha',label:'Paçoca – Comida',time:'08:00'},
   {id:'cafe',label:'Café da manhã das crianças',time:''},

@@ -43,3 +43,10 @@ ios/App/App/public/
 ios/App/App.xcodeproj/xcuserdata/
 ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
 ios/App/CapApp-SPM/.swiftpm/
+
+# Ficheiros privados (vivem em ../assistente-privado)
+context-assistente-pessoal.md
+play-console-testers-log.md
+ASSINATURA.md
+.env.assinatura
+*.sh

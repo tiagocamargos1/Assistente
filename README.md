@@ -6,7 +6,7 @@ Hub de organização pessoal e familiar, leve e imediato: tarefas, rotinas, nota
 - **Política de privacidade:** https://tiagocamargos1.github.io/Assistente/privacidade.html
 - **Custo de operação:** zero (Firebase no plano gratuito, GitHub Pages e Actions públicos)
 
-> Este projeto é pessoal, feito para a família Camargos e alguns testadores convidados. O código é público para simplificar a hospedagem e a automação; não há chaves secretas no repositório.
+> Este projeto é pessoal, feito para a família Camargos e alguns testadores convidados. O código é público para simplificar a hospedagem (GitHub Pages) e a automação (GitHub Actions); não há chaves secretas nem dados pessoais no repositório — a memória do projeto e os registos de teste vivem num repositório privado à parte.
 
 ## O que faz
 
@@ -45,7 +45,6 @@ ios/                        projeto Xcode (Swift Package Manager)
 scripts/                    job Node do briefing/lembretes (GitHub Actions)
 .github/workflows/          agendamento do job
 GUIA-APP-NATIVO.md          passo a passo para compilar iOS/Android
-context-assistente-pessoal.md  memória do projeto: decisões, histórico, pendentes
 ```
 
 ## Desenvolver
