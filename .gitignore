@@ -50,3 +50,10 @@ play-console-testers-log.md
 ASSINATURA.md
 .env.assinatura
 *.sh
+
+# Vídeos (não vão para o Git)
+*.MP4
+*.mp4
+*.mov
+frame*.jpg
+contact*.jpg
