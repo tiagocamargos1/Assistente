@@ -128,7 +128,8 @@ const app = initializeApp({
   appId: "1:611661253806:web:d5358f3ec3ccada1f0313f"
 }, 'ecra'); // nome próprio: sessão anónima separada da do Assistente no mesmo browser
 const db = getFirestore(app), auth = getAuth(app);
-const HID = 'casa';
+// Casa a mostrar: ?h=<id> no URL; sem parâmetro usa a casa da família ('casa').
+const HID = (new URLSearchParams(location.search).get('h') || 'casa').replace(/[^A-Za-z0-9_-]/g, '') || 'casa';
 const $ = id => document.getElementById(id);
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const pad = n => String(n).padStart(2,'0');

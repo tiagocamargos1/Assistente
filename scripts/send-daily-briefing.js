@@ -147,14 +147,21 @@ async function buildBriefing(uid, dateStr, dow) {
 // uma vez 30 minutos antes ("pre") e outra à própria hora ("due"). O que já
 // foi avisado fica registado em days/{data}.reminded para nunca repetir.
 const CASA_PRE_MIN = 30;
+// Desde 10/09/2026 há uma casa por utilizador (household/{hid}); percorre todas.
 async function sendCasaReminders(subsByUid) {
-  const houseSnap = await db.doc('household/casa').get();
-  if (!houseSnap.exists) return;
+  const housesSnap = await db.collection('household').get();
+  for (const houseSnap of housesSnap.docs) {
+    try { await sendHouseReminders(houseSnap, subsByUid); }
+    catch (err) { console.error(`Casa ${houseSnap.id}:`, err.message); }
+  }
+}
+async function sendHouseReminders(houseSnap, subsByUid) {
+  const hid = houseSnap.id;
   const house = houseSnap.data();
   const timezone = house.timezone || 'Europe/Lisbon';
   const today = localDateStr(timezone);
   const nowMin = minutesSinceMidnight(localHHMM(timezone));
-  const dayRef = db.doc(`household/casa/days/${today}`);
+  const dayRef = db.doc(`household/${hid}/days/${today}`);
   const daySnap = await dayRef.get();
   const day = daySnap.exists ? daySnap.data() : {};
   const done = day.done || {};
@@ -190,7 +197,7 @@ async function sendCasaReminders(subsByUid) {
         }
       }
       await dayRef.set({ date: today, reminded: { [rkey]: true } }, { merge: true });
-      console.log(`Casa: reminder "${rkey}" (${task.label}) sent to ${sent} member(s).`);
+      console.log(`Casa ${hid}: reminder "${rkey}" (${task.label}) sent to ${sent} member(s).`);
     }
   }
 }

@@ -2554,8 +2554,38 @@ function renderRoutines(){
 //   household/casa/days/YYYY-MM-DD → {done:{taskId:{by,name,at}}, extras:[{id,label}], reminded:{…}}
 // A pertença à casa é decidida pelo e-mail Google (lista `emails`), tanto no
 // app como nas regras do Firestore — não depende dos uids fixos tiago/monique.
-const CASA_ID='casa';
+// Casas (households): cada utilizador tem a sua — criada automaticamente no
+// primeiro acesso, com ele como dono (ownerEmail) e único membro; os restantes
+// entram por e-mail em ⚙️ Tarefas da casa → Membros. O índice houseIndex/{email}
+// diz a cada pessoa qual é a sua casa. A família Camargos mantém a casa "casa"
+// (é a que o ecrã do frigorífico e o job de lembretes conhecem por defeito).
+let CASA_ID=null;
+const FAMILY_CASA_ID='casa';
 const CASA_OWNER_EMAIL='tiagocamargos@tocsmartgroup.com';
+function houseIndexKey(email){return String(email||'').trim().toLowerCase();}
+function newHouseId(){
+  const seed=(casaEmail()||cu||'')+'|'+Date.now();
+  let h=2166136261;for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+  return 'h_'+h.toString(36)+Math.floor(Math.random()*1e6).toString(36);
+}
+// Descobre (ou cria) a casa desta pessoa. Devolve o id ou null (sem e-mail Google).
+async function resolveHouseId(){
+  const email=casaEmail();
+  if(!email||!window.fbGet)return null;
+  if(email===CASA_OWNER_EMAIL||cu==='tiago')return FAMILY_CASA_ID;
+  try{
+    const idx=await window.fbGet(`houseIndex/${houseIndexKey(email)}`);
+    if(idx&&idx.hid)return idx.hid;
+  }catch(e){dbg('resolveHouseId: index read failed '+(e&&e.code||e));}
+  // Sem índice: cria a própria casa (vazia — cada casa define as suas tarefas)
+  const hid=newHouseId();
+  try{
+    await window.fbSave(`household/${hid}`,{name:'Casa',ownerEmail:email,emails:[email],tasks:[],members:{},createdAt:new Date().toISOString()});
+    await window.fbSave(`houseIndex/${houseIndexKey(email)}`,{hid,email});
+    dbg('resolveHouseId: created '+hid);
+    return hid;
+  }catch(e){dbg('resolveHouseId: create failed '+(e&&e.code||e));return null;}
+}
 // Só o dono: os restantes membros são adicionados em ⚙️ Tarefas da casa → Membros (a casa já existe no Firestore).
 const CASA_DEFAULT_EMAILS=[CASA_OWNER_EMAIL];
 const CASA_DEFAULT_TASKS=[
@@ -2571,7 +2601,7 @@ let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMon
 let fbUnsubCasa=null,fbUnsubCasaDay=null,casaMidnightTimer=null;
 let casaDraftTasks=[],casaNotifChecked=false;
 function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`gemail_${cu}`)||'').toLowerCase();}
-function casaIsOwner(){return cu==='tiago'||casaEmail()===CASA_OWNER_EMAIL;}
+function casaIsOwner(){const oe=(casa&&casa.ownerEmail)||(CASA_ID===FAMILY_CASA_ID?CASA_OWNER_EMAIL:null);return !!oe&&(casaEmail()===oe||(CASA_ID===FAMILY_CASA_ID&&cu==='tiago'));}
 function casaTasks(){return((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));}
 function casaSetTabVisible(on){
   document.querySelectorAll('[data-tab="casa"],[data-mais="casa"],[data-tab="compras"],[data-mais="compras"]').forEach(el=>el.style.display=on?'':'none');
@@ -2581,14 +2611,22 @@ function startCasaListener(){
   if(fbUnsubCasaDay)fbUnsubCasaDay();
   if(fbUnsubCasaMonth)fbUnsubCasaMonth();fbUnsubCasaMonth=null;casaMonthDays={};casaView='day';casaMonth=null;
   if(fbUnsubCasaToday)fbUnsubCasaToday();fbUnsubCasaToday=null;casaTodayDay=null;casaTodayListenedFor=null;
-  casa=null;casaDay=null;casaMember=false;casaDate=todayStr();casaNotifChecked=false;
+  casa=null;casaDay=null;casaMember=false;casaDate=todayStr();casaNotifChecked=false;CASA_ID=null;
   casaSetTabVisible(false);
   if(!window.fbListenDoc)return;
-  fbUnsubCasa=window.fbListenDoc(`household/${CASA_ID}`,async data=>{
+  const myCu=cu;
+  resolveHouseId().then(hid=>{
+    if(!hid||cu!==myCu)return;
+    CASA_ID=hid;
+    startCasaListenerFor(hid);
+  });
+}
+function startCasaListenerFor(hid){
+  fbUnsubCasa=window.fbListenDoc(`household/${hid}`,async data=>{
     if(!data){
-      // Ainda não existe: só o dono (Tiago) cria a casa, com a tabela do papel como ponto de partida
-      if(casaIsOwner()){
-        try{await window.fbSave(`household/${CASA_ID}`,{name:'Casa',emails:CASA_DEFAULT_EMAILS,tasks:CASA_DEFAULT_TASKS,members:{},createdAt:new Date().toISOString()});}catch(e){console.error('casa create',e);}
+      // Só a casa da família é criada aqui (as outras nascem em resolveHouseId)
+      if(hid===FAMILY_CASA_ID&&casaIsOwner()){
+        try{await window.fbSave(`household/${hid}`,{name:'Casa',ownerEmail:CASA_OWNER_EMAIL,emails:CASA_DEFAULT_EMAILS,tasks:CASA_DEFAULT_TASKS,members:{},createdAt:new Date().toISOString()});}catch(e){console.error('casa create',e);}
       }
       return;
     }
@@ -2821,6 +2859,10 @@ function renderCasa(){
   if(casaView==='month'){el.innerHTML=renderCasaMonth();return;}
   if(casaView==='feed'){el.innerHTML=renderCasaFeed();return;}
   const items=casaAllItems();
+  if(!items.length&&casaView==='day'&&!(casaDay&&casaDay.extras&&casaDay.extras.length)){
+    el.innerHTML=`<div class="empty-state"><div class="icon">🏡</div>A tua casa ainda não tem tarefas.<br><span style="font-size:12px;color:var(--text-muted)">Toca em ⚙️ Editar tarefas para criar a tabela diária (refeições, animais, limpeza…) e adicionar quem vive contigo.</span></div><button class="rep-btn" style="margin-top:12px;" onclick="openCasaEdit()">⚙️ Editar tarefas</button>`;
+    return;
+  }
   const done=(casaDay&&casaDay.done)||{};
   const isToday=casaDate===todayStr();
   const nowMin=casaNowMin();
@@ -2941,12 +2983,21 @@ async function saveCasaEdit(){
   const exn=document.getElementById('casaExtraNames');
   if(exn)data.extraNames=exn.value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,12);
   if(casaIsOwner()){
-    const emails=document.getElementById('casaEmails').value.split(/[\n,;\s]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@'));
-    if(!emails.includes(CASA_OWNER_EMAIL))emails.unshift(CASA_OWNER_EMAIL);
+    const ownerEmail=(casa&&casa.ownerEmail)||casaEmail();
+    const emails=[...new Set(document.getElementById('casaEmails').value.split(/[\n,;\s]+/).map(e=>e.trim().toLowerCase()).filter(e=>e.includes('@')))];
+    if(!emails.includes(ownerEmail))emails.unshift(ownerEmail);
     data.emails=emails;
+    if(!casa||!casa.ownerEmail)data.ownerEmail=ownerEmail;
   }
   try{
     await window.fbSave(`household/${CASA_ID}`,data);
+    // Índice e-mail → casa para os membros (quem entra sabe qual é a sua casa);
+    // quem foi retirado perde a entrada, se apontava para esta casa.
+    if(data.emails){
+      const before=((casa&&casa.emails)||[]).map(houseIndexKey);
+      for(const em of data.emails){ try{await window.fbSave(`houseIndex/${houseIndexKey(em)}`,{hid:CASA_ID,email:em});}catch(e){dbg('houseIndex save '+em+' '+(e&&e.code||e));} }
+      for(const em of before){ if(!data.emails.includes(em)){ try{const idx=await window.fbGet(`houseIndex/${em}`); if(idx&&idx.hid===CASA_ID)await window.fbDelete(`houseIndex/${em}`);}catch(e){} } }
+    }
     document.getElementById('casaEditModal').classList.remove('open');
     notify('✓ Tarefas da casa atualizadas!','success');
   }catch(e){notify('Erro ao guardar: '+(e.code||e.message),'error');}
