@@ -1330,10 +1330,23 @@ function startGoogleAuth(){
   // 'appUrlOpen' listener below, which is where onToken() actually runs
   // for this path.
   if(isIosNative()){
-    startIosPkceAuth();
+    // O fluxo PKCE precisa do esquema de URL invertido registado no Info.plist,
+    // que só existe a partir do build 2. Num build mais antigo (o build 1 ainda
+    // pode estar na App Store) cai-se no fluxo antigo pela página-ponte.
+    iosBuildNumber().then(b=>{ if(b>=2)startIosPkceAuth(); else startNativeBridgeAuth(); });
     return;
   }
-  if(isNativeApp()){
+  if(isNativeApp()){startNativeBridgeAuth();return;}
+  const redirect='https://tiagocamargos1.github.io/Assistente';
+  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
+  dbg('startGoogleAuth: redirecting to accounts.google.com now');
+  window.location.href=url;
+}
+async function iosBuildNumber(){
+  try{const info=await window.Capacitor.Plugins.App.getInfo();const n=parseInt(info&&info.build,10);return isNaN(n)?0:n;}catch(e){return 0;}
+}
+function startNativeBridgeAuth(){
+  {
     const bridge='https://tiagocamargos1.github.io/Assistente/oauth-bridge.html';
     const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(bridge)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
     const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
@@ -1344,12 +1357,7 @@ function startGoogleAuth(){
       dbg('startGoogleAuth: native platform but Browser plugin missing — falling back to in-app redirect (will likely be blocked by Google)');
       window.location.href=url;
     }
-    return;
   }
-  const redirect='https://tiagocamargos1.github.io/Assistente';
-  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
-  dbg('startGoogleAuth: redirecting to accounts.google.com now');
-  window.location.href=url;
 }
 // ── PKCE (app nativo iOS) ────────────────────────
 function b64url(bytes){
@@ -1491,7 +1499,7 @@ let gTokenExpiry=0;
 // just times out below and falls back to asking to reconnect manually.
 async function getValidToken(){
   if(gToken&&Date.now()<gTokenExpiry)return gToken;
-  if(isIosNative()){
+  if(isIosNative()&&localStorage.getItem(`grefresh_${cu}`)){
     const tk=await refreshIosToken();
     if(!tk)notify('Sessão do Google expirada. Toque em "Conectar Google" para ver a agenda.','info');
     return tk;
