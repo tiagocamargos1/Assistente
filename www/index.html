@@ -15,7 +15,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithCredential, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithCredential, signOut, onAuthStateChanged, deleteUser, revokeAccessToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
   authDomain: "assistente-ee1f4.firebaseapp.com",
@@ -33,6 +33,15 @@ window.fbSignInWithGoogleToken = async (accessToken) => {
   const result = await signInWithCredential(auth, cred);
   return result.user.uid;
 };
+// Sign in with Apple (app nativa iOS): o plugin devolve o identityToken; o nonce em
+// claro tem de ser o mesmo cujo SHA-256 foi enviado à Apple.
+window.fbSignInWithApple = async (idToken, rawNonce) => {
+  const cred = new OAuthProvider('apple.com').credential({ idToken, rawNonce });
+  const result = await signInWithCredential(auth, cred);
+  return { uid: result.user.uid, email: result.user.email || null, displayName: result.user.displayName || null };
+};
+// Exigido pela Apple ao eliminar a conta: revogar o token (o Firebase fala com a Apple).
+window.fbRevokeAppleToken = async (authorizationCode) => { await revokeAccessToken(auth, authorizationCode); };
 window.fbSignOut = () => signOut(auth).catch(() => {});
 // Apaga o utilizador no Firebase Auth (conta eliminada pelo próprio). Se o
 // Firebase exigir login recente (auth/requires-recent-login), faz apenas signOut:
@@ -394,6 +403,9 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
   <button class="google-btn" onclick="startGoogleAuth()">
     <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path></svg>
     Entrar com Google
+  </button>
+  <button class="google-btn apple-btn" id="appleLoginBtn" style="display:none;margin-top:10px;background:#000;color:#fff;border-color:#000;" onclick="startAppleAuth()">
+    <span style="font-size:17px;line-height:1;">&#xF8FF;</span> Iniciar sessão com a Apple
   </button>
   <div style="margin-top:16px;font-size:12px;color:var(--text-dim);max-width:280px;">Novo por aqui? Seu acesso é criado automaticamente no primeiro login — não precisa de convite.</div>
 </div>
@@ -1186,15 +1198,17 @@ function skipPinSetup(){document.getElementById('pinSetupModal').classList.remov
 // ── GOOGLE TOKEN PERSISTENCE (avoid re-login) ────
 function persistGoogle(uid){
   try{
+    if(gProfile)localStorage.setItem(`gprofile_${uid}`,JSON.stringify(gProfile));
     if(gToken){
       localStorage.setItem(`gtoken_${uid}`,gToken);
       localStorage.setItem(`gtoken_expiry_${uid}`,String(gTokenExpiry));
-      if(gProfile)localStorage.setItem(`gprofile_${uid}`,JSON.stringify(gProfile));
     }
   }catch(e){}
 }
 function loadStoredGoogle(uid){
   try{
+    const prof0=localStorage.getItem(`gprofile_${uid}`);
+    if(prof0&&!gProfile)try{gProfile=JSON.parse(prof0);}catch(e){}
     const tok=localStorage.getItem(`gtoken_${uid}`);
     const exp=parseInt(localStorage.getItem(`gtoken_expiry_${uid}`)||'0',10);
     if(tok&&exp>Date.now()){
@@ -1312,7 +1326,70 @@ function quickLogin(uid){
   cu=uid;
   dbg(`quickLogin(${uid})`);
   try{localStorage.setItem('pendingLoginUid',uid);}catch(e){}
+  let prov=null;
+  try{prov=(JSON.parse(localStorage.getItem(`gprofile_${uid}`)||'null')||{}).provider||null;}catch(e){}
+  if(prov==='apple'){startAppleAuth();return;}
   startGoogleAuth();
+}
+function isAppleUser(){return !!(gProfile&&gProfile.provider==='apple');}
+// ── SIGN IN WITH APPLE (app nativa iOS; exigido pela App Store quando há login Google) ──
+function applePlugin(){return(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SignInWithApple)||null;}
+function initLoginButtons(){
+  const b=document.getElementById('appleLoginBtn');
+  if(b&&isIosNative()&&applePlugin())b.style.display='flex';
+}
+function randomNonce(){return b64url(crypto.getRandomValues(new Uint8Array(32)));}
+function decodeJwtPayload(t){try{const p=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(decodeURIComponent(escape(atob(p))));}catch(e){return {};}}
+async function appleAuthorize(){
+  const plugin=applePlugin();
+  if(!plugin)throw new Error('Sign in with Apple indisponível nesta versão da app.');
+  const rawNonce=randomNonce();
+  const hashed=await sha256(rawNonce);
+  const res=await plugin.authorize({clientId:'com.tocsmartgroup.assistente',redirectURI:'https://tiagocamargos1.github.io/Assistente/',scopes:'email name',state:randomNonce().slice(0,16),nonce:hashed});
+  const r=(res&&res.response)||res||{};
+  if(!r.identityToken)throw new Error('A Apple não devolveu o token de identidade.');
+  return {rawNonce,identityToken:r.identityToken,authorizationCode:r.authorizationCode||null,email:r.email||null,givenName:r.givenName||null,familyName:r.familyName||null,user:r.user||null};
+}
+async function startAppleAuth(){
+  dbg('startAppleAuth: started');
+  try{
+    const a=await appleAuthorize();
+    if(!window.firebaseReady)await new Promise(res=>window.addEventListener('firebaseReady',res,{once:true}));
+    const fb=await window.fbSignInWithApple(a.identityToken,a.rawNonce);
+    const claims=decodeJwtPayload(a.identityToken);
+    const sub=claims.sub||a.user||fb.uid;
+    // A Apple só envia nome/e-mail no PRIMEIRO login; depois disso vêm do Firebase / do perfil guardado.
+    let stored=null;try{stored=JSON.parse(localStorage.getItem(`gprofile_${localStorage.getItem('pendingLoginUid')||''}`)||'null');}catch(e){}
+    const email=(a.email||fb.email||claims.email||(stored&&stored.email)||'').toLowerCase();
+    const given=a.givenName||(fb.displayName||'').split(' ')[0]||(stored&&stored.given_name)||(email?email.split('@')[0]:'Utilizador');
+    const name=[a.givenName,a.familyName].filter(Boolean).join(' ')||fb.displayName||given;
+    gToken=null;gTokenExpiry=0;
+    gProfile={id:'apple_'+sub,given_name:given,name,email,provider:'apple'};
+    let pendingUid=null;
+    try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
+    if(pendingUid)cu=pendingUid;
+    if(!cu){
+      if(email==='tiagocamargos@tocsmartgroup.com')cu='tiago';
+      else if(email&&email.includes('monique'))cu='monique';
+      else cu=await resolveDynamicUser(gProfile);
+    }
+    dbg(`startAppleAuth: identity = ${cu}`);
+    await window.fbSave(`authMap/${fb.uid}`,{appUid:cu});
+    try{localStorage.setItem(`authUidFor_${cu}`,fb.uid);}catch(e){}
+    await enterApp();
+    clearLoginDebug();
+    notify(`✓ Olá, ${given}!`,'success');
+    showPushBanner();
+    savePrefs();
+    persistGoogle(cu);
+    if(!hasPin(cu))offerPinSetup(cu);
+  }catch(e){
+    const msg=String(e&&(e.message||e.code)||e);
+    if(/cancel|1001/i.test(msg)){notify('Início de sessão com a Apple cancelado.','info');return;}
+    console.error('startAppleAuth failed:',e);
+    dbg(`startAppleAuth: FAILED — ${msg}`);
+    notify('Não foi possível entrar com a Apple: '+msg,'error');
+  }
 }
 function startGoogleAuth(){
   dbg(`startGoogleAuth: standalone=${window.navigator.standalone===true} ua=${(navigator.userAgent||'').slice(0,70)}`);
@@ -1499,6 +1576,7 @@ let gTokenExpiry=0;
 // just times out below and falls back to asking to reconnect manually.
 async function getValidToken(){
   if(gToken&&Date.now()<gTokenExpiry)return gToken;
+  if(isAppleUser())return null; // entrou com a Apple: não há Google Calendar ligado
   if(isIosNative()&&localStorage.getItem(`grefresh_${cu}`)){
     const tk=await refreshIosToken();
     if(!tk)notify('Sessão do Google expirada. Toque em "Conectar Google" para ver a agenda.','info');
@@ -1605,6 +1683,10 @@ async function deleteAccount(){
     try{ if(gProfile&&gProfile.id)await window.fbDelete(`people/${gProfile.id}`); }catch(e){}
     try{ await window.fbUpdate(`household/${CASA_ID}`,{[`members.${cu}`]:window.fbDeleteField()}); }catch(e){}
     try{ const au=await window.fbGetAuthUid(); if(au)await window.fbDelete(`authMap/${au}`); }catch(e){}
+    if(isAppleUser()){
+      // A Apple exige revogar o token ao eliminar a conta: pede um código novo e revoga via Firebase.
+      try{ const a=await appleAuthorize(); if(a.authorizationCode)await window.fbRevokeAppleToken(a.authorizationCode); }catch(e){ console.warn('apple revoke',e); }
+    }
     try{ await window.fbDeleteAuthUser(); }catch(e){ console.warn('deleteAuthUser',e); }
   }catch(e){ console.error(e); }
   try{
@@ -3239,6 +3321,7 @@ function renderCalBriefing(){
   const today=new Date().toISOString().split('T')[0];
   const todayEv=gcalEvs.filter(e=>e.date===today).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const sec=document.getElementById('calBriefing');
+  if(!gToken&&isAppleUser()){sec.innerHTML=`<div style="font-size:12px;color:var(--text-dim);padding:8px 0;">Entrou com a Apple — a agenda do Google Calendar não está ligada nesta conta.</div>`;return;}
   if(!gToken){sec.innerHTML=`<div class="conn-box"><p>Conecte o Google para ver sua agenda.</p><button class="conn-btn" onclick="startGoogleAuth()">Conectar Google</button></div>`;return;}
   sec.innerHTML=todayEv.length
     ?todayEv.map(e=>`<div class="event-card gcal"><div class="ev-time">${e.time||'Dia todo'}</div><div class="ev-title">${esc(e.title)}</div></div>`).join('')
@@ -3665,6 +3748,7 @@ function focusCaptureIfQuick(){
 updateDate();
 setInterval(updateDate,60000);
 initLoginScreen();
+initLoginButtons();
 // Handle the OAuth redirect back from Google (token in URL hash). The login
 // flow now does a full top-level redirect (see startGoogleAuth), so this is
 // the ONLY place a login ever actually completes — the page fully reloads
