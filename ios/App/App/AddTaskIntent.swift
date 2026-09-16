@@ -36,6 +36,9 @@ struct AssistenteShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: AddTaskIntent(),
             phrases: [
+                "Anotar no \(.applicationName)",
+                "Anota no \(.applicationName)",
+                "Apontar no \(.applicationName)",
                 "Nova tarefa no \(.applicationName)",
                 "Criar tarefa no \(.applicationName)"
             ],

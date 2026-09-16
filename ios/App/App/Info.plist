@@ -8,6 +8,11 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
         <string>Assistente Pessoal</string>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<string>AP</string>
+		<string>Assistente</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
