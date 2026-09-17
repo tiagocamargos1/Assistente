@@ -10,8 +10,16 @@
         <string>Assistente Pessoal</string>
 	<key>INAlternativeAppNames</key>
 	<array>
-		<string>AP</string>
-		<string>Assistente</string>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>AP</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>á pê</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>Assistente</string>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
