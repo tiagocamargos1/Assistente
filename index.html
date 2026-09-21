@@ -1164,6 +1164,7 @@ async function submitPin(){
   loadStoredGoogle(cu);
   document.getElementById('pinScreen').classList.add('hidden');
   await enterApp();
+  markSession(cu);
   updateChip();
   notify(`✓ Bem-vindo(a), ${USERS[cu].name}!`,'success');
   // Always call renderCalBriefing()+fetchCal() here, even if the locally
@@ -1195,6 +1196,39 @@ async function confirmPinSetup(){
   notify('🔒 PIN criado! Da próxima vez, use-o para entrar rápido.','success');
 }
 function skipPinSetup(){document.getElementById('pinSetupModal').classList.remove('open');}
+// ── SESSÃO PERSISTENTE (sobrevive a recarregamentos da página) ────
+// A Apple rejeitou a 1.0 porque, no iPad (iPadOS 27), depois de entrar com a
+// Apple ou com o Google a app "voltava ao ecrã de login": a WebView recarregou
+// a página e, sem PIN, uma sessão nova não era retomada. Agora, quem entrou
+// fica marcado em localStorage e, ao carregar a página, se o Firebase Auth
+// ainda tiver essa sessão, a app abre diretamente. Quem tem PIN continua a
+// passar pelo ecrã do PIN (acesso rápido protegido), como antes.
+function markSession(uid){try{if(uid)localStorage.setItem('sessionUid',uid);}catch(e){}}
+function clearSession(){try{localStorage.removeItem('sessionUid');}catch(e){}}
+async function tryResumeSession(){
+  let uid=null;
+  try{uid=localStorage.getItem('sessionUid');}catch(e){}
+  if(!uid||cu)return false;
+  if(hasPin(uid))return false; // com PIN, o ecrã de PIN é o caminho normal
+  let prof=null;
+  try{prof=JSON.parse(localStorage.getItem(`gprofile_${uid}`)||'null');}catch(e){}
+  if(!prof)return false;
+  if(!window.firebaseReady)await new Promise(r=>window.addEventListener('firebaseReady',r,{once:true}));
+  const expected=localStorage.getItem(`authUidFor_${uid}`);
+  const live=window.fbGetAuthUid?await window.fbGetAuthUid():null;
+  if(!live||(expected&&expected!==live)){dbg('resume: sem sessão Firebase válida');return false;}
+  if(cu)return false; // entretanto o utilizador já entrou por outra via
+  dbg(`resume: a retomar sessão de ${uid}`);
+  cu=uid;
+  loadStoredGoogle(cu);
+  if(!gProfile)gProfile=prof;
+  hydrateProfile(cu);
+  await enterApp();
+  updateChip();
+  clearLoginDebug();
+  if(!isAppleUser()){renderCalBriefing();fetchCal();}
+  return true;
+}
 // ── GOOGLE TOKEN PERSISTENCE (avoid re-login) ────
 function persistGoogle(uid){
   try{
@@ -1377,6 +1411,7 @@ async function startAppleAuth(){
     await window.fbSave(`authMap/${fb.uid}`,{appUid:cu});
     try{localStorage.setItem(`authUidFor_${cu}`,fb.uid);}catch(e){}
     await enterApp();
+    markSession(cu);
     clearLoginDebug();
     notify(`✓ Olá, ${given}!`,'success');
     showPushBanner();
@@ -1549,6 +1584,7 @@ async function onToken(tk){
     dbg('onToken: calling enterApp()');
     await enterApp();
     dbg('onToken: enterApp() done — SUCCESS');
+    markSession(cu);
     clearLoginDebug();
     notify(`✓ Olá, ${gProfile.given_name}!`,'success');
     fetchCal();
@@ -1694,6 +1730,7 @@ async function deleteAccount(){
     keys.forEach(k=>localStorage.removeItem(k));
   }catch(e){}
   closeAccountModal();
+  clearSession();
   gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];ideas=[];
   document.getElementById('pinScreen').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
@@ -1709,6 +1746,7 @@ function logout(){
   if(fbUnsubIdeas)fbUnsubIdeas();
   stopCasaListeners();
   if(cu)clearStoredGoogle(cu);
+  clearSession();
   if(window.fbSignOut)window.fbSignOut();
   gToken=null;gProfile=null;gcalEvs=[];cu=null;tasks=[];notes=[];routines=[];ideas=[];
   document.getElementById('pinScreen').classList.add('hidden');
@@ -3781,6 +3819,8 @@ if(window.self!==window.top && (window.location.hash.includes('access_token')||w
     }
   }else if(window.location.hash.includes('error')){
     dbg(`page load — Google returned an OAuth error in hash: ${window.location.hash}`);
+  }else{
+    tryResumeSession().catch(e=>dbg('resume: FAILED — '+(e&&e.message||e)));
   }
   renderLoginDebug();
 }
