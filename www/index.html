@@ -696,6 +696,10 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
   <div class="modal-box">
     <h2>👤 A minha conta</h2>
     <p id="accountInfo" style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;"></p>
+    <label id="bioPrefRow" style="display:none;align-items:center;gap:10px;font-size:13px;margin:0 0 14px;cursor:pointer;">
+      <input type="checkbox" id="bioPrefToggle" onchange="setBioEnabled(this.checked)" style="width:18px;height:18px;">
+      <span id="bioPrefLabel">Entrar com Face ID</span>
+    </label>
     <button class="close-btn" onclick="closeAccountModal();logout()">Sair</button>
     <button class="close-btn" onclick="closeAccountModal()">Fechar</button>
     <div class="rep-sec" style="margin-top:18px;">
@@ -1107,6 +1111,11 @@ async function sha256(str){
 }
 function hasPin(uid){return!!localStorage.getItem(`pin_${uid}`);}
 function handleProfileClick(uid){
+  // No iOS, com Face ID/Touch ID ativo e sessão guardada, a biometria substitui o PIN.
+  if(bioEnabled()&&localStorage.getItem('sessionUid')===uid){
+    tryBiometricUnlock(uid).then(ok=>{ if(!ok){ if(hasPin(uid))openPinScreen(uid); else quickLogin(uid); } });
+    return;
+  }
   if(hasPin(uid)){openPinScreen(uid);}
   else{quickLogin(uid);}
 }
@@ -1209,7 +1218,17 @@ async function tryResumeSession(){
   let uid=null;
   try{uid=localStorage.getItem('sessionUid');}catch(e){}
   if(!uid||cu)return false;
-  if(hasPin(uid))return false; // com PIN, o ecrã de PIN é o caminho normal
+  if(bioEnabled()){
+    // iOS: Face ID/Touch ID substitui o PIN ao abrir a app
+    const chk=await bioCheck();
+    if(chk.isAvailable){
+      const ok=await tryBiometricUnlock(uid);
+      if(ok)return true;
+      if(hasPin(uid)){openPinScreen(uid);return false;}
+      return false;
+    }
+  }
+  if(hasPin(uid))return false; // com PIN (e sem biometria), o ecrã de PIN é o caminho normal
   let prof=null;
   try{prof=JSON.parse(localStorage.getItem(`gprofile_${uid}`)||'null');}catch(e){}
   if(!prof)return false;
@@ -1228,6 +1247,65 @@ async function tryResumeSession(){
   clearLoginDebug();
   if(!isAppleUser()){renderCalBriefing();fetchCal();}
   return true;
+}
+// ── FACE ID / TOUCH ID (app nativa iOS) ────────────────
+// Plugin @aparajita/capacitor-biometric-auth. No arranque, se houver sessão
+// guardada e biometria disponível, pede Face ID e entra sem PIN. Se não houver
+// biometria configurada (ex.: iPad da revisão da Apple) segue a sessão
+// persistente normal; se o utilizador cancelar, cai no PIN ou no login.
+function bioPlugin(){return(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.BiometricAuthNative)||null;}
+function bioSupported(){return isNativeApp()&&!!bioPlugin();}
+function bioEnabled(){try{return bioSupported()&&localStorage.getItem('bio_enabled')!=='0';}catch(e){return false;}}
+function setBioEnabled(on){try{localStorage.setItem('bio_enabled',on?'1':'0');}catch(e){} notify(on?'Face ID ativado para entrar.':'Face ID desativado — entra com o PIN ou o Google.','info');}
+let bioTypeCache=null;
+async function bioCheck(){
+  const p=bioPlugin(); if(!p)return {isAvailable:false};
+  try{const r=await p.checkBiometry(); bioTypeCache=r; return r;}catch(e){return {isAvailable:false};}
+}
+function bioLabel(){const t=bioTypeCache&&bioTypeCache.biometryType; return t===1?'Touch ID':'Face ID';}
+async function resumeSessionAs(uid){
+  // Retoma a sessão de `uid` (após Face ID) — mesmo caminho da sessão persistente.
+  if(cu)return true;
+  let prof=null;
+  try{prof=JSON.parse(localStorage.getItem(`gprofile_${uid}`)||'null');}catch(e){}
+  if(!window.firebaseReady)await new Promise(r=>window.addEventListener('firebaseReady',r,{once:true}));
+  const expected=localStorage.getItem(`authUidFor_${uid}`);
+  const live=window.fbGetAuthUid?await window.fbGetAuthUid():null;
+  if(!live||(expected&&expected!==live))return false;
+  cu=uid;
+  loadStoredGoogle(cu);
+  if(!gProfile&&prof)gProfile=prof;
+  hydrateProfile(cu);
+  document.getElementById('pinScreen').classList.add('hidden');
+  await enterApp();
+  markSession(cu);
+  updateChip();
+  clearLoginDebug();
+  if(!isAppleUser()){renderCalBriefing();fetchCal();}
+  return true;
+}
+async function tryBiometricUnlock(uid){
+  if(!bioEnabled()||cu)return false;
+  const chk=await bioCheck();
+  if(!chk.isAvailable){dbg('bio: indisponível — '+(chk.reason||chk.code||''));return false;}
+  try{
+    await bioPlugin().internalAuthenticate({reason:'Entrar no Assistente Pessoal',cancelTitle:'Usar PIN',allowDeviceCredential:false});
+  }catch(e){
+    dbg('bio: '+(e&&(e.code||e.message)||e));
+    return false;
+  }
+  const ok=await resumeSessionAs(uid);
+  if(!ok){notify('Sessão expirada. Entra com o Google.','info');quickLogin(uid);return true;}
+  notify(`✓ Bem-vindo(a), ${USERS[cu]&&USERS[cu].name||''}!`,'success');
+  return true;
+}
+function initBioPref(){
+  const row=document.getElementById('bioPrefRow');
+  if(!row)return;
+  if(!bioSupported()){row.style.display='none';return;}
+  row.style.display='flex';
+  document.getElementById('bioPrefToggle').checked=bioEnabled();
+  bioCheck().then(()=>{const l=document.getElementById('bioPrefLabel');if(l)l.textContent=`Entrar com ${bioLabel()}`;});
 }
 // ── GOOGLE TOKEN PERSISTENCE (avoid re-login) ────
 function persistGoogle(uid){
@@ -1695,6 +1773,7 @@ function openAccountModal(){
   const u=USERS[cu]||{};
   const email=(gProfile&&gProfile.email)||(()=>{try{return (JSON.parse(localStorage.getItem(`gprofile_${cu}`)||'null')||{}).email||'';}catch(e){return '';}})();
   document.getElementById('accountInfo').textContent=`${u.name||cu}${email?' · '+email:''}`;
+  initBioPref();
   document.getElementById('accountModal').classList.add('open');
 }
 function closeAccountModal(){document.getElementById('accountModal').classList.remove('open');}

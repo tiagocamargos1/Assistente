@@ -8,6 +8,8 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
         <string>Assistente Pessoal</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>O Assistente usa o Face ID para entrares sem escrever o PIN.</string>
 	<key>INAlternativeAppNames</key>
 	<array>
 		<dict>

@@ -8,6 +8,7 @@
     "cap:sync": "npm run sync-www && npx cap sync"
   },
   "dependencies": {
+    "@aparajita/capacitor-biometric-auth": "^10.0.0",
     "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.1.1",
