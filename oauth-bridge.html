@@ -12,21 +12,39 @@
 </style>
 </head>
 <body>
-<p>Entrando no Assistente Pessoal…</p>
+<div>
+  <p>Entrando no Assistente Pessoal…</p>
+  <div id="fallback" style="display:none;margin-top:18px;">
+    <a id="openBtn" href="#" style="display:inline-block;background:#d4a84a;color:#0f1115;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:12px;font-size:15px;">Abrir o Assistente Pessoal</a>
+    <p style="font-size:12px;margin-top:14px;">Se não abrir, <a id="altLink" href="#" style="color:#d4a84a;">tenta por aqui</a> ou volta à app e toca de novo em “Entrar com Google”.</p>
+  </div>
+</div>
 <script>
-  // This page exists purely to hand a Google OAuth token back to the native
-  // app. startGoogleAuth() (in index.html) opens accounts.google.com in a
-  // real system browser tab (not the app's own embedded WebView — Google
-  // blocks OAuth from inside embedded WebViews) with this page's URL as the
-  // redirect_uri. Google appends the token as a URL hash fragment when it
-  // sends the browser here. All this page does is forward that same hash
-  // fragment on to the app via its custom URL scheme, which both platforms
-  // (Android intent-filter / iOS CFBundleURLTypes) already register as
-  // "assistentepessoal://". The OS then closes this browser tab/view and
-  // hands control back to the app, where an 'appUrlOpen' listener in
-  // index.html picks up the token and finishes logging in.
+  // Esta página só existe para devolver o token do Google à app nativa.
+  // startGoogleAuth() (index.html) abre accounts.google.com num separador do
+  // sistema com esta página como redirect_uri; o Google acrescenta o token no
+  // fragmento (#access_token=…). Aqui reencaminhamos esse fragmento para a app
+  // pelo esquema "assistentepessoal://" (Android intent-filter / iOS
+  // CFBundleURLTypes); o listener 'appUrlOpen' em index.html termina o login.
+  //
+  // Android: o Chrome bloqueia saltos automáticos para esquemas personalizados
+  // sem um toque do utilizador (visto no Xiaomi da Lu, 22/09) — por isso usa-se
+  // o formato intent:// (aponta diretamente ao pacote) e, se em 1,2 s a app não
+  // abrir, aparece um botão para o utilizador tocar.
   var hash = window.location.hash || '';
-  window.location.replace('assistentepessoal://oauthcallback' + hash);
+  var q = hash.replace(/^#/, '');
+  var isAndroid = /Android/i.test(navigator.userAgent);
+  var appUrl = 'assistentepessoal://oauthcallback' + hash;
+  var intentUrl = 'intent://oauthcallback?' + q + '#Intent;scheme=assistentepessoal;package=com.tocsmartgroup.assistente;end';
+  var primary = isAndroid ? intentUrl : appUrl;
+  try { window.location.replace(primary); } catch (e) {}
+  setTimeout(function () {
+    var box = document.getElementById('fallback');
+    if (!box) return;
+    document.getElementById('openBtn').setAttribute('href', primary);
+    document.getElementById('altLink').setAttribute('href', appUrl);
+    box.style.display = 'block';
+  }, 1200);
 </script>
 </body>
 </html>

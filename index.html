@@ -3799,7 +3799,8 @@ function runSiriTask(text){
 function handleOAuthCallbackUrl(rawUrl){
   try{
     const u=new URL(rawUrl);
-    const hash=(u.hash||'').replace(/^#/,'');
+    // Android (intent://) traz o token na query; iOS/web no fragmento
+    const hash=(u.hash||'').replace(/^#/,'')||(u.search||'').replace(/^\?/,'');
     if(!hash)return false;
     const p=new URLSearchParams(hash);
     const tk=p.get('access_token');
