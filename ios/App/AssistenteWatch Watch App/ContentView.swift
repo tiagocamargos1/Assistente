@@ -7,6 +7,7 @@ let gold = Color(red: 0.83, green: 0.66, blue: 0.29)
 struct LoginView: View {
     @EnvironmentObject var store: Store
     var body: some View {
+        ScrollView {
         VStack(spacing: 10) {
             Image(systemName: "sparkle").font(.system(size: 28)).foregroundStyle(gold)
             Text("Assistente Pessoal").font(.headline)
@@ -15,9 +16,29 @@ struct LoginView: View {
                 .signInWithAppleButtonStyle(.white)
                 .frame(height: 40)
             if store.loading { ProgressView() }
-            if let e = store.error { Text(e).font(.caption2).foregroundStyle(.red).multilineTextAlignment(.center) }
+            if let e = store.error { Text(e).font(.caption2).foregroundStyle(.red).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true) }
         }
         .padding(.horizontal, 6)
+        }
+    }
+}
+
+// ── Emparelhamento com o iPhone ──
+struct PairingView: View {
+    @EnvironmentObject var store: Store
+    let code: String
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 8) {
+                Image(systemName: "applewatch.radiowaves.left.and.right").font(.system(size: 24)).foregroundStyle(gold)
+                Text("Ligar ao iPhone").font(.headline)
+                Text("\(String(code.prefix(3))) \(String(code.suffix(3)))").font(.system(size: 30, weight: .bold, design: .rounded)).monospacedDigit()
+                Text("No iPhone: Assistente → A minha conta → Ligar Apple Watch, e escreve este código.").font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                ProgressView()
+                Button(role: .destructive) { store.signOut() } label: { Text("Cancelar") }
+            }
+            .padding(.horizontal, 4)
+        }
     }
 }
 

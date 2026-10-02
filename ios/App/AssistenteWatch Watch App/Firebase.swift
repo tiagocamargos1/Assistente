@@ -112,6 +112,7 @@ enum FSValue {
     static func encode(_ v: Any?) -> [String: Any] {
         switch v {
         case nil: return ["nullValue": NSNull()]
+        case let dt as Date: return ["timestampValue": ISO8601DateFormatter().string(from: dt)]
         case let b as Bool: return ["booleanValue": b]
         case let i as Int: return ["integerValue": String(i)]
         case let d as Double: return ["doubleValue": d]
@@ -195,6 +196,17 @@ actor Firestore {
         var f: [String: Any] = [:]; for (k, v) in fields { f[k] = FSValue.encode(v) }
         let q = "?" + mask.map { "updateMask.fieldPaths=" + ($0.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? $0) }.joined(separator: "&")
         _ = try await request(path, method: "PATCH", query: q, body: ["fields": f])
+    }
+
+    /// Cria um documento novo (falha se já existir — currentDocument.exists=false).
+    func create(_ path: String, fields: [String: Any?]) async throws {
+        var f: [String: Any] = [:]; for (k, v) in fields { f[k] = FSValue.encode(v) }
+        _ = try await request(path, method: "PATCH", query: "?currentDocument.exists=false", body: ["fields": f])
+    }
+
+    /// Apaga um documento (ignora se não existir).
+    func delete(_ path: String) async throws {
+        _ = try await request(path, method: "DELETE")
     }
 
     /// Apaga um campo (updateMask com o campo e sem valor no corpo).

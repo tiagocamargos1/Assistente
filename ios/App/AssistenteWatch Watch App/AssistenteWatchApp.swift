@@ -6,7 +6,7 @@ struct AssistenteWatchApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if store.signedIn { RootView() } else { LoginView() }
+                if !store.signedIn { LoginView() } else if let code = store.pairingCode { PairingView(code: code) } else { RootView() }
             }
             .environmentObject(store)
         }

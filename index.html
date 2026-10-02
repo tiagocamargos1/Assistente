@@ -50,6 +50,10 @@ window.fbDeleteAuthUser = async () => {
   if (!auth.currentUser) return;
   try { await deleteUser(auth.currentUser); } catch (e) { await signOut(auth).catch(() => {}); throw e; }
 };
+window.fbGetAuthEmail = async () => {
+  if (!authInitDone) await authReadyPromise;
+  return auth.currentUser && auth.currentUser.email ? auth.currentUser.email.toLowerCase() : null;
+};
 let authInitDone = false;
 const authReadyPromise = new Promise((resolve) => {
   const unsub = onAuthStateChanged(auth, (user) => { unsub(); authInitDone = true; resolve(user ? user.uid : null); });
@@ -700,6 +704,14 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <input type="checkbox" id="bioPrefToggle" onchange="setBioEnabled(this.checked)" style="width:18px;height:18px;">
       <span id="bioPrefLabel">Entrar com Face ID</span>
     </label>
+    <div id="watchLinkRow" style="margin:0 0 14px;">
+      <div style="font-size:13px;margin-bottom:6px;">⌚ Ligar Apple Watch</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="watchCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Código de 6 dígitos" style="flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;letter-spacing:3px;">
+        <button class="close-btn" style="margin:0;width:auto;padding:10px 16px;background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="linkWatch()">Ligar</button>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:6px;">No relógio, abre o Assistente, toca em «Iniciar sessão» e escreve aqui o código que aparece.</p>
+    </div>
     <button class="close-btn" onclick="closeAccountModal();logout()">Sair</button>
     <button class="close-btn" onclick="closeAccountModal()">Fechar</button>
     <div class="rep-sec" style="margin-top:18px;">
@@ -1361,6 +1373,21 @@ function hydrateProfile(uid){
     if(raw)USERS[uid]=JSON.parse(raw);
   }catch(e){}
 }
+// Grava a ligação conta Firebase → identidade da app. As regras do Firestore só
+// aceitam a identidade que corresponde ao token (e-mail verificado, id Google/Apple
+// ou relógio ligado); se o perfil escolhido no ecrã de login não corresponder à
+// conta usada, entra-se com a identidade própria dessa conta.
+async function saveAuthMapSafe(authUid,uid,profile){
+  try{await window.fbSave(`authMap/${authUid}`,{appUid:uid});return uid;}
+  catch(e){
+    dbg(`authMap recusado para ${uid}: ${e&&e.code||e}`);
+    const fallback=await resolveDynamicUser(profile);
+    if(fallback===uid)throw e;
+    await window.fbSave(`authMap/${authUid}`,{appUid:fallback});
+    notify('Esta conta não corresponde ao perfil escolhido — entraste com o teu próprio perfil.','info');
+    return fallback;
+  }
+}
 async function resolveDynamicUser(profile){
   const gid='g_'+profile.id;
   let doc=null;
@@ -1382,6 +1409,28 @@ async function resolveDynamicUser(profile){
   }
   try{localStorage.setItem('lastDynamicUser',uid);}catch(e){}
   return uid;
+}
+// Liga um Apple Watch à conta atual: o relógio publicou pairing/{código} com o seu
+// uid; aqui grava-se linkedAccounts/{uidDoRelógio}. As regras exigem que o código
+// exista, não tenha expirado e que appUid/e-mail sejam os desta sessão.
+async function linkWatch(){
+  const inp=document.getElementById('watchCode');
+  const code=((inp&&inp.value)||'').replace(/\D/g,'');
+  if(code.length!==6){notify('Escreve os 6 dígitos que aparecem no relógio.','info');return;}
+  try{
+    const authUid=await window.fbGetAuthUid();
+    const email=await window.fbGetAuthEmail();
+    if(!authUid||!cu){notify('Entra primeiro na tua conta.','error');return;}
+    const p=await window.fbGet(`pairing/${code}`);
+    if(!p||!p.watchUid){notify('Código não encontrado — confirma o código no relógio.','error');return;}
+    const exp=p.expiresAt&&p.expiresAt.toMillis?p.expiresAt.toMillis():0;
+    if(!exp||exp<Date.now()){notify('Este código expirou — pede um novo no relógio.','error');return;}
+    await window.fbSave(`linkedAccounts/${p.watchUid}`,{appUid:cu,email:email||'',linkerUid:authUid,code});
+    if(inp)inp.value='';
+    notify('⌚ Apple Watch ligado! Em segundos o relógio abre os teus dados.','success');
+  }catch(e){
+    notify('Não foi possível ligar o relógio: '+(e&&(e.code||e.message)||e),'error');
+  }
 }
 function applyFamilyUI(){
   const solo=!isFamily(cu);
@@ -1482,11 +1531,11 @@ async function startAppleAuth(){
     if(pendingUid)cu=pendingUid;
     if(!cu){
       if(email==='tiagocamargos@tocsmartgroup.com')cu='tiago';
-      else if(email&&email.includes('monique'))cu='monique';
+      else if(email==='moniqueabril@gmail.com')cu='monique';
       else cu=await resolveDynamicUser(gProfile);
     }
     dbg(`startAppleAuth: identity = ${cu}`);
-    await window.fbSave(`authMap/${fb.uid}`,{appUid:cu});
+    cu=await saveAuthMapSafe(fb.uid,cu,gProfile);
     try{localStorage.setItem(`authUidFor_${cu}`,fb.uid);}catch(e){}
     await enterApp();
     markSession(cu);
@@ -1649,12 +1698,12 @@ async function onToken(tk){
     }
     if(!cu){
       const email=(gProfile.email||'').toLowerCase();
-      if(email.includes('monique'))cu='monique';
+      if(email==='moniqueabril@gmail.com')cu='monique';
       else if(email==='tiagocamargos@tocsmartgroup.com')cu='tiago';
       else cu=await resolveDynamicUser(gProfile);
     }
     dbg(`onToken: resolved identity = ${cu}`);
-    await window.fbSave(`authMap/${authUid}`,{appUid:cu});
+    cu=await saveAuthMapSafe(authUid,cu,gProfile);
     try{localStorage.setItem(`authUidFor_${cu}`,authUid);}catch(e){}
     // Update avatar in login screen
     const img=document.getElementById(`limg${cu.charAt(0).toUpperCase()+cu.slice(1)}`);
