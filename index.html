@@ -416,6 +416,7 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
   <button class="google-btn apple-btn" id="appleLoginBtn" style="display:none;margin-top:10px;background:#000;color:#fff;border-color:#000;" onclick="startAppleAuth()">
     <span style="font-size:17px;line-height:1;">&#xF8FF;</span> Iniciar sessão com a Apple
   </button>
+  <p style="font-size:11px;color:var(--text-dim);margin-top:14px;text-align:center;">Ao entrar aceitas os <a href="https://tiagocamargos1.github.io/Assistente/termos.html" target="_blank" style="color:inherit;">Termos</a> e a <a href="https://tiagocamargos1.github.io/Assistente/privacidade.html" target="_blank" style="color:inherit;">Política de Privacidade</a>.</p>
   <div style="margin-top:16px;font-size:12px;color:var(--text-dim);max-width:280px;">Novo por aqui? Seu acesso é criado automaticamente no primeiro login — não precisa de convite.</div>
 </div>
 <!-- PIN QUICK ACCESS -->
@@ -723,6 +724,8 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     <div class="rep-sec" style="margin-top:18px;">
       <h3>Eliminar conta</h3>
       <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;">Apaga definitivamente a tua conta e todos os teus dados no Assistente (tarefas, notas, ideias, rotinas, projetos, preferências e subscrição de notificações). As marcações partilhadas da casa e da lista de compras ficam, sem ligação à tua conta. Não é possível anular.</p>
+      <button class="close-btn" onclick="exportMyData()">📥 Exportar os meus dados</button>
+      <p style="font-size:11px;color:var(--text-dim);text-align:center;margin:6px 0;"><a href="https://tiagocamargos1.github.io/Assistente/privacidade.html" target="_blank" style="color:inherit;">Privacidade</a> · <a href="https://tiagocamargos1.github.io/Assistente/termos.html" target="_blank" style="color:inherit;">Termos</a></p>
       <button class="close-btn" style="border-color:#c06060;color:#c06060;" onclick="deleteAccount()">Eliminar a minha conta e os dados</button>
     </div>
   </div>
@@ -773,7 +776,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
 <div class="notif info" id="notif">Aguardando login Google…</div>
 <script>
 const CLIENT_ID='150189154211-br8invtfrin89lfes5d0488876ansq8c.apps.googleusercontent.com';
-const SCOPES='https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+const SCOPES='https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 // Cliente OAuth do tipo "iOS" (Google Cloud, projeto Assistente TOC). Só o
 // app nativo iOS o usa, no fluxo authorization-code + PKCE: o Safari do
 // iPhone (ITP) bloqueia a renovação silenciosa por iframe que funciona no
@@ -1832,6 +1835,34 @@ function openAccountModal(){
   document.getElementById('accountModal').classList.add('open');
 }
 function closeAccountModal(){document.getElementById('accountModal').classList.remove('open');}
+// Exportação de dados (RGPD, art. 20.º — portabilidade): junta num ficheiro JSON
+// tudo o que está guardado sobre esta conta e entrega-o ao utilizador.
+async function exportMyData(){
+  if(!cu)return;
+  notify('A preparar a exportação…','info');
+  const out={app:'Assistente Pessoal',exportadoEm:new Date().toISOString(),identidade:cu,
+    perfil:gProfile?{nome:gProfile.name||null,email:gProfile.email||null}:null,
+    tarefas:tasks||[],notas:notes||[],rotinas:routines||[],projetos:projects||[],ideias:ideas||[]};
+  for(const [k,path] of [['preferencias',`prefs/${cu}`],['agendaEmCache',`calendar_cache/${cu}`]]){
+    try{out[k]=await window.fbGet(path);}catch(e){out[k]=null;}
+  }
+  try{ if(CASA_ID&&casa)out.casa={id:CASA_ID,nome:casa.name||'Casa',tarefas:casa.tasks||[],membros:casa.emails||[]}; }catch(e){}
+  const json=JSON.stringify(out,null,2);
+  const name=`assistente-dados-${todayStr()}.json`;
+  try{
+    const file=new File([json],name,{type:'application/json'});
+    if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Os meus dados — Assistente Pessoal'});return;
+    }
+    if(!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())){
+      const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();
+      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
+      notify('✓ Ficheiro '+name+' transferido.','success');return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError')return; console.warn('export',e); }
+  try{await navigator.clipboard.writeText(json);notify('✓ Dados copiados (JSON). Cola num e-mail ou nota para os guardares.','success');}
+  catch(e){notify('Não foi possível exportar: '+(e.message||e),'error');}
+}
 // Eliminação de conta (exigida pela App Store para apps com registo):
 // apaga os documentos do utilizador em users/{cu}/*, prefs, push_subscriptions,
 // calendar_cache, people/{googleId}, authMap/{authUid}, a entrada em
@@ -1851,6 +1882,7 @@ async function deleteAccount(){
     }
     for(const path of [`users/${cu}`,`prefs/${cu}`,`push_subscriptions/${cu}`,`calendar_cache/${cu}`]){ try{await window.fbDelete(path);}catch(e){} }
     try{ if(gProfile&&gProfile.id)await window.fbDelete(`people/${gProfile.id}`); }catch(e){}
+    try{ const em=casaEmail(); if(em)await window.fbDelete(`houseIndex/${houseIndexKey(em)}`); }catch(e){}
     try{ await window.fbUpdate(`household/${CASA_ID}`,{[`members.${cu}`]:window.fbDeleteField()}); }catch(e){}
     try{ const au=await window.fbGetAuthUid(); if(au)await window.fbDelete(`authMap/${au}`); }catch(e){}
     if(isAppleUser()){
