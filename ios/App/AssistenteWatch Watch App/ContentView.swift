@@ -47,11 +47,12 @@ struct RootView: View {
     @EnvironmentObject var store: Store
     var body: some View {
         TabView {
-            CasaView().tag(0)
-            TarefasView().tag(1)
-            ComprasView().tag(2)
+            NavigationStack { CasaView().navigationTitle("Casa") }.tag(0)
+            NavigationStack { TarefasView().navigationTitle("Tarefas") }.tag(1)
+            NavigationStack { ComprasView().navigationTitle("Compras") }.tag(2)
         }
         .tabViewStyle(.page)
+        .tint(gold)
         .task { await store.refreshAll() }
     }
 }
@@ -60,12 +61,8 @@ struct Header: View {
     let title: String
     let count: Int
     var body: some View {
-        HStack {
-            Text(title).font(.headline).foregroundStyle(gold)
-            Spacer()
-            Text("\(count)").font(.caption2).foregroundStyle(.secondary)
-        }
-        .listRowBackground(Color.clear)
+        Text("\(count) \(title)").font(.footnote).foregroundStyle(gold)
+            .listRowBackground(Color.clear)
     }
 }
 
@@ -73,7 +70,7 @@ struct CasaView: View {
     @EnvironmentObject var store: Store
     var body: some View {
         List {
-            Header(title: "🏡 Casa · hoje", count: store.houseTasks.filter { $0.doneBy == nil }.count)
+            Header(title: "por fazer hoje", count: store.houseTasks.filter { $0.doneBy == nil }.count)
             if store.houseId == nil {
                 Text("Ainda não fazes parte de nenhuma casa.").font(.footnote).foregroundStyle(.secondary)
             } else if store.houseTasks.isEmpty {
@@ -100,7 +97,7 @@ struct TarefasView: View {
     @EnvironmentObject var store: Store
     var body: some View {
         List {
-            Header(title: "✅ Tarefas", count: store.tasks.count)
+            Header(title: "pendentes", count: store.tasks.count)
             if store.tasks.isEmpty {
                 Text(store.loading ? "A carregar…" : "Nada pendente para hoje 🎉").font(.footnote).foregroundStyle(.secondary)
             }
@@ -124,7 +121,7 @@ struct ComprasView: View {
     @EnvironmentObject var store: Store
     var body: some View {
         List {
-            Header(title: "🛒 Compras", count: store.shopping.filter { !$0.bought }.count)
+            Header(title: "por comprar", count: store.shopping.filter { !$0.bought }.count)
             if store.houseId == nil {
                 Text("Sem casa associada.").font(.footnote).foregroundStyle(.secondary)
             } else if store.shopping.isEmpty {
