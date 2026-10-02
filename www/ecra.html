@@ -151,6 +151,7 @@ function tick(){
 }
 setInterval(tick,15000);
 
+function safeColor(c){return /^#[0-9a-fA-F]{6}$/.test(String(c||''))?c:'#c9a84c';}
 function deviceCode(u){ // 6 caracteres legíveis, derivados do uid (sem 0/O/1/I)
   const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const fnv=seed=>{ let h=seed>>>0; for(let i=0;i<u.length;i++){ h^=u.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h; };
@@ -199,7 +200,7 @@ function members(){ return Object.entries((casa&&casa.members)||{}).map(([k,m])=
 // Nomes extra definidos no Assistente (⚙️ Tarefas da casa → "Outras pessoas que marcam no ecrã"), ex.: TJ, Bella
 function extraPeople(){ return ((casa&&casa.extraNames)||[]).filter(Boolean).map(n=>({key:'x_'+String(n).toLowerCase().replace(/[^a-z0-9]+/g,'_'),name:String(n),color:'#8a8070'})); }
 function renderWho(){
-  $('who').innerHTML=members().map(m=>`<span><i style="background:${esc(m.color)}"></i>${esc(m.name)}</span>`).join('');
+  $('who').innerHTML=members().map(m=>`<span><i style="background:${safeColor(m.color)}"></i>${esc(m.name)}</span>`).join('');
 }
 function tasks(){
   const fixed=((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));
@@ -247,7 +248,7 @@ function openWho(p){
   $('whoTitle').textContent=p.kind==='buy'?'Quem comprou?':'Quem fez?';
   $('whoSub').textContent=p.label;
   const ppl=[...members(),...extraPeople()];
-  $('people').innerHTML=ppl.map(m=>`<button data-key="${esc(m.key)}" data-name="${esc(m.name)}" style="border-color:${esc(m.color)}">${esc(m.name)}</button>`).join('')+`<button data-key="outro" data-name="Outro">Outro…</button>`;
+  $('people').innerHTML=ppl.map(m=>`<button data-key="${esc(m.key)}" data-name="${esc(m.name)}" style="border-color:${safeColor(m.color)}">${esc(m.name)}</button>`).join('')+`<button data-key="outro" data-name="Outro">Outro…</button>`;
   $('whoOv').classList.add('open');
 }
 window.closeWho=()=>{ $('whoOv').classList.remove('open'); pending=null; };

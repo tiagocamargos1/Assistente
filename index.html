@@ -81,7 +81,7 @@ window.fbListen = (path, cb) => {
 };
 window.fbListenCol = (path, cb) => {
   return onSnapshot(collection(db, path), snap => {
-    cb(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    cb(snap.docs.map(d => ({ ...d.data(), id: d.id })));
   });
 };
 // Variante de fbListen com callback de erro (necessária para a Casa: uma conta
@@ -94,7 +94,7 @@ window.fbDeleteField = () => deleteField();
 // Lê os documentos de uma coleção com field == value (ex.: convites para o meu e-mail).
 window.fbQueryEq = async (path, field, value) => {
   const snap = await getDocs(query(collection(db, path), where(field, '==', value)));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map(d => ({ ...d.data(), id: d.id }));
 };
 window.firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
@@ -801,7 +801,9 @@ const USERS={tiago:{name:'Tiago',emoji:'T',color:'#c9a84c'},monique:{name:'Moniq
 function dbg(msg){
   try{
     const log=JSON.parse(localStorage.getItem('loginDebugLog')||'[]');
-    log.push({t:Date.now(),msg:String(msg)});
+    // Nunca guardar e-mails nem identificadores no registo técnico (fica no aparelho).
+    const clean=String(msg).replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/g,'<email>').replace(/authUid=\S+/g,'authUid=<…>');
+    log.push({t:Date.now(),msg:clean});
     while(log.length>25)log.shift();
     localStorage.setItem('loginDebugLog',JSON.stringify(log));
   }catch(e){}
@@ -816,7 +818,9 @@ function renderLoginDebug(){
   if(!panel)return;
   let log=[];
   try{log=JSON.parse(localStorage.getItem('loginDebugLog')||'[]');}catch(e){}
-  if(!log.length){panel.style.display='none';panel.innerHTML='';return;}
+  // O painel técnico só aparece em modo de diagnóstico (?debug=1).
+  const debugOn=/[?&]debug=1/.test(location.search);
+  if(!log.length||!debugOn){panel.style.display='none';panel.innerHTML='';return;}
   const t0=log[0].t;
   const lines=log.map(e=>`+${((e.t-t0)/1000).toFixed(1)}s  ${esc(e.msg)}`).join('\n');
   panel.style.display='block';
@@ -828,6 +832,7 @@ function renderLoginDebug(){
 }
 // STATE
 let cu=null,gToken=null,gProfile=null;
+let pendingRefreshToken=null;
 let tasks=[],gcalEvs=[],notes=[];
 let filter='all',shareMode=false,isDark=true,selectedDay=null;
 const AREAS={deus:{label:'Deus',emoji:'🙏'},pessoal:{label:'Pessoal',emoji:'👤'},familia:{label:'Família',emoji:'👨‍👩‍👧'},financas:{label:'Finanças',emoji:'💰'},negocios:{label:'Negócios',emoji:'💼'}};
@@ -889,7 +894,7 @@ function renderAreaRow(){
     if(!enabledAreas.includes(key))return;
     const a=areaDef(key);
     if(!a)return;
-    html+=`<button class="filter-btn${currentArea===key?' active':''}" data-area="${key}" onclick="setArea('${key}',this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
+    html+=`<button class="filter-btn${currentArea===key?' active':''}" data-area="${key}" onclick="setArea(${jsa(key)},this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
   });
   row.innerHTML=html;
 }
@@ -902,7 +907,7 @@ function renderAreaFilterRow(){
     if(!enabledAreas.includes(key))return;
     const a=areaDef(key);
     if(!a)return;
-    html+=`<button class="filter-btn${areaFilter===key?' active':''}" onclick="setAreaFilter('${key}',this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
+    html+=`<button class="filter-btn${areaFilter===key?' active':''}" onclick="setAreaFilter(${jsa(key)},this)">${esc(a.emoji)} ${esc(a.label)}</button>`;
   });
   row.innerHTML=html;
   renderTasks();
@@ -973,7 +978,7 @@ function renderCustomAreaList(){
     return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);">`
       +`<input type="checkbox" id="areaChk_${c.key}" ${checked?'checked':''} style="width:15px;height:15px;">`
       +`<span style="flex:1;">${esc(c.emoji||'🔖')} ${esc(c.label)}</span>`
-      +`<button type="button" onclick="deleteCustomAreaDraft('${c.key}')" title="Excluir" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;padding:2px 4px;">🗑️</button>`
+      +`<button type="button" onclick="deleteCustomAreaDraft(${jsa(c.key)})" title="Excluir" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;padding:2px 4px;">🗑️</button>`
       +`</label>`;
   }).join('');
 }
@@ -1027,7 +1032,7 @@ async function saveAreaSettings(){
   await savePrefs();
   notify('✓ Áreas atualizadas!','success');
 }
-let fbUnsubTasks=null,fbUnsubNotes=null,fbUnsubRoutines=null,fbUnsubProjects=null,fbUnsubIdeas=null;
+let fbUnsubTasks=null,fbUnsubShared=null,fbUnsubNotes=null,fbUnsubRoutines=null,fbUnsubProjects=null,fbUnsubIdeas=null;
 let routines=[];
   let ideas=[];
   let ideaFilter='all';
@@ -1083,41 +1088,28 @@ async function savePrefs(){
   await window.fbSave(`prefs/${cu}`,{theme:isDark?'dark':'light',gProfile:gProfile||null,enabledAreas,customAreas});
 }
 function startListeners(){
-  // Unsubscribe previous
-  if(fbUnsubTasks)fbUnsubTasks();
-  if(fbUnsubNotes)fbUnsubNotes();
-  if(fbUnsubRoutines)fbUnsubRoutines();
-  if(fbUnsubProjects)fbUnsubProjects();
-  if(isFamily(cu)){
-    // Tiago/Monique: merge personal + household shared tasks
-    fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,myTasks=>{
-      window.fbListenCol('shared_tasks',sharedTasks=>{
-        tasks=[...myTasks,...sharedTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
-        renderTasks();updateStats();renderShared();renderHoje();
-        document.getElementById('fbDot').classList.add('on');
-        document.getElementById('fbLbl').textContent='';
-      });
-    });
-  }else{
-    // Independent/solo accounts: fully private, never touch the family's shared_tasks
-    fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,myTasks=>{
-      tasks=[...myTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
-      renderTasks();updateStats();renderShared();renderHoje();
-      document.getElementById('fbDot').classList.add('on');
-      document.getElementById('fbLbl').textContent='';
-    });
-  }
+  // Cancela os anteriores (cada listener é criado UMA vez — antes, cada atualização
+  // das tarefas/rotinas abria mais um listener de shared_tasks/ideas).
+  [fbUnsubTasks,fbUnsubShared,fbUnsubNotes,fbUnsubRoutines,fbUnsubProjects,fbUnsubIdeas].forEach(u=>{try{u&&u();}catch(e){}});
+  fbUnsubShared=null;fbUnsubIdeas=null;
+  let myTasks=[],sharedTasks=[];
+  const mergeTasks=()=>{
+    tasks=[...myTasks,...sharedTasks].sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
+    renderTasks();updateStats();renderShared();renderHoje();
+    document.getElementById('fbDot').classList.add('on');
+    document.getElementById('fbLbl').textContent='';
+  };
+  fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,t=>{myTasks=t;mergeTasks();});
+  // Tiago/Monique: + tarefas partilhadas da família. Contas independentes nunca tocam em shared_tasks.
+  if(isFamily(cu))fbUnsubShared=window.fbListenCol('shared_tasks',t=>{sharedTasks=t;mergeTasks();});
   fbUnsubNotes=window.fbListenCol(`users/${cu}/notes`,n=>{
     notes=n.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
     renderNotes();
   });
-  fbUnsubRoutines=window.fbListenCol(`users/${cu}/routines`,r=>{
-    routines=r;
-    renderRoutines();
-    fbUnsubIdeas=window.fbListenCol(`users/${cu}/ideas`,i=>{
-      ideas=i.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
-      renderIdeas();
-    });
+  fbUnsubRoutines=window.fbListenCol(`users/${cu}/routines`,r=>{routines=r;renderRoutines();});
+  fbUnsubIdeas=window.fbListenCol(`users/${cu}/ideas`,i=>{
+    ideas=i.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
+    renderIdeas();
   });
   fbUnsubProjects=window.fbListenCol(`users/${cu}/projects`,p=>{
     projects=p.sort((a,b)=>((a.createdAt||'')<(b.createdAt||''))?-1:1);
@@ -1131,6 +1123,42 @@ async function sha256(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 function hasPin(uid){return!!localStorage.getItem(`pin_${uid}`);}
+// PIN v2: PBKDF2-SHA256 com sal aleatório (150 000 iterações) — "v2$sal$hash".
+// Os PINs antigos (SHA-256 simples) continuam a funcionar e são convertidos ao primeiro uso.
+const PIN_ITER=150000;
+function hexOf(buf){return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function pbkdf2Hex(pin,saltHex){
+  const salt=new Uint8Array(saltHex.match(/../g).map(h=>parseInt(h,16)));
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);
+  return hexOf(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations:PIN_ITER},key,256));
+}
+async function makePinHash(pin){const salt=hexOf(crypto.getRandomValues(new Uint8Array(16)));return `v2$${salt}$${await pbkdf2Hex(pin,salt)}`;}
+async function verifyPin(uid,pin){
+  const stored=localStorage.getItem(`pin_${uid}`);if(!stored)return false;
+  if(stored.startsWith('v2$')){const[,salt,h]=stored.split('$');return (await pbkdf2Hex(pin,salt))===h;}
+  if(await sha256(pin)!==stored)return false;
+  try{localStorage.setItem(`pin_${uid}`,await makePinHash(pin));}catch(e){}
+  return true;
+}
+// Tentativas falhadas: a partir da 5.ª há espera crescente; à 10.ª a sessão deste
+// aparelho é terminada (é preciso voltar a entrar com Google/Apple).
+function pinFails(uid){return parseInt(localStorage.getItem(`pinFails_${uid}`)||'0',10)||0;}
+function pinLockedFor(uid){const until=parseInt(localStorage.getItem(`pinLockUntil_${uid}`)||'0',10)||0;return Math.max(0,until-Date.now());}
+function pinRegisterFail(uid){
+  const n=pinFails(uid)+1;localStorage.setItem(`pinFails_${uid}`,String(n));
+  if(n>=10){
+    ['pin_','pinFails_','pinLockUntil_','gtoken_','gtoken_expiry_','grefresh_'].forEach(k=>{try{localStorage.removeItem(k+uid);}catch(e){}});
+    try{localStorage.removeItem('sessionUid');}catch(e){}
+    if(window.fbSignOut)window.fbSignOut();
+    notify('Demasiadas tentativas. Por segurança, entra outra vez com a tua conta.','error');
+    document.getElementById('pinScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    return true;
+  }
+  if(n>=5)localStorage.setItem(`pinLockUntil_${uid}`,String(Date.now()+30000*Math.pow(2,n-5)));
+  return false;
+}
+function pinResetFails(uid){try{localStorage.removeItem(`pinFails_${uid}`);localStorage.removeItem(`pinLockUntil_${uid}`);}catch(e){}}
 function handleProfileClick(uid){
   // No iOS, com Face ID/Touch ID ativo e sessão guardada, a biometria substitui o PIN.
   if(bioEnabled()&&localStorage.getItem('sessionUid')===uid){
@@ -1164,10 +1192,8 @@ function handlePinKey(e){if(e.key==='Enter')submitPin();}
 async function checkPinAutoSubmit(){
   if(pinAutoSubmitting)return;
   const val=document.getElementById('pinInput').value.trim();
-  if(val.length<4)return;
-  const hash=await sha256(val);
-  const stored=localStorage.getItem(`pin_${pendingPinUser}`);
-  if(hash===stored){
+  if(val.length<4||pinLockedFor(pendingPinUser))return;
+  if(await verifyPin(pendingPinUser,val)){
     pinAutoSubmitting=true;
     await submitPin();
   }
@@ -1175,9 +1201,14 @@ async function checkPinAutoSubmit(){
 async function submitPin(){
   const val=document.getElementById('pinInput').value.trim();
   if(!/^\d{4,6}$/.test(val)){notify('O PIN deve ter de 4 a 6 números.','error');return;}
-  const hash=await sha256(val);
-  const stored=localStorage.getItem(`pin_${pendingPinUser}`);
-  if(hash!==stored){notify('PIN incorreto.','error');document.getElementById('pinInput').value='';return;}
+  const wait=pinLockedFor(pendingPinUser);
+  if(wait){notify(`Demasiadas tentativas. Tenta de novo dentro de ${Math.ceil(wait/1000)} s.`,'error');document.getElementById('pinInput').value='';return;}
+  if(!(await verifyPin(pendingPinUser,val))){
+    document.getElementById('pinInput').value='';
+    if(!pinRegisterFail(pendingPinUser))notify('PIN incorreto.','error');
+    return;
+  }
+  pinResetFails(pendingPinUser);
   const targetUid=pendingPinUser;
   // The PIN only unlocks the app UI. Firestore access still requires a real
   // Firebase Auth session for THIS person — if this device currently holds
@@ -1220,8 +1251,8 @@ async function confirmPinSetup(){
   const p2=document.getElementById('newPin2').value.trim();
   if(!/^\d{4,6}$/.test(p1)){notify('O PIN deve ter de 4 a 6 números.','error');return;}
   if(p1!==p2){notify('Os PINs não coincidem.','error');return;}
-  const hash=await sha256(p1);
-  localStorage.setItem(`pin_${pendingPinSetupUser}`,hash);
+  localStorage.setItem(`pin_${pendingPinSetupUser}`,await makePinHash(p1));
+  pinResetFails(pendingPinSetupUser);
   document.getElementById('pinSetupModal').classList.remove('open');
   notify('🔒 PIN criado! Da próxima vez, use-o para entrar rápido.','success');
 }
@@ -1462,7 +1493,7 @@ function renderDynamicLoginCards(){
   div.className='login-card';
   div.id='lcard_'+uid;
   div.onclick=()=>handleProfileClick(uid);
-  div.innerHTML=`<div class="login-avatar" style="background:${p.color};color:#0f0e0c;font-weight:700;">${esc(p.emoji||(p.name||'U').charAt(0))}</div><div class="login-name">${esc(p.name||'Usuário')}</div><div class="login-hint">Continuar</div>`;
+  div.innerHTML=`<div class="login-avatar" style="background:${safeColor(p.color)};color:#0f0e0c;font-weight:700;">${esc(p.emoji||(p.name||'U').charAt(0))}</div><div class="login-name">${esc(p.name||'Usuário')}</div><div class="login-hint">Continuar</div>`;
   cardsWrap.appendChild(div);
 }
 // Only show a quick-access card for Tiago/Monique on a device that has
@@ -1546,6 +1577,7 @@ async function startAppleAuth(){
     dbg(`startAppleAuth: identity = ${cu}`);
     cu=await saveAuthMapSafe(fb.uid,cu,gProfile);
     try{localStorage.setItem(`authUidFor_${cu}`,fb.uid);}catch(e){}
+    if(pendingRefreshToken){try{localStorage.setItem(`grefresh_${cu}`,pendingRefreshToken);}catch(e){} pendingRefreshToken=null;}
     await enterApp();
     markSession(cu);
     clearLoginDebug();
@@ -1586,7 +1618,7 @@ function startGoogleAuth(){
   }
   if(isNativeApp()){startNativeBridgeAuth();return;}
   const redirect='https://tiagocamargos1.github.io/Assistente';
-  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
+  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account&state=${encodeURIComponent(newOAuthState())}`;
   dbg('startGoogleAuth: redirecting to accounts.google.com now');
   window.location.href=url;
 }
@@ -1596,7 +1628,7 @@ async function iosBuildNumber(){
 function startNativeBridgeAuth(){
   {
     const bridge='https://tiagocamargos1.github.io/Assistente/oauth-bridge.html';
-    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(bridge)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account`;
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(bridge)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=select_account&state=${encodeURIComponent(newOAuthState())}`;
     const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
     if(browser){
       dbg('startGoogleAuth: native platform, opening system browser tab');
@@ -1606,6 +1638,22 @@ function startNativeBridgeAuth(){
       window.location.href=url;
     }
   }
+}
+// ── OAuth "state" (anti-CSRF / anti-injeção de login) ───────────
+// Cada pedido de login leva um valor aleatório; a resposta só é aceite se o
+// trouxer de volta. Impede que um link com #access_token=<token de outra pessoa>
+// (ou assistentepessoal://oauthcallback#…) inicie sessão na conta errada.
+function newOAuthState(){
+  const st=b64url(crypto.getRandomValues(new Uint8Array(24)));
+  try{localStorage.setItem('oauthState',JSON.stringify({s:st,t:Date.now()}));}catch(e){}
+  return st;
+}
+function consumeOAuthState(got){
+  let ok=false;
+  try{const o=JSON.parse(localStorage.getItem('oauthState')||'null');localStorage.removeItem('oauthState');
+    ok=!!o&&!!got&&o.s===got&&(Date.now()-o.t)<20*60*1000;}catch(e){}
+  if(!ok)dbg('OAuth: resposta recusada (state em falta ou diferente)');
+  return ok;
 }
 // ── PKCE (app nativo iOS) ────────────────────────
 function b64url(bytes){
@@ -1617,7 +1665,7 @@ async function startIosPkceAuth(){
   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
   const challenge=b64url(new Uint8Array(digest));
   try{localStorage.setItem('pkce_verifier',verifier);}catch(e){}
-  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${IOS_CLIENT_ID}&redirect_uri=${encodeURIComponent(IOS_REDIRECT)}&response_type=code&scope=${encodeURIComponent(SCOPES)}&code_challenge=${challenge}&code_challenge_method=S256&prompt=select_account`;
+  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${IOS_CLIENT_ID}&redirect_uri=${encodeURIComponent(IOS_REDIRECT)}&response_type=code&scope=${encodeURIComponent(SCOPES)}&code_challenge=${challenge}&code_challenge_method=S256&prompt=select_account&state=${encodeURIComponent(newOAuthState())}`;
   const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
   dbg('startIosPkceAuth: opening system browser (code+PKCE)');
   if(browser)browser.open({url});else window.location.href=url;
@@ -1639,6 +1687,7 @@ async function handleIosPkceCallback(rawUrl){
     const q=rawUrl.split('?')[1]||'';
     const p=new URLSearchParams(q.split('#')[0]);
     code=p.get('code');err=p.get('error');
+    if(code&&!consumeOAuthState(p.get('state')))code=null;
   }catch(e){}
   dbg(`handleIosPkceCallback: code=${!!code} error=${err||'none'}`);
   if(!code){notify('Login com Google cancelado ou recusado.','info');return;}
@@ -1649,7 +1698,8 @@ async function handleIosPkceCallback(rawUrl){
   if(pendingUid)cu=pendingUid;
   try{
     const j=await googleTokenRequest({client_id:IOS_CLIENT_ID,code,code_verifier:verifier,grant_type:'authorization_code',redirect_uri:IOS_REDIRECT});
-    if(j.refresh_token&&cu){try{localStorage.setItem(`grefresh_${cu}`,j.refresh_token);}catch(e){}}
+    // O refresh token só é guardado depois de o authMap confirmar a identidade (ver onToken).
+    pendingRefreshToken=j.refresh_token||null;
     dbg(`handleIosPkceCallback: exchange ok, refresh=${!!j.refresh_token}`);
     onToken(j.access_token);
   }catch(e){
@@ -1686,7 +1736,7 @@ async function onToken(tk){
     const r=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:`Bearer ${tk}`}});
     if(!r.ok){dbg(`onToken: userinfo fetch HTTP ${r.status}`);}
     gProfile=await r.json();
-    dbg(`onToken: userinfo ok, email=${gProfile&&gProfile.email||'?'}`);
+    dbg(`onToken: userinfo ok, email=${gProfile&&gProfile.email?'sim':'?'}`);
     if(!window.firebaseReady){
       dbg('onToken: waiting for firebaseReady…');
       await new Promise(res=>window.addEventListener('firebaseReady',res,{once:true}));
@@ -1698,7 +1748,7 @@ async function onToken(tk){
     try{
       dbg('onToken: calling Firebase signInWithCredential');
       authUid=await window.fbSignInWithGoogleToken(tk);
-      dbg(`onToken: Firebase auth OK, authUid=${authUid}`);
+      dbg('onToken: Firebase auth OK');
     }catch(authErr){
       console.error('fbSignInWithGoogleToken failed:',authErr);
       dbg(`onToken: Firebase auth FAILED — ${authErr&&authErr.code||''} ${authErr&&authErr.message||authErr}`);
@@ -1714,6 +1764,7 @@ async function onToken(tk){
     dbg(`onToken: resolved identity = ${cu}`);
     cu=await saveAuthMapSafe(authUid,cu,gProfile);
     try{localStorage.setItem(`authUidFor_${cu}`,authUid);}catch(e){}
+    if(pendingRefreshToken){try{localStorage.setItem(`grefresh_${cu}`,pendingRefreshToken);}catch(e){} pendingRefreshToken=null;}
     // Update avatar in login screen
     const img=document.getElementById(`limg${cu.charAt(0).toUpperCase()+cu.slice(1)}`);
     if(img&&gProfile.picture){img.src=gProfile.picture;img.style.display='block';img.nextSibling&&(img.nextSibling.style.display='none');}
@@ -1772,9 +1823,10 @@ async function getValidToken(){
       }
       resolve(gToken);
     }
+    const silentState=b64url(crypto.getRandomValues(new Uint8Array(24)));
     function onMsg(ev){
       if(ev.origin!==window.location.origin)return;
-      if(ev.data&&ev.data.type==='silentGoogleToken')finish(ev.data.token||null);
+      if(ev.data&&ev.data.type==='silentGoogleToken'&&ev.data.state===silentState)finish(ev.data.token||null);
     }
     window.addEventListener('message',onMsg);
     const redirect='https://tiagocamargos1.github.io/Assistente';
@@ -1787,14 +1839,15 @@ async function getValidToken(){
       const p=gProfile||JSON.parse(localStorage.getItem(`gprofile_${cu}`)||'null');
       if(p&&p.email)hint='&login_hint='+encodeURIComponent(p.email);
     }catch(e){}
-    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none${hint}`;
+    const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&prompt=none${hint}&state=${encodeURIComponent(silentState)}`;
     iframe.src=url;
     document.body.appendChild(iframe);
     setTimeout(()=>finish(null),8000);
   });
 }
 async function enterApp(){
-  if(!cu)cu='tiago';
+  // Nunca assumir uma identidade por defeito: sem sessão provada, volta ao login.
+  if(!cu){document.getElementById('loginScreen').classList.remove('hidden');return;}
   hydrateProfile(cu);
   document.getElementById('loginScreen').classList.add('hidden');
   updateChip();
@@ -1874,13 +1927,13 @@ async function deleteAccount(){
   if((typed||'').trim().toUpperCase()!=='ELIMINAR'){notify('Eliminação cancelada.','info');return;}
   notify('A eliminar a conta…','info');
   try{
-    if(fbUnsubTasks)fbUnsubTasks();if(fbUnsubNotes)fbUnsubNotes();if(fbUnsubRoutines)fbUnsubRoutines();if(fbUnsubProjects)fbUnsubProjects();if(fbUnsubIdeas)fbUnsubIdeas();
+    if(fbUnsubTasks)fbUnsubTasks();if(fbUnsubShared)fbUnsubShared();if(fbUnsubNotes)fbUnsubNotes();if(fbUnsubRoutines)fbUnsubRoutines();if(fbUnsubProjects)fbUnsubProjects();if(fbUnsubIdeas)fbUnsubIdeas();
     stopCasaListeners();
     const cols={tasks,notes,routines,projects,ideas};
     for(const [col,arr] of Object.entries(cols)){
       for(const it of (arr||[])){ if(it&&it.id){ try{await window.fbDelete(`users/${cu}/${col}/${it.id}`);}catch(e){} } }
     }
-    for(const path of [`users/${cu}`,`prefs/${cu}`,`push_subscriptions/${cu}`,`calendar_cache/${cu}`]){ try{await window.fbDelete(path);}catch(e){} }
+    for(const path of [`prefs/${cu}`,`push_subscriptions/${cu}`,`calendar_cache/${cu}`]){ try{await window.fbDelete(path);}catch(e){} }
     try{ if(gProfile&&gProfile.id)await window.fbDelete(`people/${gProfile.id}`); }catch(e){}
     try{ const em=casaEmail(); if(em)await window.fbDelete(`houseIndex/${houseIndexKey(em)}`); }catch(e){}
     try{ const au=await window.fbGetAuthUid(); if(au&&window.fbQueryEq){ for(const l of await window.fbQueryEq('linkedAccounts','linkerUid',au)){ try{await window.fbDelete(`linkedAccounts/${l.id}`);}catch(e){} } } }catch(e){}
@@ -1907,6 +1960,8 @@ async function deleteAccount(){
 function logout(){
   if(!confirm('Sair?'))return;
   if(fbUnsubTasks)fbUnsubTasks();
+  if(fbUnsubShared)fbUnsubShared();
+  try{localStorage.removeItem('loginDebugLog');}catch(e){}
   if(fbUnsubNotes)fbUnsubNotes();
   if(fbUnsubRoutines)fbUnsubRoutines();
   if(fbUnsubProjects)fbUnsubProjects();
@@ -1924,7 +1979,7 @@ function logout(){
 function updateChip(){
   const u=USERS[cu]||USERS.tiago;
   const av=document.getElementById('chipAv');
-  if(gProfile?.picture){av.innerHTML=`<img src="${gProfile.picture}" style="width:28px;height:28px;border-radius:50%;">`;}
+  if(gProfile?.picture){av.innerHTML=/^https:\/\//.test(String(gProfile.picture))?`<img src="${esc(gProfile.picture)}" style="width:28px;height:28px;border-radius:50%;" referrerpolicy="no-referrer">`:'';}
   else{av.textContent=u.emoji;av.style.background=u.color;}
   document.getElementById('chipName').textContent=u.name;
 }
@@ -2501,14 +2556,14 @@ function renderTasks(){
 function taskHTML(t){
   const canDel=!t.shared||t.owner===cu;
   const other=t.owner&&t.owner!==cu?USERS[t.owner]?.name:null;
-  const tid=String(t.id).replace(/'/g,'');
+  const tid=String(t.id);
   const prio=taskPriority(t);
   const pDef=priorityDef(prio);
   const status=taskStatus(t);
   const proj=t.projectId?projects.find(p=>p.id===t.projectId):null;
   const assignee=t.shared&&t.assignedTo?USERS[t.assignedTo]?.name:null;
   return`<div class="task-item${t.done?' done':''}${status==='andamento'?' inprog':''}">
-    <div class="task-check" onclick="toggleTask('${tid}')">${t.done?'✓':''}</div>
+    <div class="task-check" onclick="toggleTask(${jsa(tid)})">${t.done?'✓':''}</div>
     <div class="task-body">
       <div class="task-text">${esc(t.text||'')}</div>
       <div class="task-meta">
@@ -2527,10 +2582,10 @@ function taskHTML(t){
     <div class="task-acts">
       <button class="tact-kebab" onclick="toggleTaskMenu(event)">⋮</button>
       <div class="task-menu">
-        ${!t.done?`<div class="tmenu-item" onclick="toggleInProgress('${tid}');closeAllTaskMenus()">${status==='andamento'?'⏸ Pausar':'▶ Iniciar'}</div>`:''}
-        <div class="tmenu-item" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal('${tid}');closeAllTaskMenus()">${hasActiveReminder(t)?'⏰ Lembrete agendado':'🔔 Agendar lembrete'}</div>
-        ${canDel?`<div class="tmenu-item" onclick="openEditTask('${tid}');closeAllTaskMenus()">✏️ Editar</div>`:''}
-        ${canDel?`<div class="tmenu-item danger" onclick="deleteTask('${tid}');closeAllTaskMenus()">✕ Excluir</div>`:''}
+        ${!t.done?`<div class="tmenu-item" onclick="toggleInProgress(${jsa(tid)});closeAllTaskMenus()">${status==='andamento'?'⏸ Pausar':'▶ Iniciar'}</div>`:''}
+        <div class="tmenu-item" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal(${jsa(tid)});closeAllTaskMenus()">${hasActiveReminder(t)?'⏰ Lembrete agendado':'🔔 Agendar lembrete'}</div>
+        ${canDel?`<div class="tmenu-item" onclick="openEditTask(${jsa(tid)});closeAllTaskMenus()">✏️ Editar</div>`:''}
+        ${canDel?`<div class="tmenu-item danger" onclick="deleteTask(${jsa(tid)});closeAllTaskMenus()">✕ Excluir</div>`:''}
       </div>
     </div>
   </div>`;
@@ -2635,7 +2690,7 @@ function overdueLabel(iso){
 }
 function reminderBadgeHTML(t){
   if(!hasActiveReminder(t))return'';
-  const tid=String(t.id).replace(/'/g,'');
+  const tid=String(t.id);
   if(isReminderOverdue(t))return`<span class="ttag" id="rembadge-${tid}" style="color:var(--red);border-color:var(--red);background:rgba(192,96,96,.15);">🔴 ${overdueLabel(t.reminderAt)}</span>`;
   return`<span class="ttag" style="color:var(--gold);border-color:var(--gold);">⏰ ${fdt(t.reminderAt)}</span>`;
 }
@@ -2756,7 +2811,7 @@ function renderNotes(){
     <div class="note-card">
       <div class="note-text">${esc(n.text||'')}</div>
       <div class="note-meta">${fd2(n.createdAt)} · ${USERS[n.owner]?.name||'?'}</div>
-      <button class="note-del" onclick="deleteNote('${String(n.id)}')">✕</button>
+      <button class="note-del" onclick="deleteNote(${jsa(n.id)})">✕</button>
     </div>`).join('');
 }
 // ── ROUTINES (recurring habits) ───────────────────
@@ -2828,13 +2883,13 @@ function renderRoutines(){
     }
     return `<div class="note-card">
       <div style="display:flex;align-items:flex-start;gap:9px;">
-        <div class="task-check" style="${done?'background:var(--green);border-color:var(--green);color:#fff;':''}${!due?'opacity:.35;pointer-events:none;':''}" onclick="toggleRoutineToday('${r.id}')">${done?'✓':''}</div>
+        <div class="task-check" style="${done?'background:var(--green);border-color:var(--green);color:#fff;':''}${!due?'opacity:.35;pointer-events:none;':''}" onclick="toggleRoutineToday(${jsa(r.id)})">${done?'✓':''}</div>
         <div style="flex:1;min-width:0;">
           <div class="note-text">${esc(r.text)} ${areaTag(r.area)}</div>
           <div class="note-meta">${r.freq==='daily'?'Todos os dias':'Semanal'}${!due?' · não é hoje':''}</div>
           <div style="display:flex;gap:3px;margin-top:6px;">${dots}</div>
         </div>
-        <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="removeRoutine('${r.id}')">✕</button>
+        <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="removeRoutine(${jsa(r.id)})">✕</button>
       </div>
     </div>`;
   }).join('');
@@ -2897,9 +2952,9 @@ async function offerHouseInvites(email,currentHid){
   try{list=await window.fbQueryEq('invites','email',houseIndexKey(email));}catch(e){dbg('invites read '+(e&&e.code||e));return null;}
   for(const inv of list){
     if(!inv.hid||inv.hid===currentHid){try{await window.fbDelete(`invites/${inv.id}`);}catch(e){}continue;}
-    const who=inv.fromName?`${inv.fromName} (${inv.fromEmail||''})`:(inv.fromEmail||'Alguém');
+    const who=`${inv.fromEmail||'?'}${inv.fromName?` (${String(inv.fromName).slice(0,40)})`:''}`;
     const extra=currentHid?'\n\nAo aceitar, deixas a casa atual e passas a ver esta.':'';
-    const ok=confirm(`${who} convidou-te para a casa "${inv.houseName||'Casa'}".\n\nAceitar? Vais ver e marcar as tarefas da casa e partilhar a lista de compras.${extra}`);
+    const ok=confirm(`${who} convidou-te para a casa "${String(inv.houseName||'Casa').slice(0,40)}".\n\nSó aceites se conheces este e-mail.\n\nAceitar? Vais ver e marcar as tarefas da casa e partilhar a lista de compras.${extra}`);
     try{
       if(ok)await window.fbSave(`houseIndex/${houseIndexKey(email)}`,{hid:inv.hid,email:houseIndexKey(email)});
       await window.fbDelete(`invites/${inv.id}`);
@@ -3030,7 +3085,7 @@ function renderCasaFeed(){
   const members=Object.entries((casa&&casa.members)||{});
   const week=Date.now()-7*86400000;
   const counts={};for(const e of ev){if(new Date(e.at).getTime()>=week)counts[e.uid]=(counts[e.uid]||0)+1;}
-  const stats=members.map(([uid,m])=>`<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="casa-av" style="background:${esc(m.color||'#c9a84c')};width:20px;height:20px;font-size:9px;">${esc((m.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(m.name||uid)}: <strong>${counts[uid]||0}</strong></span></span>`).join('');
+  const stats=members.map(([uid,m])=>`<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="casa-av" style="background:${safeColor(m.color)};width:20px;height:20px;font-size:9px;">${esc((m.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(m.name||uid)}: <strong>${counts[uid]||0}</strong></span></span>`).join('');
   let html='';let lastDay='';
   for(const e of ev){
     const ds=e.at.slice(0,10);
@@ -3068,7 +3123,7 @@ function casaShiftMonth(delta){
   renderCasa();
 }
 function casaOpenDay(ds){casaDate=ds;casaView='day';listenCasaDay();renderCasa();}
-function casaMemberColor(uid){const m=(casa&&casa.members||{})[uid];return(m&&m.color)||(USERS[uid]&&USERS[uid].color)||'#c9a84c';}
+function casaMemberColor(uid){const m=(casa&&casa.members||{})[uid];return safeColor((m&&m.color)||(USERS[uid]&&USERS[uid].color));}
 function renderCasaMonth(){
   const [y,m]=casaMonth.split('-').map(Number);
   const nDays=new Date(y,m,0).getDate();
@@ -3078,7 +3133,7 @@ function renderCasaMonth(){
   const tasks=casaTasks();
   const monthLabel=new Date(y,m-1,1).toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
   const members=Object.entries((casa&&casa.members)||{});
-  const legend=members.map(([uid,mm])=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;"><span class="casa-av" style="background:${esc(mm.color||'#c9a84c')};width:18px;height:18px;font-size:9px;">${esc((mm.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(mm.name||uid)}</span></span>`).join('')+`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:rgba(192,96,96,.4)"></span><span style="font-size:11px;color:var(--text-muted)">não feito</span></span>`;
+  const legend=members.map(([uid,mm])=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;"><span class="casa-av" style="background:${safeColor(mm.color)};width:18px;height:18px;font-size:9px;">${esc((mm.name||uid).charAt(0).toUpperCase())}</span><span style="font-size:11px;color:var(--text-muted)">${esc(mm.name||uid)}</span></span>`).join('')+`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:rgba(192,96,96,.4)"></span><span style="font-size:11px;color:var(--text-muted)">não feito</span></span>`;
   let head='<tr><th>Tarefa</th>';
   for(let d=1;d<=nDays;d++){const ds=`${casaMonth}-${String(d).padStart(2,'0')}`;head+=`<th class="${ds===today?'today':''}">${d}</th>`;}
   head+='</tr>';
@@ -3096,7 +3151,7 @@ function renderCasaMonth(){
       else if(ds<today||(ds===today&&t.time&&casaMinutes(t.time)<nowMin)){cls+=' miss';}
       else{cls+=' future';}
       if(ds===today)cls+=' today';
-      body+=`<td class="${cls}" onclick="casaOpenDay('${ds}')">${inner}</td>`;
+      body+=`<td class="${cls}" onclick="casaOpenDay(${jsa(ds)})">${inner}</td>`;
     }
     body+='</tr>';
   }
@@ -3133,7 +3188,7 @@ function casaHojeHTML(){
   const next=pend.filter(t=>t.time&&casaMinutes(t.time)>=nowMin).sort((a,b)=>casaMinutes(a.time)-casaMinutes(b.time))[0];
   const late=pend.filter(t=>t.time&&casaMinutes(t.time)<nowMin);
   const shopN=(typeof shoppingPending==='function')?shoppingPending().length:0;
-  const rows=pend.map(t=>{const isLate=t.time&&casaMinutes(t.time)<nowMin;return `<div class="casa-item${isLate?' late':''}" onclick="casaToggle('${esc(t.id)}','${today}')">
+  const rows=pend.map(t=>{const isLate=t.time&&casaMinutes(t.time)<nowMin;return `<div class="casa-item${isLate?' late':''}" onclick="casaToggle(${jsa(t.id)},${jsa(today)})">
       <div class="casa-check"></div>
       <div class="casa-lbl"><div>${esc(t.label)}</div>${isLate?'<div class="casa-sub">em atraso</div>':''}</div>
       ${t.time?`<div class="casa-time">${isLate?'⚠️ ':'até '}${esc(t.time)}</div>`:''}
@@ -3195,20 +3250,20 @@ function renderCasa(){
   const doneCount=items.filter(t=>done[t.id]).length;
   const pct=items.length?Math.round(doneCount/items.length*100):0;
   const members=Object.entries((casa&&casa.members)||{});
-  const avs=members.map(([uid,m])=>`<div class="casa-av" title="${esc(m.name||uid)}${m.notif?' · lembretes ativos':' · sem lembretes'}" style="background:${esc(m.color||'#c9a84c')};position:relative;">${esc((m.name||uid).charAt(0).toUpperCase())}<span style="position:absolute;right:-5px;bottom:-5px;font-size:10px;line-height:1;">${m.notif?'🔔':'🔕'}</span></div>`).join('');
+  const avs=members.map(([uid,m])=>`<div class="casa-av" title="${esc(m.name||uid)}${m.notif?' · lembretes ativos':' · sem lembretes'}" style="background:${safeColor(m.color)};position:relative;">${esc((m.name||uid).charAt(0).toUpperCase())}<span style="position:absolute;right:-5px;bottom:-5px;font-size:10px;line-height:1;">${m.notif?'🔔':'🔕'}</span></div>`).join('');
   const semNotif=members.filter(([uid,m])=>!m.notif).map(([uid,m])=>m.name||uid);
   const notifLine=semNotif.length?`<div style="font-size:11px;color:var(--text-muted);margin:-4px 0 10px;">🔕 Sem lembretes: <strong>${esc(semNotif.join(', '))}</strong> — ${semNotif.includes((USERS[cu]||{}).name)?`<a href="#" onclick="openPushSettings();return false;" style="color:var(--gold)">ativa aqui</a>`:'cada um ativa no próprio telemóvel'}</div>`:'';
   const rows=items.map(t=>{
     const dn=done[t.id];
     const tMin=casaMinutes(t.time);
     const late=!dn&&isToday&&tMin!==null&&nowMin>tMin;
-    const timeLbl=t.time?(late?`⚠️ ${t.time}`:`até ${t.time}`):'';
+    const timeLbl=t.time?(late?`⚠️ ${esc(t.time)}`:`até ${esc(t.time)}`):'';
     const sub=dn?`✓ ${esc(dn.name||dn.by||'')} · ${casaFmtTime(dn.at)}`:(late?'em atraso':(t.extra?'só hoje':''));
-    return `<div class="casa-item${dn?' done':''}${late?' late':''}" onclick="casaToggle('${esc(t.id)}')">
+    return `<div class="casa-item${dn?' done':''}${late?' late':''}" onclick="casaToggle(${jsa(t.id)})">
       <div class="casa-check">${dn?'✓':''}</div>
       <div class="casa-lbl"><div>${esc(t.label)}</div>${sub?`<div class="casa-sub">${sub}</div>`:''}</div>
       ${timeLbl?`<div class="casa-time">${timeLbl}</div>`:''}
-      ${t.extra?`<button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();casaRemoveExtra('${esc(t.id)}')">✕</button>`:''}
+      ${t.extra?`<button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();casaRemoveExtra(${jsa(t.id)})">✕</button>`:''}
     </div>`;
   }).join('');
   el.innerHTML=`
@@ -3259,16 +3314,28 @@ function startCasaDevicesListener(){
   if(fbUnsubCasaDevices||!window.fbListenCol)return;
   fbUnsubCasaDevices=window.fbListenCol(`household/${CASA_ID}/devices`,list=>{casaDevices=list;renderCasaDevices();});
 }
+// Mesmo cálculo do ecra.html: o código é derivado do uid do ecrã, nunca do que o ecrã escreveu.
+function deviceCode(u){
+  const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';u=String(u||'');
+  const fnv=seed=>{let h=seed>>>0;for(let i=0;i<u.length;i++){h^=u.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h;};
+  let h1=fnv(2166136261),h2=fnv(0x9747b28c),out='';
+  for(let i=0;i<3;i++){out+=A[h1%32];h1=Math.floor(h1/32);}
+  for(let i=0;i<3;i++){out+=A[h2%32];h2=Math.floor(h2/32);}
+  return out;
+}
 function renderCasaDevices(){
   const el=document.getElementById('casaDevicesList');if(!el)return;
   if(!casaDevices.length){el.innerHTML='Nenhum ecrã pediu ligação.';return;}
   el.innerHTML=casaDevices.sort((a,b)=>(a.approved?1:0)-(b.approved?1:0)).map(d=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
-    <div style="flex:1;min-width:0;"><b style="letter-spacing:2px;color:var(--gold-light);">${esc(d.code||'')}</b> · ${esc(d.name||'Ecrã')}<div style="font-size:11px;color:var(--text-dim);">${d.approved?'✓ ligado':'⏳ à espera de aprovação'}${d.createdAt?' · '+fd2(d.createdAt):''}</div></div>
-    ${d.approved?'':`<button class="filter-btn" style="background:var(--green);color:#fff;border-color:var(--green);" onclick="casaDeviceApprove('${esc(d.id)}')">Aprovar</button>`}
-    <button class="filter-btn" style="color:var(--red);" onclick="casaDeviceRemove('${esc(d.id)}')">✕</button>
+    <div style="flex:1;min-width:0;"><b style="letter-spacing:2px;color:var(--gold-light);">${deviceCode(d.id)}</b> · Ecrã da casa${d.code&&d.code!==deviceCode(d.id)?' <span style="color:var(--red);">⚠️ código não confere — não aprovar</span>':''}<div style="font-size:11px;color:var(--text-dim);">${d.approved?'✓ ligado':'⏳ à espera de aprovação'}${d.createdAt?' · '+fd2(d.createdAt):''}</div></div>
+    ${d.approved?'':`<button class="filter-btn" style="background:var(--green);color:#fff;border-color:var(--green);" onclick="casaDeviceApprove(${jsa(d.id)})">Aprovar</button>`}
+    <button class="filter-btn" style="color:var(--red);" onclick="casaDeviceRemove(${jsa(d.id)})">✕</button>
   </div>`).join('');
 }
 async function casaDeviceApprove(id){
+  const code=deviceCode(id);
+  const typed=prompt(`Para ligar este ecrã, escreve o código de 6 letras que aparece NO PRÓPRIO ECRÃ da casa:`);
+  if(String(typed||'').trim().toUpperCase()!==code){notify('Código diferente — o ecrã não foi ligado.','error');return;}
   try{await window.fbUpdate(`household/${CASA_ID}/devices/${id}`,{approved:true,approvedBy:cu,approvedAt:new Date().toISOString()});notify('✓ Ecrã ligado à casa.','success');}
   catch(e){notify('Erro: '+(e.code||e.message),'error');}
 }
@@ -3330,7 +3397,8 @@ async function saveCasaEdit(){
       }
       for(const em of before){ if(!data.emails.includes(em)){
         try{await window.fbDelete(`invites/${em}__${CASA_ID}`);}catch(e){}
-        try{const idx=await window.fbGet(`houseIndex/${em}`); if(idx&&idx.hid===CASA_ID)await window.fbDelete(`houseIndex/${em}`);}catch(e){}
+        // O dono não pode ler o índice de outra pessoa; as regras só deixam apagá-lo se apontar para esta casa.
+        try{await window.fbDelete(`houseIndex/${em}`);}catch(e){}
       } }
       if(invited)notify(`✉️ ${invited} convite(s) enviado(s): a pessoa aceita ao abrir o Assistente.`,'info');
     }
@@ -3504,17 +3572,17 @@ function renderShopping(){
   const bdg=document.getElementById('bdgS');if(bdg)bdg.textContent=pend.length;
   if(!casaMember){el.innerHTML=`<div class="empty-state"><div class="icon">🛒</div>Esta conta ainda não faz parte de nenhuma casa.</div>`;return;}
   const groups={};for(const i of pend){const k=i.cat||shopCatFor(i.label);(groups[k]=groups[k]||[]).push(i);}
-  const rowHTML=i=>`<div class="task-item" onclick="toggleShoppingItem('${esc(i.id)}')">
+  const rowHTML=i=>`<div class="task-item" onclick="toggleShoppingItem(${jsa(i.id)})">
       <div class="task-check"></div>
-      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''} · <span class="ttag ts" style="cursor:pointer;" title="Toca para mudar a categoria" onclick="event.stopPropagation();cycleShopCat('${esc(i.id)}')">${esc(shopCatDef(i.cat||shopCatFor(i.label)).label)}</span></div></div>
-      <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();removeShoppingItem('${esc(i.id)}')">✕</button>
+      <div class="task-body"><div class="task-text">${esc(i.label)}${i.qty?` <span class="ttag tt">${esc(i.qty)}</span>`:''}</div><div class="note-meta">${esc(i.addedByName||'')}${i.addedAt?` · ${fd2(i.addedAt)}`:''} · <span class="ttag ts" style="cursor:pointer;" title="Toca para mudar a categoria" onclick="event.stopPropagation();cycleShopCat(${jsa(i.id)})">${esc(shopCatDef(i.cat||shopCatFor(i.label)).label)}</span></div></div>
+      <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="event.stopPropagation();removeShoppingItem(${jsa(i.id)})">✕</button>
     </div>`;
   const rows=SHOP_CATS.filter(c=>groups[c.key]).map(c=>`<div class="sdiv" style="margin-top:6px;">${esc(c.label)} · ${groups[c.key].length}</div>`+groups[c.key].map(rowHTML).join('')).join('');
   const shareBtn=pend.length?`<button class="rep-btn" style="margin:4px 0 10px;" onclick="shareShopping()">📤 Partilhar lista (WhatsApp, …)</button>`:'';
   const sugg=shoppingSuggestions();
-  const suggHtml=sugg.length?`<div class="sdiv">Sugestões — já compraram antes</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${sugg.map(s=>`<button class="filter-btn" onclick="addShoppingItem('${esc(s.label).replace(/'/g,'&#39;')}')">+ ${esc(s.label)}${s.n>1?` <span style="opacity:.6">×${s.n}</span>`:''}</button>`).join('')}</div>`:'';
+  const suggHtml=sugg.length?`<div class="sdiv">Sugestões — já compraram antes</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${sugg.map(s=>`<button class="filter-btn" onclick="addShoppingItem(${jsa(s.label)})">+ ${esc(s.label)}${s.n>1?` <span style="opacity:.6">×${s.n}</span>`:''}</button>`).join('')}</div>`:'';
   const bought=shoppingBought();
-  const boughtHtml=bought.length?`<div class="sdiv" style="cursor:pointer;" onclick="shoppingShowBought=!shoppingShowBought;renderShopping()">${shoppingShowBought?'▾':'▸'} Comprados (${bought.length})</div>`+(shoppingShowBought?bought.slice(0,40).map(i=>`<div class="task-item done" onclick="toggleShoppingItem('${esc(i.id)}')">
+  const boughtHtml=bought.length?`<div class="sdiv" style="cursor:pointer;" onclick="shoppingShowBought=!shoppingShowBought;renderShopping()">${shoppingShowBought?'▾':'▸'} Comprados (${bought.length})</div>`+(shoppingShowBought?bought.slice(0,40).map(i=>`<div class="task-item done" onclick="toggleShoppingItem(${jsa(i.id)})">
       <div class="task-check">✓</div>
       <div class="task-body"><div class="task-text">${esc(i.label)}</div><div class="note-meta" style="color:var(--green)">✓ ${esc(i.boughtByName||'')}${i.boughtAt?` · ${fd2(i.boughtAt)}`:''}</div></div>
     </div>`).join('')+`<button class="rep-btn" onclick="clearBoughtOld()">🧹 Limpar comprados há mais de 60 dias</button>`:''):'';
@@ -3770,10 +3838,10 @@ function renderFiltersSheet(){
     catRows+=fOptRow(df.project==='none','✦','Sem projeto',`setDraftFilter('project','none')`);
     projects.forEach(p=>{
       catRows+=`<div class="fopt${df.project===p.id?' sel':''}">
-        <span class="fopt-ic" onclick="setDraftFilter('project','${p.id}')">${p.emoji||'📁'}</span>
-        <span class="fopt-lbl" onclick="setDraftFilter('project','${p.id}')">${esc(p.name)}</span>
-        <span class="fopt-check" onclick="setDraftFilter('project','${p.id}')">${df.project===p.id?'✓':''}</span>
-        <button class="tact" style="margin-left:6px;" onclick="event.stopPropagation();deleteProjectPrompt('${p.id}','${esc(p.name).replace(/'/g,'')}')" title="Excluir">✕</button>
+        <span class="fopt-ic" onclick="setDraftFilter('project',${jsa(p.id)})">${p.emoji||'📁'}</span>
+        <span class="fopt-lbl" onclick="setDraftFilter('project',${jsa(p.id)})">${esc(p.name)}</span>
+        <span class="fopt-check" onclick="setDraftFilter('project',${jsa(p.id)})">${df.project===p.id?'✓':''}</span>
+        <button class="tact" style="margin-left:6px;" onclick="event.stopPropagation();deleteProjectPrompt(${jsa(p.id)},${jsa(p.name)})" title="Excluir">✕</button>
       </div>`;
     });
     catRows+=newProjectDraftOpen
@@ -3823,7 +3891,7 @@ function renderTopGreeting(){
   const visibleAreaKeys=[...enabledAreas,...customAreas.map(c=>c.key)];
   const areaCounts=visibleAreaKeys.map(k=>({key:k,def:areaDef(k),count:tasks.filter(t=>!t.done&&t.area===k).length})).filter(a=>a.def&&a.count>0).sort((a,b)=>b.count-a.count).slice(0,3);
   let chipsHTML=`<div class="hchip hu" onclick="applyQuickFilter('priority','urgente')"><span class="hchip-n">${urgentCount}</span><span class="hchip-l">🔴 urgente${urgentCount===1?'':'s'}</span></div>`;
-  chipsHTML+=areaCounts.map(a=>`<div class="hchip" onclick="applyQuickFilter('area','${a.key}')"><span class="hchip-n">${a.count}</span><span class="hchip-l">${a.def.emoji} ${esc(a.def.label.toLowerCase())}</span></div>`).join('');
+  chipsHTML+=areaCounts.map(a=>`<div class="hchip" onclick="applyQuickFilter('area',${jsa(a.key)})"><span class="hchip-n">${a.count}</span><span class="hchip-l">${a.def.emoji} ${esc(a.def.label.toLowerCase())}</span></div>`).join('');
   el.innerHTML=`
     <div class="hoje-greet-row">
       <div class="hoje-greet">${esc(greetName())} 👋</div>
@@ -3864,6 +3932,11 @@ function notify(msg,type='info'){
   clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),3500);
 }
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// Argumento seguro para handlers inline (onclick="f(${jsa(x)})"): JSON dentro de HTML escapado.
+// O esc() sozinho NÃO protege dentro de onclick='...' (o browser descodifica &#39; antes de correr o JS).
+function jsa(v){return esc(JSON.stringify(String(v==null?'':v)));}
+// Cor de membro/perfil: só #rrggbb (evita injeção de CSS vinda de outros utilizadores).
+function safeColor(c,fb){return /^#[0-9a-fA-F]{6}$/.test(String(c||''))?c:(fb||'#c9a84c');}
 function fd(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});}catch(e){return d;}}
 function fd2(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('pt-BR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return'';}}
 function updateDate(){
@@ -3907,9 +3980,12 @@ let pendingSiriTaskText=null;
 function handleSiriUrl(rawUrl){
   try{
     const u=new URL(rawUrl);
+    // Só o atalho da Siri (assistentepessoal://addtask?title=…) é aceite.
+    if(u.protocol!=='assistentepessoal:'||u.hostname!=='addtask')return;
     const title=u.searchParams.get('title');
     if(!title)return;
-    const text=decodeURIComponent(title);
+    const text=title.replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,300);
+    if(!text)return;
     if(cu){runSiriTask(text);}else{pendingSiriTaskText=text;}
   }catch(e){}
 }
@@ -3937,6 +4013,7 @@ function handleOAuthCallbackUrl(rawUrl){
     dbg(`handleOAuthCallbackUrl: token=${!!tk} error=${err||'none'}`);
     const browser=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
     if(browser&&browser.close)browser.close().catch(()=>{});
+    if(tk&&!consumeOAuthState(p.get('state'))){notify('Pedido de login inválido ou expirado. Tenta outra vez.','error');return true;}
     if(tk){
       let pendingUid=null;
       try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
@@ -4008,15 +4085,16 @@ if(window.self!==window.top && (window.location.hash.includes('access_token')||w
   // inside this throwaway iframe would be wasted work and could race with
   // the real page's own state.
   const p=new URLSearchParams(window.location.hash.substring(1));
-  try{window.parent.postMessage({type:'silentGoogleToken',token:p.get('access_token')||null},window.location.origin);}catch(e){}
+  try{window.parent.postMessage({type:'silentGoogleToken',token:p.get('access_token')||null,state:p.get('state')||null},window.location.origin);}catch(e){}
 }else{
   dbg(`page load — hash has token: ${window.location.hash.includes('access_token')} — standalone=${window.navigator.standalone===true}`);
   if(window.location.hash.includes('access_token')){
     const p=new URLSearchParams(window.location.hash.substring(1));
     const tk=p.get('access_token');
     dbg(`hash parsed — access_token present: ${!!tk}`);
-    if(tk){
-      history.replaceState(null,'',window.location.pathname);
+    history.replaceState(null,'',window.location.pathname);
+    if(tk&&!consumeOAuthState(p.get('state'))){notify('Pedido de login inválido ou expirado. Tenta outra vez.','error');tryResumeSession().catch(()=>{});}
+    else if(tk){
       // If the person tapped a specific card (Tiago/Monique/a known dynamic
       // profile) before being sent to Google, honor that identity. Otherwise
       // leave cu as null so onToken() resolves it fresh from the Google

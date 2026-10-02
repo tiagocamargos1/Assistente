@@ -31,8 +31,16 @@
   // sem um toque do utilizador (visto no Xiaomi da Lu, 22/09) — por isso usa-se
   // o formato intent:// (aponta diretamente ao pacote) e, se em 1,2 s a app não
   // abrir, aparece um botão para o utilizador tocar.
-  var hash = window.location.hash || '';
-  var q = hash.replace(/^#/, '');
+  // Só os parâmetros esperados seguem para a app, cada um codificado; o
+  // fragmento original é apagado do histórico deste separador.
+  var src = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+  var out = new URLSearchParams();
+  ['access_token', 'expires_in', 'token_type', 'state', 'error'].forEach(function (k) {
+    var v = src.get(k); if (v) out.set(k, v);
+  });
+  try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+  var q = out.toString();
+  var hash = q ? '#' + q : '';
   var isAndroid = /Android/i.test(navigator.userAgent);
   var appUrl = 'assistentepessoal://oauthcallback' + hash;
   var intentUrl = 'intent://oauthcallback?' + q + '#Intent;scheme=assistentepessoal;package=com.tocsmartgroup.assistente;end';

@@ -152,7 +152,7 @@ async function sendCasaReminders(subsByUid) {
   const housesSnap = await db.collection('household').get();
   for (const houseSnap of housesSnap.docs) {
     try { await sendHouseReminders(houseSnap, subsByUid); }
-    catch (err) { console.error(`Casa ${houseSnap.id}:`, err.message); }
+    catch (err) { console.error('Casa reminders failed for one house:', err.message); }
   }
 }
 async function sendHouseReminders(houseSnap, subsByUid) {
@@ -166,15 +166,23 @@ async function sendHouseReminders(houseSnap, subsByUid) {
   const day = daySnap.exists ? daySnap.data() : {};
   const done = day.done || {};
   const reminded = day.reminded || {};
-  const memberUids = Object.keys(house.members || {});
+  // Só membros reais (e-mail na lista `emails` da casa) recebem lembretes —
+  // o mapa `members` é escrito pelos clientes e não basta para decidir a quem enviar.
+  const houseEmails = (house.emails || []).map((e) => String(e).toLowerCase());
+  const memberUids = Object.entries(house.members || {})
+    .filter(([, m]) => m && m.email && houseEmails.includes(String(m.email).toLowerCase()))
+    .map(([uid]) => uid);
   const targets = memberUids.map((uid) => subsByUid[uid]).filter(Boolean);
+  if (!targets.length) return;
 
   for (const task of house.tasks || []) {
     if (!task || !task.label || !task.time || done[task.id]) continue;
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(task.time))) continue;
+    const label = String(task.label).slice(0, 80);
     const tMin = minutesSinceMidnight(task.time);
     const slots = [
-      { key: 'pre', at: tMin - CASA_PRE_MIN, title: '🏡 Casa — daqui a 30 min', body: `${task.label} (até às ${task.time})` },
-      { key: 'due', at: tMin, title: '🏡 Casa — hora-limite', body: `${task.label} ainda não está marcado (${task.time})` }
+      { key: 'pre', at: tMin - CASA_PRE_MIN, title: '🏡 Casa — daqui a 30 min', body: `${label} (até às ${task.time})` },
+      { key: 'due', at: tMin, title: '🏡 Casa — hora-limite', body: `${label} ainda não está marcado (${task.time})` }
     ];
     for (const slot of slots) {
       if (slot.at < 0) continue;
@@ -192,12 +200,12 @@ async function sendHouseReminders(houseSnap, subsByUid) {
           if (err.statusCode === 404 || err.statusCode === 410) {
             await doc.ref.delete();
           } else {
-            console.error(`Casa: failed push to ${doc.id}:`, err.message);
+            console.error('Casa: failed push:', err.statusCode || err.message);
           }
         }
       }
       await dayRef.set({ date: today, reminded: { [rkey]: true } }, { merge: true });
-      console.log(`Casa ${hid}: reminder "${rkey}" (${task.label}) sent to ${sent} member(s).`);
+      console.log(`Casa reminder sent to ${sent} member(s).`);
     }
   }
 }
@@ -205,7 +213,9 @@ async function sendHouseReminders(houseSnap, subsByUid) {
 async function main() {
   const subsSnap = await db.collection('push_subscriptions').get();
   const subsByUid = {};
-  subsSnap.forEach((d) => { subsByUid[d.data().uid || d.id] = d; });
+  // A identidade é SEMPRE o id do documento (as regras garantem que só o próprio o escreve);
+  // o campo `uid` dentro do documento é ignorado (podia ser forjado para receber o briefing de outra pessoa).
+  subsSnap.forEach((d) => { subsByUid[d.id] = d; });
   try {
     await sendCasaReminders(subsByUid);
   } catch (e) {
@@ -218,25 +228,29 @@ async function main() {
 
   for (const doc of subsSnap.docs) {
     const sub = doc.data();
-    const uid = sub.uid || doc.id;
-    const timezone = sub.timezone || 'Europe/Lisbon';
-    const briefingTime = sub.briefingTime || '07:00';
-    const todayStr = localDateStr(timezone);
-
-    if (sub.lastSent === todayStr) continue; // already sent today
-    if (!isDueNow(briefingTime, timezone)) continue; // not their time yet
-
-    const dow = todayLocalDow(timezone);
+    const uid = doc.id;
+    const timezone = typeof sub.timezone === 'string' && sub.timezone.length < 64 ? sub.timezone : 'Europe/Lisbon';
+    const briefingTime = /^([01]\d|2[0-3]):[0-5]\d$/.test(String(sub.briefingTime || '')) ? sub.briefingTime : '07:00';
+    let todayStr, dow;
+    try {
+      todayStr = localDateStr(timezone);
+      if (sub.lastSent === todayStr) continue; // already sent today
+      if (!isDueNow(briefingTime, timezone)) continue; // not their time yet
+      dow = todayLocalDow(timezone);
+    } catch (e) {
+      console.error('Subscription with invalid time settings skipped.');
+      continue;
+    }
     let body;
     try {
       body = await buildBriefing(uid, todayStr, dow);
     } catch (e) {
-      console.error(`Failed building briefing for ${uid}:`, e.message);
+      console.error('Failed building a briefing:', e.message);
       continue;
     }
 
     const payload = JSON.stringify({
-      title: `🔔 Bom dia${sub.name ? ', ' + sub.name : ''}!`,
+      title: `🔔 Bom dia${sub.name ? ', ' + String(sub.name).slice(0, 30) : ''}!`,
       body,
       url: './?quick=1'
     });
@@ -244,13 +258,13 @@ async function main() {
     try {
       await webpush.sendNotification(sub.subscription, payload);
       await doc.ref.update({ lastSent: todayStr });
-      console.log(`Sent briefing to ${uid} (${timezone} ${briefingTime}).`);
+      console.log('Sent one briefing.');
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 410) {
-        console.log(`Subscription for ${uid} is gone, removing it.`);
+        console.log('A subscription is gone, removing it.');
         await doc.ref.delete();
       } else {
-        console.error(`Failed to send push to ${uid}:`, err.message);
+        console.error('Failed to send a briefing push:', err.statusCode || err.message);
       }
     }
   }

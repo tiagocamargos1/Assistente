@@ -11,11 +11,23 @@ on:
 jobs:
   send-briefing:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
+    concurrency: { group: daily-briefing, cancel-in-progress: false }
     permissions:
       contents: read
       id-token: write # required so this job can mint a short-lived Google credential (Workload Identity Federation) — no downloaded key involved
     steps:
       - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: scripts
+        # Dependências instaladas ANTES de obter credenciais Google e sem scripts de instalação
+        # (um pacote comprometido não chega a ver as credenciais).
+        run: npm install --omit=dev --ignore-scripts --no-audit --no-fund
 
       # Exchanges GitHub's OIDC token for temporary Google Cloud credentials,
       # scoped to the github-actions-briefing service account. Set up once in
@@ -25,14 +37,6 @@ jobs:
         with:
           workload_identity_provider: 'projects/611661253806/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
           service_account: 'github-actions-briefing@assistente-ee1f4.iam.gserviceaccount.com'
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        working-directory: scripts
-        run: npm install --omit=dev
 
       - name: Send due briefings
         working-directory: scripts

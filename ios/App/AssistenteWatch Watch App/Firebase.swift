@@ -22,6 +22,8 @@ enum Keychain {
         let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: key]
         SecItemDelete(q as CFDictionary)
         var add = q; add[kSecValueData as String] = data
+        // Só acessível neste relógio, depois do primeiro desbloqueio (não vai para backups nem outros aparelhos).
+        add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         SecItemAdd(add as CFDictionary, nil)
     }
     static func get(_ key: String) -> String? {
@@ -95,9 +97,15 @@ actor FirebaseAuth {
         req.httpBody = "grant_type=refresh_token&refresh_token=\(s.refreshToken)".data(using: .utf8)
         let (data, resp) = try await URLSession.shared.data(for: req)
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
-        guard (resp as? HTTPURLResponse)?.statusCode == 200, let idTok = json["id_token"] as? String else {
-            session = nil; persist()
-            throw FirebaseError(message: "Sessão expirada — entra de novo")
+        let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200, let idTok = json["id_token"] as? String else {
+            // Só termina a sessão quando o refresh token é de facto inválido (4xx);
+            // falhas de rede/servidor (5xx, 429) mantêm a sessão para tentar depois.
+            if (400...403).contains(status) {
+                session = nil; persist()
+                throw FirebaseError(message: "Sessão expirada — entra de novo")
+            }
+            throw FirebaseError(message: "Sem ligação ao servidor — tenta daqui a pouco")
         }
         s.idToken = idTok
         if let r = json["refresh_token"] as? String { s.refreshToken = r }
