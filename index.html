@@ -1883,6 +1883,7 @@ async function deleteAccount(){
     for(const path of [`users/${cu}`,`prefs/${cu}`,`push_subscriptions/${cu}`,`calendar_cache/${cu}`]){ try{await window.fbDelete(path);}catch(e){} }
     try{ if(gProfile&&gProfile.id)await window.fbDelete(`people/${gProfile.id}`); }catch(e){}
     try{ const em=casaEmail(); if(em)await window.fbDelete(`houseIndex/${houseIndexKey(em)}`); }catch(e){}
+    try{ const au=await window.fbGetAuthUid(); if(au&&window.fbQueryEq){ for(const l of await window.fbQueryEq('linkedAccounts','linkerUid',au)){ try{await window.fbDelete(`linkedAccounts/${l.id}`);}catch(e){} } } }catch(e){}
     try{ await window.fbUpdate(`household/${CASA_ID}`,{[`members.${cu}`]:window.fbDeleteField()}); }catch(e){}
     try{ const au=await window.fbGetAuthUid(); if(au)await window.fbDelete(`authMap/${au}`); }catch(e){}
     if(isAppleUser()){
