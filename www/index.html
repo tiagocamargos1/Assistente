@@ -14,7 +14,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, onSnapshot, deleteDoc, serverTimestamp, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithCredential, signOut, onAuthStateChanged, deleteUser, revokeAccessToken } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
@@ -91,6 +91,11 @@ window.fbListenDoc = (path, cb, onErr) => {
 };
 window.fbUpdate = async (path, data) => { await updateDoc(doc(db, path), data); };
 window.fbDeleteField = () => deleteField();
+// Lê os documentos de uma coleção com field == value (ex.: convites para o meu e-mail).
+window.fbQueryEq = async (path, field, value) => {
+  const snap = await getDocs(query(collection(db, path), where(field, '==', value)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+};
 window.firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -690,6 +695,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     <div class="rep-sec" id="casaEmailsWrap" style="display:none;">
       <h3>Membros da casa (e-mails Google, um por linha)</h3>
       <textarea id="casaEmails" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;resize:vertical;"></textarea>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:4px;">Cada e-mail novo recebe um convite: a pessoa só entra na casa depois de aceitar, ao abrir o Assistente com essa conta.</p>
     </div>
     <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveCasaEdit()">Guardar</button>
     <button class="close-btn" onclick="document.getElementById('casaEditModal').classList.remove('open')">Cancelar</button>
@@ -2812,7 +2818,7 @@ function renderRoutines(){
 // app como nas regras do Firestore — não depende dos uids fixos tiago/monique.
 // Casas (households): cada utilizador tem a sua — criada automaticamente no
 // primeiro acesso, com ele como dono (ownerEmail) e único membro; os restantes
-// entram por e-mail em ⚙️ Tarefas da casa → Membros. O índice houseIndex/{email}
+// são convidados por e-mail em ⚙️ Tarefas da casa → Membros e entram ao aceitar. O índice houseIndex/{email}
 // diz a cada pessoa qual é a sua casa. A família Camargos mantém a casa "casa"
 // (é a que o ecrã do frigorífico e o job de lembretes conhecem por defeito).
 let CASA_ID=null;
@@ -2831,9 +2837,16 @@ async function resolveHouseId(){
   if(email===CASA_OWNER_EMAIL||cu==='tiago')return FAMILY_CASA_ID;
   try{
     const idx=await window.fbGet(`houseIndex/${houseIndexKey(email)}`);
-    if(idx&&idx.hid)return idx.hid;
+    if(idx&&idx.hid){
+      // Já tenho casa: convites pendentes para outra casa são perguntados depois, sem bloquear
+      setTimeout(()=>offerHouseInvites(email,idx.hid),1500);
+      return idx.hid;
+    }
   }catch(e){dbg('resolveHouseId: index read failed '+(e&&e.code||e));}
-  // Sem índice: cria a própria casa (vazia — cada casa define as suas tarefas)
+  // Sem índice: primeiro, convites pendentes (só entro numa casa se aceitar)
+  const accepted=await offerHouseInvites(email,null);
+  if(accepted)return accepted;
+  // Sem convite aceite: cria a própria casa (vazia — cada casa define as suas tarefas)
   const hid=newHouseId();
   try{
     await window.fbSave(`household/${hid}`,{name:'Casa',ownerEmail:email,emails:[email],tasks:[],members:{},createdAt:new Date().toISOString()});
@@ -2842,7 +2855,31 @@ async function resolveHouseId(){
     return hid;
   }catch(e){dbg('resolveHouseId: create failed '+(e&&e.code||e));return null;}
 }
-// Só o dono: os restantes membros são adicionados em ⚙️ Tarefas da casa → Membros (a casa já existe no Firestore).
+// Convites: o dono acrescenta o e-mail em ⚙️ Tarefas da casa → Membros e isso cria
+// invites/{email}__{hid}. A pessoa só entra na casa se ACEITAR (grava ela própria o
+// seu houseIndex — as regras não deixam o dono gravar o índice de outra pessoa).
+async function offerHouseInvites(email,currentHid){
+  if(!window.fbQueryEq)return null;
+  let list=[];
+  try{list=await window.fbQueryEq('invites','email',houseIndexKey(email));}catch(e){dbg('invites read '+(e&&e.code||e));return null;}
+  for(const inv of list){
+    if(!inv.hid||inv.hid===currentHid){try{await window.fbDelete(`invites/${inv.id}`);}catch(e){}continue;}
+    const who=inv.fromName?`${inv.fromName} (${inv.fromEmail||''})`:(inv.fromEmail||'Alguém');
+    const extra=currentHid?'\n\nAo aceitar, deixas a casa atual e passas a ver esta.':'';
+    const ok=confirm(`${who} convidou-te para a casa "${inv.houseName||'Casa'}".\n\nAceitar? Vais ver e marcar as tarefas da casa e partilhar a lista de compras.${extra}`);
+    try{
+      if(ok)await window.fbSave(`houseIndex/${houseIndexKey(email)}`,{hid:inv.hid,email:houseIndexKey(email)});
+      await window.fbDelete(`invites/${inv.id}`);
+    }catch(e){notify('Não foi possível aceitar o convite: '+(e.code||e.message),'error');continue;}
+    if(ok){
+      notify('✓ Entraste na casa "'+(inv.houseName||'Casa')+'".','success');
+      if(currentHid)startCasaListener();
+      return inv.hid;
+    }
+  }
+  return null;
+}
+// Só o dono: os restantes membros são convidados em ⚙️ Tarefas da casa → Membros (a casa já existe no Firestore).
 const CASA_DEFAULT_EMAILS=[CASA_OWNER_EMAIL];
 const CASA_DEFAULT_TASKS=[
   {id:'pacoca_manha',label:'Paçoca – Comida',time:'08:00'},
@@ -3247,12 +3284,22 @@ async function saveCasaEdit(){
   }
   try{
     await window.fbSave(`household/${CASA_ID}`,data);
-    // Índice e-mail → casa para os membros (quem entra sabe qual é a sua casa);
-    // quem foi retirado perde a entrada, se apontava para esta casa.
+    // Novos e-mails recebem um CONVITE (a pessoa aceita no próprio telemóvel);
+    // quem foi retirado perde o convite e, se apontava para esta casa, o índice.
     if(data.emails){
       const before=((casa&&casa.emails)||[]).map(houseIndexKey);
-      for(const em of data.emails){ try{await window.fbSave(`houseIndex/${houseIndexKey(em)}`,{hid:CASA_ID,email:em});}catch(e){dbg('houseIndex save '+em+' '+(e&&e.code||e));} }
-      for(const em of before){ if(!data.emails.includes(em)){ try{const idx=await window.fbGet(`houseIndex/${em}`); if(idx&&idx.hid===CASA_ID)await window.fbDelete(`houseIndex/${em}`);}catch(e){} } }
+      const me=USERS[cu]||{};
+      let invited=0;
+      for(const em of data.emails){
+        if(em===houseIndexKey(casaEmail())||before.includes(em))continue;
+        try{await window.fbSave(`invites/${em}__${CASA_ID}`,{email:em,hid:CASA_ID,houseName:(casa&&casa.name)||'Casa',fromEmail:casaEmail(),fromName:me.name||'',createdAt:new Date().toISOString()});invited++;}
+        catch(e){dbg('invite save '+em+' '+(e&&e.code||e));}
+      }
+      for(const em of before){ if(!data.emails.includes(em)){
+        try{await window.fbDelete(`invites/${em}__${CASA_ID}`);}catch(e){}
+        try{const idx=await window.fbGet(`houseIndex/${em}`); if(idx&&idx.hid===CASA_ID)await window.fbDelete(`houseIndex/${em}`);}catch(e){}
+      } }
+      if(invited)notify(`✉️ ${invited} convite(s) enviado(s): a pessoa aceita ao abrir o Assistente.`,'info');
     }
     document.getElementById('casaEditModal').classList.remove('open');
     notify('✓ Tarefas da casa atualizadas!','success');
