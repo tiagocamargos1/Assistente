@@ -6,6 +6,9 @@ import Security
 enum FirebaseConfig {
     static let apiKey = "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4"
     static let projectId = "assistente-ee1f4"
+    // A API key está restrita por referenciador HTTP (só o site da app). Os pedidos
+    // nativos do relógio identificam-se com o mesmo referenciador.
+    static let referer = "https://tiagocamargos1.github.io/Assistente/"
     static var firestoreBase: String { "https://firestore.googleapis.com/v1/projects/\(projectId)/databases/(default)/documents" }
 }
 
@@ -72,6 +75,7 @@ actor FirebaseAuth {
         let url = URL(string: "https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=\(FirebaseConfig.apiKey)")!
         var req = URLRequest(url: url); req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue(FirebaseConfig.referer, forHTTPHeaderField: "Referer")
         let postBody = "id_token=\(idToken)&providerId=apple.com&nonce=\(rawNonce)"
         let body: [String: Any] = ["postBody": postBody, "requestUri": "https://assistente-ee1f4.firebaseapp.com", "returnIdpCredential": true, "returnSecureToken": true]
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -94,6 +98,7 @@ actor FirebaseAuth {
         let url = URL(string: "https://securetoken.googleapis.com/v1/token?key=\(FirebaseConfig.apiKey)")!
         var req = URLRequest(url: url); req.httpMethod = "POST"
         req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        req.setValue(FirebaseConfig.referer, forHTTPHeaderField: "Referer")
         req.httpBody = "grant_type=refresh_token&refresh_token=\(s.refreshToken)".data(using: .utf8)
         let (data, resp) = try await URLSession.shared.data(for: req)
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
