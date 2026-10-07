@@ -503,6 +503,36 @@ body[data-tab]:not([data-tab="hoje"]) #topGreeting .hoje-sub{display:none;}
   .hoje-greet{font-size:18px;}
   .input-section{padding-top:10px;padding-bottom:10px;}
 }
+
+/* Adiar e Pesquisa */
+.snz-ov,.srch-ov{position:fixed;inset:0;z-index:600;background:rgba(10,14,24,.55);display:flex;}
+.snz-ov{align-items:flex-end;justify-content:center;}
+.snz-sheet{width:100%;max-width:480px;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:var(--shadow-lg);animation:snzup .22s ease;}
+@keyframes snzup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.snz-grab{width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 10px;}
+.snz-title{font-size:16px;font-weight:800;color:var(--text);}
+.snz-task{font-size:12px;color:var(--text-muted);margin:2px 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.snz-opt{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer;font-family:inherit;color:var(--text);text-align:left;position:relative;}
+.snz-opt:active{border-color:var(--gold);}
+.snz-ico{font-size:18px;width:24px;text-align:center;}
+.snz-l{font-size:14px;font-weight:700;flex:1;}
+.snz-s{font-size:12px;color:var(--text-muted);}
+.snz-pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;}
+.snz-cancel{width:100%;background:none;border:none;color:var(--text-muted);font-size:14px;font-weight:700;padding:10px;cursor:pointer;font-family:inherit;}
+.srch-ov{align-items:flex-start;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 12px 12px;}
+.srch-box{width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column;background:var(--surface);border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden;margin-top:calc(env(safe-area-inset-top) + 6px);}
+.srch-bar{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.srch-bar input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:16px;color:var(--text);font-family:inherit;}
+.srch-bar button{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:50%;width:28px;height:28px;cursor:pointer;}
+.srch-res{overflow-y:auto;padding:6px 8px 10px;}
+.srch-h{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin:10px 6px 4px;}
+.srch-row{display:flex;gap:10px;align-items:baseline;width:100%;background:transparent;border:none;border-radius:10px;padding:10px;cursor:pointer;font-family:inherit;text-align:left;color:var(--text);}
+.srch-row:hover,.srch-row:active{background:var(--surface2);}
+.srch-t{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.srch-t mark{background:rgba(var(--accent-rgb),.22);color:inherit;border-radius:3px;padding:0 1px;}
+.srch-s{font-size:11px;color:var(--text-muted);flex:0 0 auto;}
+.srch-hint{padding:22px 14px;text-align:center;font-size:13px;color:var(--text-muted);}
+.srch-bar input::-webkit-search-cancel-button{display:none;-webkit-appearance:none;}
 </style>
 </head>
 <body>
@@ -549,6 +579,7 @@ body[data-tab]:not([data-tab="hoje"]) #topGreeting .hoje-sub{display:none;}
   </div>
   <div class="header-right">
     <div class="header-date" id="headerDate">Ter, 26 mai · 23:48</div>
+    <button class="icon-btn" onclick="openSearch()" title="Pesquisar" aria-label="Pesquisar">🔍</button>
     <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
     <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
@@ -2596,6 +2627,97 @@ async function postponeTask(id){
   notify('➜ Adiada para '+fd(t.date),'info');
   try{renderTopGreeting();}catch(e){}
 }
+
+// ── ADIAR COM UM TOQUE ───────────────────────────────────────────────
+function dstr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function snoozeOptions(){
+  const n=new Date();n.setHours(12,0,0,0);
+  const add=k=>{const d=new Date(n);d.setDate(d.getDate()+k);return d;};
+  const dow=n.getDay();                       // 0=dom
+  const toSat=((6-dow)+7)%7||7;               // próximo sábado
+  const toMon=((1-dow)+7)%7||7;               // próxima segunda
+  return[
+    {ico:'🌙',lbl:'Hoje à noite',sub:'mantém hoje',date:dstr(n),night:true},
+    {ico:'🌅',lbl:'Amanhã',sub:fd(dstr(add(1))),date:dstr(add(1))},
+    {ico:'🛋️',lbl:'Fim de semana',sub:fd(dstr(add(toSat))),date:dstr(add(toSat))},
+    {ico:'📆',lbl:'Próxima semana',sub:fd(dstr(add(toMon))),date:dstr(add(toMon))}
+  ];
+}
+function openSnooze(id){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  if(!t||t.done)return;
+  if(t.shared&&t.owner!==cu){notify('Só quem criou pode adiar.','error');return;}
+  if(hasActiveReminder(t)){notify('Tem lembrete agendado. Use ⋮ › Editar para mudar a data.','info');return;}
+  closeSnooze();
+  const ov=document.createElement('div');ov.className='snz-ov';ov.id='snzOv';
+  ov.onclick=e=>{if(e.target===ov)closeSnooze();};
+  const opts=snoozeOptions();
+  ov.innerHTML=`<div class="snz-sheet" role="dialog" aria-label="Adiar tarefa">
+    <div class="snz-grab"></div>
+    <div class="snz-title">Adiar</div>
+    <div class="snz-task">${esc(t.text||'')}</div>
+    ${opts.map((o,i)=>`<button class="snz-opt" onclick="snoozeTo(${jsa(String(id))},${jsa(o.date)})"><span class="snz-ico">${o.ico}</span><span class="snz-l">${o.lbl}</span><span class="snz-s">${esc(o.sub)}</span></button>`).join('')}
+    <label class="snz-opt snz-pick"><span class="snz-ico">🗓️</span><span class="snz-l">Escolher data…</span><input type="date" min="${todayStr()}" onchange="if(this.value)snoozeTo(${jsa(String(id))},this.value)"></label>
+    <button class="snz-cancel" onclick="closeSnooze()">Cancelar</button>
+  </div>`;
+  document.body.appendChild(ov);
+}
+function closeSnooze(){const o=document.getElementById('snzOv');if(o)o.remove();}
+async function snoozeTo(id,date){
+  const t=tasks.find(t=>String(t.id)===String(id));
+  closeSnooze();
+  if(!t||!date)return;
+  t.date=date;
+  await saveTask(t);
+  hapticTap('light');
+  notify('➜ Adiada para '+(date===todayStr()?'hoje à noite':fd(date)),'info');
+  try{renderTopGreeting();}catch(e){}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSnooze();closeSearch();}});
+
+// ── PESQUISA GLOBAL ──────────────────────────────────────────────────
+function normS(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();}
+function openSearch(){
+  closeSearch();
+  const ov=document.createElement('div');ov.className='srch-ov';ov.id='srchOv';
+  ov.onclick=e=>{if(e.target===ov)closeSearch();};
+  ov.innerHTML=`<div class="srch-box" role="dialog" aria-label="Pesquisar">
+    <div class="srch-bar"><span>🔍</span><input id="srchInp" type="search" placeholder="Pesquisar tarefas, notas, ideias, compras…" autocomplete="off" oninput="runSearch(this.value)"><button onclick="closeSearch()" aria-label="Fechar">✕</button></div>
+    <div class="srch-res" id="srchRes"><div class="srch-hint">Escreva para procurar em tudo o que guardou.</div></div>
+  </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>{const i=document.getElementById('srchInp');if(i)i.focus();},50);
+}
+function closeSearch(){const o=document.getElementById('srchOv');if(o)o.remove();}
+function runSearch(q){
+  const el=document.getElementById('srchRes');if(!el)return;
+  const nq=normS(q).trim();
+  if(nq.length<2){el.innerHTML='<div class="srch-hint">Escreva para procurar em tudo o que guardou.</div>';return;}
+  const hit=txt=>normS(txt).includes(nq);
+  const groups=[];
+  const tk=tasks.filter(t=>hit(t.text)).slice(0,12);
+  if(tk.length)groups.push(['📋 Tarefas',tk.map(t=>({txt:t.text,sub:(t.done?'✓ feita':(t.date?fd(t.date):'sem data')),act:`searchGo('task',${jsa(String(t.id))})`}))]);
+  const nt=notes.filter(n=>hit(n.text)).slice(0,8);
+  if(nt.length)groups.push(['📝 Notas',nt.map(n=>({txt:n.text,sub:fd2(n.createdAt),act:`searchGo('notes')`}))]);
+  const id=ideas.filter(i=>hit(i.text)).slice(0,8);
+  if(id.length)groups.push(['💡 Ideias',id.map(i=>({txt:i.text,sub:'',act:`searchGo('ideias')`}))]);
+  const sh=(typeof shopping!=='undefined'?shopping:[]).filter(i=>hit(i.label)).slice(0,8);
+  if(sh.length)groups.push(['🛒 Compras',sh.map(i=>({txt:i.label,sub:i.bought?'comprado':'por comprar',act:`searchGo('compras')`}))]);
+  const rt=routines.filter(r=>hit(r.text||r.name||r.title)).slice(0,6);
+  if(rt.length)groups.push(['🔁 Rotinas',rt.map(r=>({txt:r.text||r.name||r.title,sub:'',act:`searchGo('routines')`}))]);
+  if(!groups.length){el.innerHTML=`<div class="srch-hint">Nada encontrado para “${esc(q)}”.</div>`;return;}
+  const mark=txt=>{const s=String(txt||'');const i=normS(s).indexOf(nq);if(i<0)return esc(s);return esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+nq.length))+'</mark>'+esc(s.slice(i+nq.length));};
+  el.innerHTML=groups.map(([h,list])=>`<div class="srch-h">${h}</div>`+list.map(r=>`<button class="srch-row" onclick="${r.act}"><span class="srch-t">${mark(r.txt)}</span>${r.sub?`<span class="srch-s">${esc(r.sub)}</span>`:''}</button>`).join('')).join('');
+}
+function searchGo(kind,id){
+  closeSearch();
+  if(kind==='task'){
+    const t=tasks.find(t=>String(t.id)===String(id));
+    if(t&&(!t.shared||t.owner===cu)){openEditTask(id);return;}
+    switchTab('tasks');return;
+  }
+  switchTab(kind);
+}
 // ── GESTOS NOS CARTÕES: direita = concluir · esquerda = adiar ─────────
 (function(){
   let card=null,sx=0,sy=0,dx=0,mode=null,t0=0;
@@ -2621,7 +2743,7 @@ async function postponeTask(id){
     card.style.transform=`translateX(${x}px)`;
     card.classList.toggle('sw-r',x>TH*0.6);card.classList.toggle('sw-l',x<-TH*0.6);
     if(x>TH*0.6)card.setAttribute('data-sw',done?'↺ Reabrir':'✓ Concluir');
-    else if(x<-TH*0.6)card.setAttribute('data-sw','➜ Amanhã');
+    else if(x<-TH*0.6)card.setAttribute('data-sw','📅 Adiar…');
     else card.removeAttribute('data-sw');
   },{passive:true});
   function finish(){
@@ -2634,7 +2756,7 @@ async function postponeTask(id){
     c.style.transform='';c.classList.remove('sw-r','sw-l');c.removeAttribute('data-sw');
     const id=idOf(c);
     if(!act||id==null)return;
-    if(act==='ok')toggleTask(id);else postponeTask(id);
+    if(act==='ok')toggleTask(id);else openSnooze(id);
   }
   document.addEventListener('touchend',finish,{passive:true});
   document.addEventListener('touchcancel',()=>{if(card){card.style.transform='';card.classList.remove('sw-r','sw-l','sw-run');card.removeAttribute('data-sw');card=null;}},{passive:true});
@@ -2789,6 +2911,7 @@ function taskHTML(t){
       <div class="task-menu">
         ${!t.done?`<div class="tmenu-item" onclick="toggleInProgress(${jsa(tid)});closeAllTaskMenus()">${status==='andamento'?'⏸ Pausar':'▶ Iniciar'}</div>`:''}
         <div class="tmenu-item" style="${isReminderOverdue(t)?'color:var(--red);':hasActiveReminder(t)?'color:var(--gold);':''}" onclick="openReminderModal(${jsa(tid)});closeAllTaskMenus()">${hasActiveReminder(t)?'⏰ Lembrete agendado':'🔔 Agendar lembrete'}</div>
+        ${!t.done&&canDel?`<div class="tmenu-item" onclick="openSnooze(${jsa(tid)});closeAllTaskMenus()">📅 Adiar…</div>`:''}
         ${canDel?`<div class="tmenu-item" onclick="openEditTask(${jsa(tid)});closeAllTaskMenus()">✏️ Editar</div>`:''}
         ${canDel?`<div class="tmenu-item danger" onclick="deleteTask(${jsa(tid)});closeAllTaskMenus()">✕ Excluir</div>`:''}
       </div>
