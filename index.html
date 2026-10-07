@@ -5,12 +5,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Assistente">
-<meta name="theme-color" content="#0f0e0c">
+<meta name="theme-color" content="#f4f5f8">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <title>Assistente Pessoal</title>
-<link href="./index_files/css2" rel="stylesheet">
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -100,21 +99,24 @@ window.firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
 </script>
 <style>
-:root{--bg:#0f0e0c;--surface:#1a1814;--surface2:#242018;--border:#2e2a22;--gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6530;--text:#ede8df;--text-muted:#8a8070;--text-dim:#5a5248;--green:#5a9e6f;--red:#c06060;--blue:#5a7ea0;--purple:#9b6fa8;--radius:12px;}
-[data-theme="light"]{--bg:#f5f2ec;--surface:#fffefa;--surface2:#f0ede6;--border:#ddd8cc;--text:#2a2520;--text-muted:#6a6058;--text-dim:#9a9088;--gold-dim:#9a7040;}
+@font-face{font-family:'Plus Jakarta Sans';font-style:normal;font-weight:200 800;font-display:swap;src:url(fonts/plus-jakarta-sans-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Plus Jakarta Sans';font-style:normal;font-weight:200 800;font-display:swap;src:url(fonts/plus-jakarta-sans-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+/* Paleta partilhada com o Setoriza («claro premium», 06/10/2026). Os nomes --gold* ficam por compatibilidade: são a cor de destaque (azul). */
+:root,[data-theme="light"]{--bg:#f4f5f8;--surface:#ffffff;--surface2:#f4f5f8;--border:#e6e8ee;--gold:#1d4ed8;--gold-light:#1e40af;--gold-dim:#c7d2fe;--accent-rgb:29,78,216;--on-accent:#ffffff;--text:#12151c;--text-muted:#5e6573;--text-dim:#8a90a0;--green:#16a34a;--red:#dc2626;--blue:#2a78d6;--purple:#7c3aed;--radius:14px;--shadow:0 1px 2px rgba(18,21,28,.06),0 6px 16px rgba(18,21,28,.05);--noise:0;}
+[data-theme="dark"]{--bg:#0b0f19;--surface:#121827;--surface2:#182033;--border:#222c42;--gold:#3b82f6;--gold-light:#93c5fd;--gold-dim:#1e3a8a;--accent-rgb:59,130,246;--on-accent:#ffffff;--text:#e6ecf7;--text-muted:#8a97b2;--text-dim:#5d6a85;--green:#34d399;--red:#f87171;--blue:#3987e5;--purple:#a78bfa;--shadow:0 1px 0 rgba(255,255,255,.03) inset;--noise:0;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .25s,color .25s;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.35;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .25s,color .25s;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:var(--noise);}
 /* LOGIN */
 .login-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;}
 .login-screen.hidden{display:none;}
 .login-logo{font-size:40px;margin-bottom:14px;animation:float 3s ease-in-out infinite;}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.login-title{font-family:'DM Serif Display',serif;font-size:30px;color:var(--gold-light);margin-bottom:6px;}
+.login-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:30px;color:var(--gold-light);margin-bottom:6px;}
 .login-sub{font-size:13px;color:var(--text-muted);margin-bottom:44px;}
 .login-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:36px;}
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 22px;cursor:pointer;text-align:center;width:148px;transition:all .2s;position:relative;overflow:hidden;}
-.login-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.05),transparent);}
+.login-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(var(--accent-rgb),.05),transparent);}
 .login-card:hover{border-color:var(--gold-dim);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.35);}
 .login-card:active{transform:translateY(0);}
 .login-avatar{width:58px;height:58px;border-radius:50%;border:2px solid var(--gold-dim);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;background:var(--surface2);overflow:hidden;}
@@ -122,14 +124,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .login-name{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px;}
 .login-hint{font-size:11px;color:var(--text-dim);}
 .login-divider{font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;}
-.google-btn{display:flex;align-items:center;gap:10px;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:11px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.google-btn{display:flex;align-items:center;gap:10px;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:11px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;transition:all .2s;}
 .google-btn:hover{border-color:var(--gold-dim);color:var(--text);}
 .loading-bar{position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:9999;transition:width .3s ease;width:0;}
 /* HEADER */
-header{position:relative;z-index:10;padding:12px 18px;padding-top:max(12px, env(safe-area-inset-top));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(201,168,76,.06) 0%,transparent 100%);}
+header{position:relative;z-index:10;padding:12px 18px;padding-top:max(12px, env(safe-area-inset-top));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(var(--accent-rgb),.06) 0%,transparent 100%);}
 .logo{display:flex;align-items:center;gap:9px;}
 .logo-icon{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
-.logo-text{font-family:'DM Serif Display',serif;font-size:17px;color:var(--gold-light);}
+.logo-text{font-family:'Plus Jakarta Sans',sans-serif;font-size:17px;color:var(--gold-light);}
 .header-right{display:flex;align-items:center;gap:8px;}
 .header-date{font-size:11px;color:var(--text-muted);text-align:right;line-height:1.6;}
 .user-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 3px;cursor:pointer;transition:all .2s;margin-left:2px;}
@@ -148,7 +150,7 @@ header{position:relative;z-index:10;padding:12px 18px;padding-top:max(12px, env(
 .input-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:7px;font-weight:600;}
 .input-row{display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:26px;padding:5px;transition:border-color .2s;}
 .input-row:focus-within{border-color:var(--gold-dim);}
-textarea{flex:1;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 4px;resize:none;height:48px;line-height:1.4;transition:border-color .2s;outline:none;}
+textarea{flex:1;background:transparent;border:none;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px 4px;resize:none;height:48px;line-height:1.4;transition:border-color .2s;outline:none;}
 textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .send-btn{background:var(--gold);color:var(--bg);border:none;border-radius:50%;width:40px;height:40px;cursor:pointer;font-size:20px;font-weight:600;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .send-btn:hover{background:var(--gold-light);}.send-btn:active{transform:scale(.95);}.send-btn:disabled{opacity:.4;cursor:not-allowed;}
@@ -167,12 +169,12 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .thinking-dots span{display:inline-block;width:4px;height:4px;background:var(--gold);border-radius:50%;animation:pulse 1.2s ease-in-out infinite;}
 .thinking-dots span:nth-child(2){animation-delay:.2s}.thinking-dots span:nth-child(3){animation-delay:.4s}
 @keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
-.ai-resp{margin-top:7px;padding:8px 12px;background:rgba(201,168,76,.06);border-left:2px solid var(--gold);border-radius:0 var(--radius) var(--radius) 0;font-size:13px;color:var(--text-muted);line-height:1.6;display:none;}
+.ai-resp{margin-top:7px;padding:8px 12px;background:rgba(var(--accent-rgb),.06);border-left:2px solid var(--gold);border-radius:0 var(--radius) var(--radius) 0;font-size:13px;color:var(--text-muted);line-height:1.6;display:none;}
 .ai-resp.visible{display:block;}
 /* TABS */
 .tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;background:var(--surface);}
 .tab{padding:9px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s;font-weight:600;}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,.14);border-radius:10px 10px 0 0;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);background:rgba(var(--accent-rgb),.14);border-radius:10px 10px 0 0;}
 .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;background:var(--gold);color:var(--bg);border-radius:8px;font-size:9px;font-weight:700;margin-left:4px;padding:0 3px;}
 .tab-mic-inline{display:none;}
 .tab-mais{display:none;}
@@ -189,11 +191,11 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .tab-content::-webkit-scrollbar{width:3px}.tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 /* FILTERS */
 .filter-row{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;}
-.filter-btn{font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
-.filter-btn:hover,.filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
+.filter-btn{font-size:12px;padding:7px 14px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:500;transition:all .15s;}
+.filter-btn:hover,.filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(var(--accent-rgb),.08);}
 .filter-btn.sf.active{border-color:var(--purple);color:var(--purple);background:rgba(155,111,168,.1);}
 /* TASKS */
-.task-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);transition:all .15s;animation:si .25s ease;}
+.task-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:8px;background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--border);transition:all .15s;animation:si .25s ease;}
 .task-item.done{border-color:rgba(90,158,111,.4);background:rgba(90,158,111,.08);}
 @keyframes si{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .task-item:hover{background:var(--surface2);}
@@ -234,9 +236,9 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 /* WEEK */
 .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;}
 .week-day{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .2s;min-height:68px;}
-.week-day:hover{border-color:var(--gold-dim);}.week-day.today{border-color:var(--gold);background:rgba(201,168,76,.08);}.week-day.selected{border-color:var(--gold);background:rgba(201,168,76,.12);}
+.week-day:hover{border-color:var(--gold-dim);}.week-day.today{border-color:var(--gold);background:rgba(var(--accent-rgb),.08);}.week-day.selected{border-color:var(--gold);background:rgba(var(--accent-rgb),.12);}
 .wd-name{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:3px;}
-.wd-num{font-size:14px;font-family:'DM Serif Display',serif;color:var(--text);margin-bottom:3px;}
+.wd-num{font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);margin-bottom:3px;}
 .week-day.today .wd-num{color:var(--gold);}
 .wd-dots{display:flex;justify-content:center;gap:2px;flex-wrap:wrap;}
 .wd-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0;}
@@ -255,12 +257,12 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .briefing::-webkit-scrollbar{width:3px}.briefing::-webkit-scrollbar-thumb{background:var(--border)}
 .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
 .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
-.stat-num{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold);line-height:1;margin-bottom:2px;}
+.stat-num{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;color:var(--gold);line-height:1;margin-bottom:2px;}
 .stat-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;}
 .hoje-greet-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 2px;}
-.hoje-greet{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);}
-.hoje-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;}
-.hoje-filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(201,168,76,.08);}
+.hoje-greet{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;color:var(--gold-light);}
+.hoje-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--surface2);cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:500;white-space:nowrap;}
+.hoje-filter-btn.active{border-color:var(--gold-dim);color:var(--gold);background:rgba(var(--accent-rgb),.08);}
 .tasks-filter-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
 /* FILTROS (bottom sheet) */
 .fsheet-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;align-items:flex-end;justify-content:center;}
@@ -269,13 +271,13 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 @keyframes slideUp{from{transform:translateY(30px);opacity:.4}to{transform:translateY(0);opacity:1}}
 .fsheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:4px auto 14px;}
 .fsheet-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.fsheet-hdr h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);}
+.fsheet-hdr h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;color:var(--text);}
 .fsheet-close{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .fsec{margin-bottom:18px;}
 .fsec-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;font-weight:600;}
 .fseg{display:flex;gap:8px;flex-wrap:wrap;}
-.fseg-btn{flex:1;min-width:90px;text-align:center;padding:10px 8px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.fseg-btn.sel{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1);}
+.fseg-btn{flex:1;min-width:90px;text-align:center;padding:10px 8px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
+.fseg-btn.sel{border-color:var(--gold);color:var(--gold);background:rgba(var(--accent-rgb),.1);}
 .fcard{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
 .fopt{display:flex;align-items:center;gap:10px;padding:12px 14px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
 .fopt:last-child{border-bottom:none;}
@@ -284,14 +286,14 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .fopt-check{width:18px;height:18px;border-radius:50%;background:var(--gold);color:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;visibility:hidden;}
 .fopt.sel .fopt-check{visibility:visible;}
 .fsheet-foot{display:flex;gap:10px;margin-top:6px;}
-.fclear-btn{flex:1;background:transparent;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
-.fapply-btn{flex:2;background:var(--gold);color:var(--bg);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
+.fclear-btn{flex:1;background:transparent;border:none;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
+.fapply-btn{flex:2;background:var(--gold);color:var(--bg);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
 .hoje-sub{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
 .hchips-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;}
 .hchip{flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px;min-width:78px;cursor:pointer;transition:border-color .15s,background .15s;}
-.hchip:hover,.hchip:active{border-color:var(--gold-dim);background:rgba(201,168,76,.08);}
+.hchip:hover,.hchip:active{border-color:var(--gold-dim);background:rgba(var(--accent-rgb),.08);}
 .hchip.hu{border-color:rgba(192,96,96,.4);}
-.hchip-n{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold);line-height:1;}
+.hchip-n{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;color:var(--gold);line-height:1;}
 .hchip.hu .hchip-n{color:var(--red);}
 .hchip-l{font-size:10px;color:var(--text-muted);white-space:nowrap;}
 .hoje-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
@@ -299,28 +301,28 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .sdot{width:5px;height:5px;border-radius:50%;background:var(--green);}.sdot.off{background:var(--text-dim);}
 .conn-box{border:1px dashed var(--border);border-radius:10px;padding:12px;text-align:center;margin-bottom:8px;}
 .conn-box p{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:8px;}
-.conn-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
-.conn-btn:hover{background:rgba(201,168,76,.1);}
-.rep-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:8px;}
+.conn-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--gold-dim);color:var(--gold);padding:6px 13px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;transition:all .2s;}
+.conn-btn:hover{background:rgba(var(--accent-rgb),.1);}
+.rep-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;transition:all .2s;margin-top:8px;}
 .rep-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
 /* MODAL */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;padding:20px;}
 .modal-ov.open{display:flex;}
 .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;max-width:400px;width:100%;max-height:82vh;overflow-y:auto;}
-.modal-box h2{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold-light);margin-bottom:14px;}
+.modal-box h2{font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;color:var(--gold-light);margin-bottom:14px;}
 .rep-sec{margin-bottom:14px;}.rep-sec h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:7px;}
 .rep-bar{height:5px;background:var(--border);border-radius:3px;margin-bottom:3px;overflow:hidden;}
 .rep-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s ease;}.rep-fill.sh{background:var(--purple);}
 .rep-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:5px;}
-.close-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:14px;transition:all .2s;}
+.close-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:8px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin-top:14px;transition:all .2s;}
 .close-btn:hover{color:var(--text);}
 /* NOTIF */
 .notif{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);z-index:900;transform:translateY(70px);opacity:0;transition:all .3s ease;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.3);}
 .notif.show{transform:translateY(0);opacity:1;}
 .notif.success{border-left:3px solid var(--green)}.notif.error{border-left:3px solid var(--red)}.notif.info{border-left:3px solid var(--gold)}
-.push-banner{background:rgba(201,168,76,.08);border:1px solid var(--gold-dim);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.push-banner{background:rgba(var(--accent-rgb),.08);border:1px solid var(--gold-dim);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .push-banner p{font-size:12px;color:var(--text-muted);flex:1;line-height:1.5;}
-.push-yes{background:var(--gold);color:var(--bg);border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;}
+.push-yes{background:var(--gold);color:var(--bg);border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:600;}
 .push-no{background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:0 4px;}
 .empty-state{text-align:center;padding:32px 20px;color:var(--text-dim);font-size:13px;}
 .empty-state .icon{font-size:24px;margin-bottom:8px;}
@@ -329,9 +331,9 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .fb-dot.on{background:var(--green);}
 /* CASA (tarefas diárias partilhadas) */
 .casa-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
-.casa-date{font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold-light);}
+.casa-date{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;color:var(--gold-light);}
 .casa-nav{display:flex;gap:4px;}
-.casa-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;}
+.casa-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:13px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
 .casa-nav button:disabled{opacity:.4;cursor:default;}
 .casa-prog{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:12px;}
 .casa-prog div{height:100%;background:var(--green);transition:width .3s;}
@@ -350,14 +352,14 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .casa-item.late .casa-time{color:var(--red);font-weight:600;}
 .casa-avs{display:flex;gap:4px;}
 .casa-view{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px;}
-.casa-view button{background:transparent;border:none;color:var(--text-muted);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.casa-view button{background:transparent;border:none;color:var(--text-muted);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
 .casa-view button.active{background:var(--gold);color:var(--bg);}
 .casa-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:12px;background:var(--surface2);}
 .casa-grid{border-collapse:separate;border-spacing:0;font-size:11px;min-width:100%;}
 .casa-grid th,.casa-grid td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:0;text-align:center;height:34px;min-width:30px;}
 .casa-grid th{color:var(--text-dim);font-weight:600;font-size:10px;background:var(--surface2);position:sticky;top:0;z-index:2;}
 .casa-grid th:first-child,.casa-grid td:first-child{position:sticky;left:0;background:var(--surface);z-index:3;text-align:left;padding:0 10px;min-width:130px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:500;}
-.casa-grid th.today,.casa-grid td.today{background:rgba(201,168,76,.10);}
+.casa-grid th.today,.casa-grid td.today{background:rgba(var(--accent-rgb),.10);}
 .casa-grid td.miss{background:rgba(192,96,96,.18);}
 .casa-grid td.done span{display:inline-flex;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bg);}
 .casa-grid td.future{opacity:.35;}
@@ -373,7 +375,7 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);}
   .tabs::-webkit-scrollbar{display:none;}
   .tab{flex:0 0 auto;min-width:68px;text-align:center;font-size:9px;padding:8px 10px;border-bottom:none;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:18px;scroll-snap-align:center;transition:background .2s,color .2s,transform .2s;}
-  .tab.active{background:var(--gold);color:var(--bg);font-weight:700;transform:scale(1.04);box-shadow:0 2px 10px rgba(201,168,76,.45);}
+  .tab.active{background:var(--gold);color:var(--on-accent);font-weight:700;transform:scale(1.04);box-shadow:0 2px 10px rgba(var(--accent-rgb),.45);}
   .tab.tab-more{display:flex;}
   .tab-badge{display:none;}
   .tab-content{padding-bottom:96px;}
@@ -520,7 +522,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
 </div>
 <div class="tab-content" id="tab-compras">
   <div class="input-row" style="margin-bottom:12px;">
-    <input type="text" id="shopInput" placeholder="Acrescentar à lista… (ex.: leite, 2 pão)" onkeydown="shopKey(event)" style="flex:1;min-width:0;background:transparent;border:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:8px 10px;outline:none;">
+    <input type="text" id="shopInput" placeholder="Acrescentar à lista… (ex.: leite, 2 pão)" onkeydown="shopKey(event)" style="flex:1;min-width:0;background:transparent;border:none;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;padding:8px 10px;outline:none;">
     <button class="send-btn" onclick="addShoppingFromField()" title="Acrescentar">+</button>
   </div>
   <div id="shopList"></div>
@@ -566,15 +568,15 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     <h2>✏️ Editar tarefa</h2>
     <div class="rep-sec">
       <h3>Texto</h3>
-      <textarea id="editTaskText" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;resize:vertical;"></textarea>
+      <textarea id="editTaskText" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;resize:vertical;"></textarea>
     </div>
     <div class="rep-sec">
       <h3>Data</h3>
-      <input type="date" id="editTaskDate" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <input type="date" id="editTaskDate" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
     </div>
     <div class="rep-sec">
       <h3>Status</h3>
-      <select id="editTaskStatus" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <select id="editTaskStatus" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
         <option value="pendente">○ Pendente</option>
         <option value="andamento">◐ Em andamento</option>
         <option value="concluida">✓ Concluída</option>
@@ -582,7 +584,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     </div>
     <div class="rep-sec">
       <h3>Prioridade</h3>
-      <select id="editTaskPriority" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <select id="editTaskPriority" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
         <option value="urgente">🚩 Urgente</option>
         <option value="alta">🚩 Alta</option>
         <option value="media">🚩 Média</option>
@@ -591,13 +593,13 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     </div>
     <div class="rep-sec">
       <h3>Área</h3>
-      <select id="editTaskArea" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <select id="editTaskArea" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
         <option value="">✦ Geral</option>
       </select>
     </div>
     <div class="rep-sec">
       <h3>Projeto</h3>
-      <select id="editTaskProject" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <select id="editTaskProject" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
         <option value="">Sem projeto</option>
       </select>
     </div>
@@ -609,7 +611,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     </div>
     <div class="rep-sec" id="editAssignWrap" style="display:none;">
       <h3>Atribuir a</h3>
-      <select id="editTaskAssignee" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <select id="editTaskAssignee" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
         <option value="">Ninguém em especial</option>
       </select>
     </div>
@@ -637,7 +639,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     </div>
     <div class="rep-sec">
       <h3>Avisar em</h3>
-      <input type="datetime-local" id="reminderDateTime" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <input type="datetime-local" id="reminderDateTime" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
       <p id="reminderHint" style="font-size:11px;color:var(--text-dim);margin-top:6px;"></p>
     </div>
     <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="confirmReminder()">Agendar lembrete</button>
@@ -651,11 +653,11 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     <h2>🔁 Nova rotina</h2>
     <div class="rep-sec">
       <h3>Texto</h3>
-      <textarea id="newRoutineText" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;resize:vertical;" placeholder="Ex: Oração da manhã"></textarea>
+      <textarea id="newRoutineText" style="width:100%;min-height:60px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;resize:vertical;" placeholder="Ex: Oração da manhã"></textarea>
     </div>
     <div class="rep-sec">
       <h3>Frequência</h3>
-      <select id="newRoutineFreq" onchange="toggleRoutineWeekdays()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <select id="newRoutineFreq" onchange="toggleRoutineWeekdays()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
         <option value="daily">Todos os dias</option>
         <option value="weekly">Dias específicos da semana</option>
       </select>
@@ -690,12 +692,12 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:8px;">Abre <b>tiagocamargos1.github.io/Assistente/ecra.html</b> no ecrã, lê o código que aparece lá e aprova-o aqui. O ecrã só vê as tarefas do dia e a lista de compras.</p>
       <div id="casaDevicesList" style="font-size:13px;color:var(--text-dim);">Nenhum ecrã pediu ligação.</div>
       <h3 style="margin-top:12px;">Outras pessoas que marcam no ecrã</h3>
-      <input type="text" id="casaExtraNames" placeholder="Ex.: TJ, Bella" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+      <input type="text" id="casaExtraNames" placeholder="Ex.: TJ, Bella" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
       <p style="font-size:11px;color:var(--text-dim);margin-top:4px;">Aparecem como botões no "Quem fez?" do ecrã, ao lado dos membros. Separa por vírgula. "Outro…" pede sempre o nome.</p>
     </div>
     <div class="rep-sec" id="casaEmailsWrap" style="display:none;">
       <h3>Membros da casa (e-mails Google, um por linha)</h3>
-      <textarea id="casaEmails" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:8px;resize:vertical;"></textarea>
+      <textarea id="casaEmails" style="width:100%;min-height:70px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;padding:8px;resize:vertical;"></textarea>
       <p style="font-size:11px;color:var(--text-dim);margin-top:4px;">Cada e-mail novo recebe um convite: a pessoa só entra na casa depois de aceitar, ao abrir o Assistente com essa conta.</p>
     </div>
     <button class="close-btn" style="background:var(--gold);color:var(--bg);border-color:var(--gold);" onclick="saveCasaEdit()">Guardar</button>
@@ -765,7 +767,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div id="customAreaList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
       <div style="display:flex;gap:6px;">
         <input type="text" id="newAreaEmoji" maxlength="4" placeholder="🔖" style="width:44px;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:16px;padding:8px 4px;">
-        <input type="text" id="newAreaLabel" maxlength="24" placeholder="Nome da nova área (ex: Estudos)" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
+        <input type="text" id="newAreaLabel" maxlength="24" placeholder="Nome da nova área (ex: Estudos)" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
         <button type="button" onclick="addCustomAreaDraft()" style="background:var(--gold);color:var(--bg);border:none;border-radius:8px;padding:0 16px;font-size:15px;font-weight:600;cursor:pointer;">+</button>
       </div>
     </div>
@@ -787,7 +789,7 @@ const IOS_REDIRECT='com.googleusercontent.apps.150189154211-rk2nslqrvo3o3q6q7s25
 function isIosNative(){
   try{return isNativeApp()&&window.Capacitor.getPlatform()==='ios';}catch(e){return false;}
 }
-const USERS={tiago:{name:'Tiago',emoji:'T',color:'#c9a84c'},monique:{name:'Monique',emoji:'M',color:'#9b6fa8'}};
+const USERS={tiago:{name:'Tiago',emoji:'T',color:'#2a78d6'},monique:{name:'Monique',emoji:'M',color:'#9b6fa8'}};
 // ── LOGIN DEBUG TRAIL ──────────────────────────────
 // The Google login was looping back to the login screen with zero visible
 // error, on desktop AND mobile, even after fixing the popup→redirect issue.
@@ -834,7 +836,7 @@ function renderLoginDebug(){
 let cu=null,gToken=null,gProfile=null;
 let pendingRefreshToken=null;
 let tasks=[],gcalEvs=[],notes=[];
-let filter='all',shareMode=false,isDark=true,selectedDay=null;
+let filter='all',shareMode=false,isDark=false,selectedDay=null;
 const AREAS={deus:{label:'Deus',emoji:'🙏'},pessoal:{label:'Pessoal',emoji:'👤'},familia:{label:'Família',emoji:'👨‍👩‍👧'},financas:{label:'Finanças',emoji:'💰'},negocios:{label:'Negócios',emoji:'💼'}};
 let currentArea='',areaFilter='all';
 const PRIORITIES={urgente:{label:'Urgente',emoji:'🚩',color:'var(--red)'},alta:{label:'Alta',emoji:'🚩',color:'#e08a3c'},media:{label:'Média',emoji:'🚩',color:'#d6c24c'},baixa:{label:'Baixa',emoji:'🚩',color:'var(--green)'}};
@@ -1392,7 +1394,7 @@ function clearStoredGoogle(uid){
   localStorage.removeItem(`grefresh_${uid}`);
 }
 // ── DYNAMIC PROFILES (sign-up beyond Tiago/Monique) ──
-const PALETTE=['#c9a84c','#9b6fa8','#5a9e6f','#5a7ea0','#c06060','#3fa7a3','#a87f4c','#7a6cc7'];
+const PALETTE=['#2a78d6','#9b6fa8','#5a9e6f','#5a7ea0','#c06060','#3fa7a3','#a87f4c','#7a6cc7'];
 function pickColor(seed){
   let h=0;for(let i=0;i<seed.length;i++)h=(h*31+seed.charCodeAt(i))>>>0;
   return PALETTE[h%PALETTE.length];
@@ -1493,7 +1495,7 @@ function renderDynamicLoginCards(){
   div.className='login-card';
   div.id='lcard_'+uid;
   div.onclick=()=>handleProfileClick(uid);
-  div.innerHTML=`<div class="login-avatar" style="background:${safeColor(p.color)};color:#0f0e0c;font-weight:700;">${esc(p.emoji||(p.name||'U').charAt(0))}</div><div class="login-name">${esc(p.name||'Usuário')}</div><div class="login-hint">Continuar</div>`;
+  div.innerHTML=`<div class="login-avatar" style="background:${safeColor(p.color)};color:#fff;font-weight:700;">${esc(p.emoji||(p.name||'U').charAt(0))}</div><div class="login-name">${esc(p.name||'Usuário')}</div><div class="login-hint">Continuar</div>`;
   cardsWrap.appendChild(div);
 }
 // Only show a quick-access card for Tiago/Monique on a device that has
@@ -2003,7 +2005,7 @@ function pushBannerHTML(){
   if(isNativeApp()){
     return `<div class="push-banner"><p>🔔 Ativar notificações neste iPhone?${casaLine}</p><button class="push-yes" onclick="reqNativeNotif()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
   }
-  return `<div class="push-banner"><p>🔔 Receber o briefing do dia e os lembretes por notificação, mesmo com o app fechado?${casaLine}<br><span style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;">Briefing às <input type="time" id="briefingTimeInput" value="07:00" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-family:'DM Sans',sans-serif;font-size:12px;"></span></p><button class="push-yes" onclick="reqPush()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
+  return `<div class="push-banner"><p>🔔 Receber o briefing do dia e os lembretes por notificação, mesmo com o app fechado?${casaLine}<br><span style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;">Briefing às <input type="time" id="briefingTimeInput" value="07:00" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;"></span></p><button class="push-yes" onclick="reqPush()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
 }
 function pushLater(){try{sessionStorage.setItem('pushLater','1');}catch(e){}document.getElementById('pushBanner').innerHTML='';}
 async function showPushBanner(){
@@ -3016,7 +3018,7 @@ function startCasaListenerFor(hid){
     const me=USERS[cu]||{};
     const m=(data.members||{})[cu];
     if(!m||m.name!==me.name){
-      try{await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{name:me.name||cu,color:me.color||'#c9a84c',email:casaEmail()||null}}});}catch(e){}
+      try{await window.fbSave(`household/${CASA_ID}`,{members:{[cu]:{name:me.name||cu,color:me.color||'#2a78d6',email:casaEmail()||null}}});}catch(e){}
     }
     listenCasaDay();
     listenCasaToday();
@@ -3357,8 +3359,8 @@ function renderCasaEditList(){
   const el=document.getElementById('casaEditList');
   if(!el)return;
   el.innerHTML=casaDraftTasks.map((t,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-    <input type="text" value="${esc(t.label)}" oninput="casaDraftTasks[${i}].label=this.value" placeholder="Tarefa" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px;">
-    <input type="time" value="${esc(t.time||'')}" onchange="casaDraftTasks[${i}].time=this.value" title="Hora-limite (opcional)" style="width:92px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 4px;">
+    <input type="text" value="${esc(t.label)}" oninput="casaDraftTasks[${i}].label=this.value" placeholder="Tarefa" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:8px;">
+    <input type="time" value="${esc(t.time||'')}" onchange="casaDraftTasks[${i}].time=this.value" title="Hora-limite (opcional)" style="width:92px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;padding:7px 4px;">
     <button onclick="casaDraftMove(${i},-1)" class="filter-btn" style="padding:6px 8px;">↑</button>
     <button onclick="casaDraftMove(${i},1)" class="filter-btn" style="padding:6px 8px;">↓</button>
     <button onclick="casaDraftTasks.splice(${i},1);renderCasaEditList()" class="filter-btn" style="padding:6px 8px;color:var(--red);">✕</button>
@@ -3681,7 +3683,7 @@ function openReport(){
 }
 // ── THEME ────────────────────────────────────────
 function toggleTheme(){applyTheme(!isDark);savePrefs();}
-function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'':'light');document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
+function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'dark':'light');var m=document.querySelector('meta[name=theme-color]');if(m)m.content=dark?'#0b0f19':'#f4f5f8';document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
 // ── UI ───────────────────────────────────────────
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
@@ -3846,7 +3848,7 @@ function renderFiltersSheet(){
     });
     catRows+=newProjectDraftOpen
       ?`<div class="fopt" style="gap:8px;">
-          <input id="newProjectNameInput" type="text" placeholder="Nome do projeto" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 9px;">
+          <input id="newProjectNameInput" type="text" placeholder="Nome do projeto" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;padding:7px 9px;">
           <button class="tact" style="color:var(--gold);" onclick="confirmNewProject()">✓</button>
         </div>`
       :`<div class="fopt" onclick="toggleNewProjectDraft()"><span class="fopt-ic">＋</span><span class="fopt-lbl" style="color:var(--gold);">Novo projeto</span></div>`;
@@ -3936,7 +3938,7 @@ function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/<
 // O esc() sozinho NÃO protege dentro de onclick='...' (o browser descodifica &#39; antes de correr o JS).
 function jsa(v){return esc(JSON.stringify(String(v==null?'':v)));}
 // Cor de membro/perfil: só #rrggbb (evita injeção de CSS vinda de outros utilizadores).
-function safeColor(c,fb){return /^#[0-9a-fA-F]{6}$/.test(String(c||''))?c:(fb||'#c9a84c');}
+function safeColor(c,fb){return /^#[0-9a-fA-F]{6}$/.test(String(c||''))?c:(fb||'#2a78d6');}
 function fd(d){if(!d)return'';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});}catch(e){return d;}}
 function fd2(iso){if(!iso)return'';try{return new Date(iso).toLocaleDateString('pt-BR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return'';}}
 function updateDate(){
