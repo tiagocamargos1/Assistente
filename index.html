@@ -450,6 +450,17 @@ header{background:var(--surface);border-bottom:1px solid var(--border);box-shado
 .hero-ring .rg-t{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--text);}
 .hero-body{min-width:0;flex:1;}
 .hero-line{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.01em;}
+.sug-card{display:flex;gap:10px;align-items:flex-start;background:rgba(var(--accent-rgb),.08);border:1px solid rgba(var(--accent-rgb),.22);border-radius:var(--radius);padding:10px 8px 10px 12px;margin:8px 0 4px;animation:sugIn .35s ease;}
+@keyframes sugIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+.sug-ico{font-size:20px;line-height:1.2;}
+.sug-body{flex:1;min-width:0;}
+.sug-tag{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--gold);}
+.sug-txt{font-size:13px;color:var(--text);margin-top:2px;line-height:1.35;}
+.sug-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.sug-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:34px;}
+.sug-btn.pri{background:var(--gold);border-color:var(--gold);color:var(--on-accent);}
+.sug-x{border:none;background:none;color:var(--text-dim);font-size:14px;width:34px;height:34px;cursor:pointer;flex:0 0 auto;}
+body[data-tab]:not([data-tab="hoje"]) #topGreeting .sug-card{display:none;}
 .hero-next{margin-top:3px;font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .hero-next b{color:var(--text);font-weight:700;}
 .hero-streak{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;color:var(--gold);background:rgba(var(--accent-rgb),.12);border-radius:999px;padding:2px 9px;}
@@ -4329,6 +4340,52 @@ function ringHTML(done,total){
   const R=22,C=2*Math.PI*R,pct=total?Math.min(1,done/total):0;
   return`<div class="hero-ring${total&&done>=total?' full':''}"><svg viewBox="0 0 54 54"><circle class="rg-bg" cx="27" cy="27" r="${R}" fill="none" stroke-width="5"/><circle class="rg-fg" cx="27" cy="27" r="${R}" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-pct)).toFixed(1)}"/></svg><div class="rg-t">${total?done+'/'+total:'✓'}</div></div>`;
 }
+// ── SUGESTÃO DO DIA: uma só dica prática, calculada no aparelho (sem custo) ──
+function sugKey(){return 'sug1_'+(cu||'x');}
+function sugDismissed(rule){try{return localStorage.getItem(sugKey())===todayStr()+'|'+rule;}catch(e){return false;}}
+function dismissSuggestion(rule){try{localStorage.setItem(sugKey(),todayStr()+'|'+rule);}catch(e){}hapticTap('light');renderTopGreeting();}
+function suggestionHTML(st,nx){
+  const pend=tasks.filter(t=>!t.done);
+  const canSnooze=t=>t&&!hasActiveReminder(t);
+  const cut=(t,n=34)=>{const x=String(t.text||'');return esc(x.length>n?x.slice(0,n-1)+'…':x);};
+  const btn=(label,fn,primary)=>`<button class="sug-btn${primary?' pri':''}" onclick="${fn}">${label}</button>`;
+  let rule=null,ico='💡',txt='',acts='';
+  const oldest=st.overdue.slice().sort((a,b)=>a.date<b.date?-1:1)[0];
+  const undated=pend.filter(t=>!t.date);
+  if(st.overdue.length>=3){
+    rule='atrasadas';ico='🧘';
+    txt=`Tem ${st.overdue.length} atrasadas. Respire: conclua uma e dê novo dia às outras.`;
+    acts=(canSnooze(oldest)?btn('Dar novo dia à mais antiga',`openSnooze(${jsa(oldest.id)})`):'');
+  }else if(st.overdue.length){
+    rule='atrasada';ico='⏰';
+    txt=`«${cut(oldest)}» está atrasada. Resolva já ou dê-lhe um novo dia.`;
+    acts=btn('Concluir',`toggleTask(${jsa(oldest.id)})`,true)+(canSnooze(oldest)?btn('Adiar',`openSnooze(${jsa(oldest.id)})`):'');
+  }else if(st.todayP.length>=6){
+    const low=st.todayP.slice().sort((a,b)=>(PRIO_RANK[taskPriority(b)]??2)-(PRIO_RANK[taskPriority(a)]??2)||String(b.time||'99').localeCompare(String(a.time||'99'))).find(canSnooze);
+    rule='cheio';ico='🎯';
+    txt=`Dia cheio (${st.todayP.length}). Escolha as 3 que importam e passe o resto para outro dia.`;
+    acts=low?btn(`Adiar «${cut(low,22)}»`,`openSnooze(${jsa(low.id)})`,true):'';
+  }else if(st.doneToday>0&&nx){
+    rule='pouco';ico='💪';
+    txt=`Já fez ${st.doneToday} hoje. Falta pouco: «${cut(nx)}».`;
+    acts=btn('Concluir',`toggleTask(${jsa(nx.id)})`,true);
+  }else if(undated.length){
+    const u=undated.find(canSnooze)||undated[0];
+    rule='semdata';ico='🗓️';
+    txt=`Tem ${undated.length} tarefa${undated.length===1?'':'s'} sem data. Dê um dia a «${cut(u)}» e liberte a cabeça.`;
+    acts=canSnooze(u)?btn('Escolher dia',`openSnooze(${jsa(u.id)})`,true):'';
+  }else if(st.total>0&&!st.todayP.length){
+    const tm=new Date();tm.setDate(tm.getDate()+1);
+    const ts=`${tm.getFullYear()}-${String(tm.getMonth()+1).padStart(2,'0')}-${String(tm.getDate()).padStart(2,'0')}`;
+    if(!pend.some(t=>t.date===ts)){
+      rule='amanha';ico='🌙';
+      txt='Dia cumprido. Que tal deixar a 1.ª tarefa de amanhã já pronta?';
+      acts=btn('Planear amanhã',`insertChip('amanha')`,true);
+    }
+  }
+  if(!rule||sugDismissed(rule))return'';
+  return`<div class="sug-card"><div class="sug-ico">${ico}</div><div class="sug-body"><div class="sug-tag">Sugestão do dia</div><div class="sug-txt">${txt}</div>${acts?`<div class="sug-acts">${acts}</div>`:''}</div><button class="sug-x" aria-label="Dispensar" onclick="dismissSuggestion(${jsa(rule)})">✕</button></div>`;
+}
 function renderTopGreeting(){
   const el=document.getElementById('topGreeting');
   if(!el||!cu)return;
@@ -4368,6 +4425,7 @@ function renderTopGreeting(){
       ${ringHTML(st.doneToday,st.total)}
       <div class="hero-body"><div class="hero-line">${line}</div>${nextLine}${streak}</div>
     </div>
+    ${suggestionHTML(st,nx)}
     <div class="hchips-row">${chipsHTML}</div>`;
 }
 // Atalhos de captura: inserem o prefixo que o app já entende
