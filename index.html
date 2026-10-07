@@ -480,6 +480,29 @@ header{background:var(--surface);border-bottom:1px solid var(--border);box-shado
 @media(prefers-reduced-motion:reduce){.task-check.pop,.celebrate{animation:none}.celebrate{opacity:1}}
 .empty-state .try-btn{margin-top:12px;background:var(--gold);color:var(--on-accent);border:none;border-radius:999px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
 .empty-state .ex{display:block;margin-top:6px;font-size:12px;color:var(--text-muted);font-style:italic;}
+
+/* Captura rápida e topo compacto */
+.quick-chips{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none;}
+.quick-chips::-webkit-scrollbar{display:none;}
+.qchip{flex:0 0 auto;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s,color .15s;}
+.qchip:hover,.qchip:active{border-color:var(--gold);color:var(--text);}
+[data-theme="dark"] .qchip{background:#1d2a4a;border-color:#33436b;color:#c3d0ec;}
+/* Fora do ecrã Hoje o topo fica mínimo: só a saudação */
+body[data-tab]:not([data-tab="hoje"]) #topGreeting .hoje-hero,
+body[data-tab]:not([data-tab="hoje"]) #topGreeting .hchips-row,
+body[data-tab]:not([data-tab="hoje"]) #topGreeting .hoje-sub{display:none;}
+@media(max-width:680px){
+  .hoje-hero{padding:9px 12px;gap:12px;margin:6px 0 2px;}
+  .hero-ring,.hero-ring svg{width:46px;height:46px;flex-basis:46px;}
+  .hero-ring .rg-t{font-size:12px;}
+  .hchips-row{margin-bottom:2px;padding-bottom:4px;}
+  .hchip{padding:5px 10px;min-width:0;flex-direction:row;align-items:center;gap:6px;border-radius:999px;}
+  .hchip-n{font-size:14px;}
+  .hchip-l{font-size:11px;}
+  .hoje-greet-row{margin:8px 0 0;}
+  .hoje-greet{font-size:18px;}
+  .input-section{padding-top:10px;padding-bottom:10px;}
+}
 </style>
 </head>
 <body>
@@ -545,6 +568,12 @@ header{background:var(--surface);border-bottom:1px solid var(--border);box-shado
         <textarea id="userInput" placeholder="Falar tarefa...
 Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="processInput()">+</button>
+      </div>
+      <div class="quick-chips" id="quickChips" aria-label="Atalhos de captura">
+        <button type="button" class="qchip" onclick="insertChip('nota')">📝 Nota</button>
+        <button type="button" class="qchip" onclick="insertChip('ideia')">💡 Ideia</button>
+        <button type="button" class="qchip qchip-casa" onclick="insertChip('comprar')" style="display:none;">🛒 Comprar</button>
+        <button type="button" class="qchip" onclick="insertChip('amanha')">📅 Amanhã</button>
       </div>
       <div class="share-row">
         <label class="share-toggle" onclick="toggleShare()">
@@ -3161,7 +3190,7 @@ function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`ge
 function casaIsOwner(){const oe=(casa&&casa.ownerEmail)||(CASA_ID===FAMILY_CASA_ID?CASA_OWNER_EMAIL:null);return !!oe&&(casaEmail()===oe||(CASA_ID===FAMILY_CASA_ID&&cu==='tiago'));}
 function casaTasks(){return((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));}
 function casaSetTabVisible(on){
-  document.querySelectorAll('[data-tab="casa"],[data-mais="casa"],[data-mais="compras"]').forEach(el=>el.style.display=on?'':'none');
+  document.querySelectorAll('[data-tab="casa"],[data-mais="casa"],[data-mais="compras"],.qchip-casa').forEach(el=>el.style.display=on?'':'none');
 }
 function startCasaListener(){
   if(fbUnsubCasa)fbUnsubCasa();
@@ -3866,6 +3895,7 @@ function switchTab(tab){
   const maisTab=document.getElementById('tabMais');
   if(maisTab)maisTab.classList.toggle('active',tab==='week'||tab==='notes'||tab==='ideias'||tab==='compras');
   closeMaisMenu();
+  try{document.body.setAttribute('data-tab',tab);}catch(e){}
   try{document.getElementById('tab-'+tab).scrollTop=0;}catch(e){}
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
@@ -4134,6 +4164,22 @@ function renderTopGreeting(){
       <div class="hero-body"><div class="hero-line">${line}</div>${nextLine}${streak}</div>
     </div>
     <div class="hchips-row">${chipsHTML}</div>`;
+}
+// Atalhos de captura: inserem o prefixo que o app já entende
+function insertChip(kind){
+  const ta=document.getElementById('userInput');if(!ta)return;
+  let v=ta.value||'';
+  const strip=v.replace(/^\s*(nota|ideia|idéia|comprar)\s*[:\-–—,]\s*/i,'');
+  if(kind==='amanha'){
+    if(!/(^|\s)amanh[ãa](\s|$)/i.test(v))v=(v.trim()?v.trim()+' ':'')+'amanhã';
+    ta.value=v;
+  }else{
+    const pre={nota:'Nota: ',ideia:'Ideia: ',comprar:'Comprar: '}[kind];
+    ta.value=pre+strip;
+  }
+  ta.focus();
+  try{ta.setSelectionRange(ta.value.length,ta.value.length);}catch(e){}
+  hapticTap('light');
 }
 function tryExample(){
   const ta=document.getElementById('userInput');
