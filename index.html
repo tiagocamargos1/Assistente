@@ -139,6 +139,16 @@ header{position:relative;z-index:10;padding:12px 18px;padding-top:max(12px, env(
 .chip-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg);overflow:hidden;}
 .chip-av img{width:100%;height:100%;object-fit:cover;}
 .chip-name{font-size:12px;color:var(--text-muted);}
+.i{width:1.2em;height:1.2em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.2em;pointer-events:none;}
+.icon-btn .i{width:18px;height:18px;}
+.mic-btn-lead .i{width:20px;height:20px;}
+.tab .i{width:20px;height:20px;}
+.qchip .i,.mais-item .i,.hoje-filter-btn .i{width:15px;height:15px;margin-right:5px;vertical-align:-.22em;}
+.mais-item .i{width:17px;height:17px;color:var(--text-muted);margin-right:0;}
+.onb-ico .i{width:28px;height:28px;stroke-width:1.7;}
+.onb-chips .i{width:14px;height:14px;margin-right:4px;vertical-align:-.2em;}
+.sug-ico .i{width:22px;height:22px;color:var(--gold);}
+.sdiv .i{width:13px;height:13px;vertical-align:-.15em;}
 .icon-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:5px;border-radius:6px;transition:color .2s;}
 .icon-btn:hover{color:var(--gold);}
 /* MAIN */
@@ -572,9 +582,14 @@ body[data-tab]:not([data-tab="hoje"]) #topGreeting .hoje-sub{display:none;}
 .onb-dots i{width:7px;height:7px;border-radius:50%;background:var(--border);}
 .onb-dots i.on{width:20px;border-radius:4px;background:var(--gold);}
 .onb-next{width:100%;background:var(--gold);color:var(--on-accent);border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;}
+.ttag .i{width:11px;height:11px;vertical-align:-.12em;}
+.tinfo .i,.task-meta .i{width:12px;height:12px;vertical-align:-.15em;}
+.rdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:6px;vertical-align:1px;}
+.onb-card small .i{width:12px;height:12px;vertical-align:-.15em;margin-right:3px;}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></symbol><symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol><symbol id="i-today" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="m9 15 2 2 4-4"/></symbol><symbol id="i-tasks" viewBox="0 0 24 24"><path d="m3 7 2 2 4-4"/><path d="m3 16 2 2 4-4"/><path d="M13 7h8M13 17h8"/></symbol><symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></symbol><symbol id="i-note" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol><symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></symbol><symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.7 12.4a2 2 0 0 0 2 1.6h8a2 2 0 0 0 2-1.5L21.5 8H6"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M5 20v-8M12 20V4M19 20v-9"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol><symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M5 3 2 6M19 3l3 3"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-8-4.7-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.3 12 20 12 20z"/></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol><symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol><symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M5 8h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4H5v-4a2 2 0 1 0 0-4z"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v1M14 7V4a2 2 0 0 0-4 0v6M10 10V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-3a2 2 0 0 0-4 0"/></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol></defs></svg>
 <div class="loading-bar" id="loadingBar"></div>
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
@@ -618,10 +633,10 @@ body[data-tab]:not([data-tab="hoje"]) #topGreeting .hoje-sub{display:none;}
   </div>
   <div class="header-right">
     <div class="header-date" id="headerDate">Ter, 26 mai · 23:48</div>
-    <button class="icon-btn" onclick="openSearch()" title="Pesquisar" aria-label="Pesquisar">🔍</button>
-    <button class="icon-btn" onclick="openAreaSettings()" title="Áreas">🏷️</button>
-    <button class="icon-btn" onclick="openPushSettings()" title="Notificações">🔔</button>
-    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema">🌙</button>
+    <button class="icon-btn" onclick="openSearch()" title="Pesquisar" aria-label="Pesquisar"><svg class="i"><use href="#i-search"/></svg></button>
+    <button class="icon-btn" onclick="openAreaSettings()" title="Áreas" aria-label="Áreas"><svg class="i"><use href="#i-tag"/></svg></button>
+    <button class="icon-btn" onclick="openPushSettings()" title="Notificações" aria-label="Notificações"><svg class="i"><use href="#i-bell"/></svg></button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Tema" aria-label="Tema"><svg class="i"><use href="#i-moon"/></svg></button>
     <div class="user-chip" onclick="openAccountModal()" title="Conta">
       <div class="chip-av" id="chipAv">?</div>
       <span class="chip-name" id="chipName">—</span>
@@ -634,16 +649,16 @@ body[data-tab]:not([data-tab="hoje"]) #topGreeting .hoje-sub{display:none;}
     <div id="topGreeting"></div>
     <div class="input-section">
       <div class="input-row">
-        <button class="mic-btn-lead" id="micBtn" onclick="toggleMic()" title="Falar">🎤</button>
+        <button class="mic-btn-lead" id="micBtn" onclick="toggleMic()" title="Falar" aria-label="Falar"><svg class="i"><use href="#i-mic"/></svg></button>
         <textarea id="userInput" placeholder="Falar tarefa...
 Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></textarea>
         <button class="send-btn" id="sendBtn" onclick="processInput()">+</button>
       </div>
       <div class="quick-chips" id="quickChips" aria-label="Atalhos de captura">
-        <button type="button" class="qchip" onclick="insertChip('nota')">📝 Nota</button>
-        <button type="button" class="qchip" onclick="insertChip('ideia')">💡 Ideia</button>
-        <button type="button" class="qchip qchip-casa" onclick="insertChip('comprar')" style="display:none;">🛒 Comprar</button>
-        <button type="button" class="qchip" onclick="insertChip('amanha')">📅 Amanhã</button>
+        <button type="button" class="qchip" onclick="insertChip('nota')"><svg class="i"><use href="#i-note"/></svg>Nota</button>
+        <button type="button" class="qchip" onclick="insertChip('ideia')"><svg class="i"><use href="#i-bulb"/></svg>Ideia</button>
+        <button type="button" class="qchip qchip-casa" onclick="insertChip('comprar')" style="display:none;"><svg class="i"><use href="#i-cart"/></svg>Comprar</button>
+        <button type="button" class="qchip" onclick="insertChip('amanha')"><svg class="i"><use href="#i-cal"/></svg>Amanhã</button>
       </div>
       <div class="share-row">
         <label class="share-toggle" onclick="toggleShare()">
@@ -655,31 +670,31 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div class="ai-resp" id="aiResp"></div>
     </div>
     <div class="tabs" id="tabsBar">
-      <div class="tab active" data-tab="hoje" onclick="switchTab(&#39;hoje&#39;)">🏠 <span class="tab-lbl">Hoje</span></div>
-      <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)">📋 <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
-      <div class="tab" data-tab="casa" onclick="switchTab('casa')" style="display:none;">🏡 <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
-      <div class="tab" data-tab="routines" onclick="switchTab(&#39;routines&#39;)">🔁 <span class="tab-lbl">Rotinas</span></div>
-      <div class="tab tab-extra" data-tab="compras" onclick="switchTab('compras')" style="display:none;">🛒 <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
-      <div class="tab tab-extra" data-tab="notes" onclick="switchTab(&#39;notes&#39;)">📝 <span class="tab-lbl">Notas</span></div>
-      <div class="tab tab-extra" data-tab="week" onclick="switchTab(&#39;week&#39;)">🗓️ <span class="tab-lbl">Semana</span></div>
-      <div class="tab tab-extra" data-tab="ideias" onclick="switchTab('ideias')">💡 <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
+      <div class="tab active" data-tab="hoje" onclick="switchTab(&#39;hoje&#39;)"><svg class="i"><use href="#i-today"/></svg> <span class="tab-lbl">Hoje</span></div>
+      <div class="tab" data-tab="tasks" onclick="switchTab(&#39;tasks&#39;)"><svg class="i"><use href="#i-tasks"/></svg> <span class="tab-lbl">Tarefas</span><span class="tab-badge" id="bdgT">0</span></div>
+      <div class="tab" data-tab="casa" onclick="switchTab('casa')" style="display:none;"><svg class="i"><use href="#i-home"/></svg> <span class="tab-lbl">Casa</span><span class="tab-badge" id="bdgC">0</span></div>
+      <div class="tab" data-tab="routines" onclick="switchTab(&#39;routines&#39;)"><svg class="i"><use href="#i-repeat"/></svg> <span class="tab-lbl">Rotinas</span></div>
+      <div class="tab tab-extra" data-tab="compras" onclick="switchTab('compras')" style="display:none;"><svg class="i"><use href="#i-cart"/></svg> <span class="tab-lbl">Compras</span><span class="tab-badge" id="bdgS">0</span></div>
+      <div class="tab tab-extra" data-tab="notes" onclick="switchTab(&#39;notes&#39;)"><svg class="i"><use href="#i-note"/></svg> <span class="tab-lbl">Notas</span></div>
+      <div class="tab tab-extra" data-tab="week" onclick="switchTab(&#39;week&#39;)"><svg class="i"><use href="#i-cal"/></svg> <span class="tab-lbl">Semana</span></div>
+      <div class="tab tab-extra" data-tab="ideias" onclick="switchTab('ideias')"><svg class="i"><use href="#i-bulb"/></svg> <span class="tab-lbl">Ideias</span><span class="tab-badge" id="bdgI">0</span></div>
       <button class="tab-mic-inline" id="fabMic" onclick="focusAndMic()" title="Falar tarefa" style="display:none;">🎤</button>
-      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()">☰ <span class="tab-lbl">Mais</span></div>
+      <div class="tab tab-mais" id="tabMais" onclick="toggleMaisMenu()"><svg class="i"><use href="#i-menu"/></svg> <span class="tab-lbl">Mais</span></div>
     </div>
     <div class="mais-menu" id="maisMenu">
-      <div class="mais-item" data-mais="compras" onclick="switchTab('compras');closeMaisMenu()" style="display:none;">🛒 Compras <span class="mais-n" id="maisNS"></span></div>
-      <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()">🗓️ Semana</div>
-      <div class="mais-item" onclick="switchTab(&#39;notes&#39;);closeMaisMenu()">📝 Notas</div>
-      <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()">💡 Ideias <span class="mais-n" id="maisNI"></span></div>
-      <div class="mais-item" onclick="openReport();closeMaisMenu()">📊 Relatório</div>
-      <div class="mais-item" onclick="openOnboarding(true);closeMaisMenu()">👋 Como funciona</div>
+      <div class="mais-item" data-mais="compras" onclick="switchTab('compras');closeMaisMenu()" style="display:none;"><svg class="i"><use href="#i-cart"/></svg>Compras <span class="mais-n" id="maisNS"></span></div>
+      <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()"><svg class="i"><use href="#i-cal"/></svg>Semana</div>
+      <div class="mais-item" onclick="switchTab(&#39;notes&#39;);closeMaisMenu()"><svg class="i"><use href="#i-note"/></svg>Notas</div>
+      <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()"><svg class="i"><use href="#i-bulb"/></svg>Ideias <span class="mais-n" id="maisNI"></span></div>
+      <div class="mais-item" onclick="openReport();closeMaisMenu()"><svg class="i"><use href="#i-chart"/></svg>Relatório</div>
+      <div class="mais-item" onclick="openOnboarding(true);closeMaisMenu()"><svg class="i"><use href="#i-sparkle"/></svg>Como funciona</div>
     </div>
     <div class="tab-content active" id="tab-hoje">
       <div id="hojeContent"></div>
     </div>
     <div class="tab-content" id="tab-tasks">
       <div class="tasks-filter-row">
-        <button class="hoje-filter-btn" id="tasksFilterBtn" onclick="openFiltersModal()">🔽 Filtros</button>
+        <button class="hoje-filter-btn" id="tasksFilterBtn" onclick="openFiltersModal()"><svg class="i"><use href="#i-filter"/></svg>Filtros</button>
       </div>
       <div id="taskList"></div>
     </div>
@@ -2560,7 +2575,7 @@ function startMic(){
   recognition.onstart=()=>{
     isListening=true;
     document.getElementById('micBtn').classList.add('listening');
-    document.getElementById('micBtn').textContent='⏹';
+    document.getElementById('micBtn').innerHTML=ico('stop');
     const fab=document.getElementById('fabMic');if(fab)fab.classList.add('listening');
     document.getElementById('thinkMsg').textContent='Ouvindo… fale agora!';
     document.getElementById('thinking').classList.add('visible');
@@ -2604,7 +2619,7 @@ function stopMic(){
   isListening=false;
   if(recognition)try{recognition.stop();}catch(e){}
   document.getElementById('micBtn').classList.remove('listening');
-  document.getElementById('micBtn').textContent='🎤';
+  document.getElementById('micBtn').innerHTML=ico('mic');
   const fab=document.getElementById('fabMic');if(fab)fab.classList.remove('listening');
   document.getElementById('thinking').classList.remove('visible');
 }
@@ -2761,16 +2776,17 @@ function searchGo(kind,id){
 }
 
 // ── PRIMEIRO CONTACTO: 3 ecrãs de boas-vindas ─────────────────────────
+function ico(n,c){return'<svg class="i'+(c?' '+c:'')+'" aria-hidden="true"><use href="#i-'+n+'"/></svg>';}
 const ONB_SLIDES=[
-  {ico:'🎤',title:'Diga ou escreva. O resto é comigo.',
+  {ico:ico('mic'),title:'Diga ou escreva. O resto é comigo.',
    txt:'Fale ou escreva como faria a uma pessoa. O Assistente percebe a data, a hora e a prioridade.',
-   demo:`<div class="onb-say">“Pagar a renda sexta às 9h”</div><div class="onb-arrow">↓</div><div class="onb-card"><span class="onb-dot"></span><div><b>Pagar a renda</b><small>📅 sexta · 09:00</small></div></div>`},
-  {ico:'☀️',title:'O seu dia, num relance',
+   demo:`<div class="onb-say">“Pagar a renda sexta às 9h”</div><div class="onb-arrow">↓</div><div class="onb-card"><span class="onb-dot"></span><div><b>Pagar a renda</b><small>${ico("cal")} sexta · 09:00</small></div></div>`},
+  {ico:ico('today'),title:'O seu dia, num relance',
    txt:'O ecrã Hoje mostra o que fazer a seguir. Deslize um cartão para a direita para concluir, ou para a esquerda para adiar.',
    demo:`<div class="onb-ring"><svg viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" fill="none" stroke="var(--border)" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="var(--gold)" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="55" transform="rotate(-90 27 27)"/></svg><span>3/5</span></div><div class="onb-swipe"><span class="ok">→ Concluir</span><span class="sn">Adiar ←</span></div>`},
-  {ico:'🧩',title:'Tudo no mesmo sítio',
+  {ico:ico('puzzle'),title:'Tudo no mesmo sítio',
    txt:'Comece a frase com uma palavra e o Assistente guarda no lugar certo. Para a casa e a família, partilhe tarefas e a lista de compras.',
-   demo:`<div class="onb-chips"><span>📝 Nota: …</span><span>💡 Ideia: …</span><span>🛒 Comprar: …</span><span>📅 … amanhã</span></div>`}
+   demo:`<div class="onb-chips"><span>${ico('note')}Nota: …</span><span>${ico('bulb')}Ideia: …</span><span>${ico('cart')}Comprar: …</span><span>${ico('cal')}… amanhã</span></div>`}
 ];
 let onbIdx=0;
 function onbKey(){return 'onb1_'+(cu||'x');}
@@ -2987,10 +3003,10 @@ function taskHTML(t){
     <div class="task-body">
       <div class="task-text">${esc(t.text||'')}</div>
       <div class="task-meta">
-        ${t.date?`<span>📅 ${fd(t.date)}</span>`:''}
+        ${t.date?`<span>${ico("cal")} ${fd(t.date)}</span>`:''}
         ${reminderBadgeHTML(t)}
         ${t.shared?`<span class="ttag ts">👫</span>`:''}
-        ${prio!=='media'?`<span class="ttag" style="color:${pDef.color};background:transparent;border:1px solid ${pDef.color};">${pDef.emoji} ${pDef.label}</span>`:''}
+        ${prio!=='media'?`<span class="ttag" style="color:${pDef.color};background:transparent;border:1px solid ${pDef.color};">${ico('flag')} ${pDef.label}</span>`:''}
         ${status==='andamento'?`<span class="ttag" style="color:var(--blue);background:rgba(90,126,160,.15);">◐ Em andamento</span>`:''}
         ${proj?`<span class="ttag" style="color:var(--text-muted);background:rgba(255,255,255,.06);">📁 ${esc(proj.name)}</span>`:''}
         ${areaTag(t.area)}
@@ -4102,7 +4118,7 @@ function openReport(){
 }
 // ── THEME ────────────────────────────────────────
 function toggleTheme(){applyTheme(!isDark);savePrefs();}
-function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'dark':'light');var m=document.querySelector('meta[name=theme-color]');if(m)m.content=dark?'#0b0f19':'#f4f5f8';document.getElementById('themeBtn').textContent=dark?'🌙':'☀️';}
+function applyTheme(dark){isDark=dark;document.documentElement.setAttribute('data-theme',dark?'dark':'light');var m=document.querySelector('meta[name=theme-color]');if(m)m.content=dark?'#0b0f19':'#f4f5f8';document.getElementById('themeBtn').innerHTML=ico(dark?'moon':'sun');}
 // ── UI ───────────────────────────────────────────
 function switchTab(tab){
   document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
@@ -4349,42 +4365,42 @@ function suggestionHTML(st,nx){
   const canSnooze=t=>t&&!hasActiveReminder(t);
   const cut=(t,n=34)=>{const x=String(t.text||'');return esc(x.length>n?x.slice(0,n-1)+'…':x);};
   const btn=(label,fn,primary)=>`<button class="sug-btn${primary?' pri':''}" onclick="${fn}">${label}</button>`;
-  let rule=null,ico='💡',txt='',acts='';
+  let rule=null,icn='',txt='',acts='';
   const oldest=st.overdue.slice().sort((a,b)=>a.date<b.date?-1:1)[0];
   const undated=pend.filter(t=>!t.date);
   if(st.overdue.length>=3){
-    rule='atrasadas';ico='🧘';
+    rule='atrasadas';icn=ico('heart');
     txt=`Tem ${st.overdue.length} atrasadas. Respire: conclua uma e dê novo dia às outras.`;
     acts=(canSnooze(oldest)?btn('Dar novo dia à mais antiga',`openSnooze(${jsa(oldest.id)})`):'');
   }else if(st.overdue.length){
-    rule='atrasada';ico='⏰';
+    rule='atrasada';icn=ico('alarm');
     txt=`«${cut(oldest)}» está atrasada. Resolva já ou dê-lhe um novo dia.`;
     acts=btn('Concluir',`toggleTask(${jsa(oldest.id)})`,true)+(canSnooze(oldest)?btn('Adiar',`openSnooze(${jsa(oldest.id)})`):'');
   }else if(st.todayP.length>=6){
     const low=st.todayP.slice().sort((a,b)=>(PRIO_RANK[taskPriority(b)]??2)-(PRIO_RANK[taskPriority(a)]??2)||String(b.time||'99').localeCompare(String(a.time||'99'))).find(canSnooze);
-    rule='cheio';ico='🎯';
+    rule='cheio';icn=ico('target');
     txt=`Dia cheio (${st.todayP.length}). Escolha as 3 que importam e passe o resto para outro dia.`;
     acts=low?btn(`Adiar «${cut(low,22)}»`,`openSnooze(${jsa(low.id)})`,true):'';
   }else if(st.doneToday>0&&nx){
-    rule='pouco';ico='💪';
+    rule='pouco';icn=ico('zap');
     txt=`Já fez ${st.doneToday} hoje. Falta pouco: «${cut(nx)}».`;
     acts=btn('Concluir',`toggleTask(${jsa(nx.id)})`,true);
   }else if(undated.length){
     const u=undated.find(canSnooze)||undated[0];
-    rule='semdata';ico='🗓️';
+    rule='semdata';icn=ico('cal');
     txt=`Tem ${undated.length} tarefa${undated.length===1?'':'s'} sem data. Dê um dia a «${cut(u)}» e liberte a cabeça.`;
     acts=canSnooze(u)?btn('Escolher dia',`openSnooze(${jsa(u.id)})`,true):'';
   }else if(st.total>0&&!st.todayP.length){
     const tm=new Date();tm.setDate(tm.getDate()+1);
     const ts=`${tm.getFullYear()}-${String(tm.getMonth()+1).padStart(2,'0')}-${String(tm.getDate()).padStart(2,'0')}`;
     if(!pend.some(t=>t.date===ts)){
-      rule='amanha';ico='🌙';
+      rule='amanha';icn=ico('moon');
       txt='Dia cumprido. Que tal deixar a 1.ª tarefa de amanhã já pronta?';
       acts=btn('Planear amanhã',`insertChip('amanha')`,true);
     }
   }
   if(!rule||sugDismissed(rule))return'';
-  return`<div class="sug-card"><div class="sug-ico">${ico}</div><div class="sug-body"><div class="sug-tag">Sugestão do dia</div><div class="sug-txt">${txt}</div>${acts?`<div class="sug-acts">${acts}</div>`:''}</div><button class="sug-x" aria-label="Dispensar" onclick="dismissSuggestion(${jsa(rule)})">✕</button></div>`;
+  return`<div class="sug-card"><div class="sug-ico">${icn}</div><div class="sug-body"><div class="sug-tag">Sugestão do dia</div><div class="sug-txt">${txt}</div>${acts?`<div class="sug-acts">${acts}</div>`:''}</div><button class="sug-x" aria-label="Dispensar" onclick="dismissSuggestion(${jsa(rule)})">✕</button></div>`;
 }
 function renderTopGreeting(){
   const el=document.getElementById('topGreeting');
@@ -4395,7 +4411,7 @@ function renderTopGreeting(){
   const urgentCount=tasks.filter(t=>!t.done&&t.urgency==='urgent').length;
   const visibleAreaKeys=[...enabledAreas,...customAreas.map(c=>c.key)];
   const areaCounts=visibleAreaKeys.map(k=>({key:k,def:areaDef(k),count:tasks.filter(t=>!t.done&&t.area===k).length})).filter(a=>a.def&&a.count>0).sort((a,b)=>b.count-a.count).slice(0,3);
-  let chipsHTML=`<div class="hchip hu" onclick="applyQuickFilter('priority','urgente')"><span class="hchip-n">${urgentCount}</span><span class="hchip-l">🔴 urgente${urgentCount===1?'':'s'}</span></div>`;
+  let chipsHTML=`<div class="hchip hu" onclick="applyQuickFilter('priority','urgente')"><span class="hchip-n">${urgentCount}</span><span class="hchip-l"><i class="rdot"></i>urgente${urgentCount===1?'':'s'}</span></div>`;
   chipsHTML+=areaCounts.map(a=>`<div class="hchip" onclick="applyQuickFilter('area',${jsa(a.key)})"><span class="hchip-n">${a.count}</span><span class="hchip-l">${a.def.emoji} ${esc(a.def.label.toLowerCase())}</span></div>`).join('');
   // frase principal: responde a "como está o meu dia?"
   let line;
@@ -4418,8 +4434,8 @@ function renderTopGreeting(){
   const streak=sk>=2?`<span class="hero-streak">🔥 ${sk} dias seguidos</span>`:'';
   el.innerHTML=`
     <div class="hoje-greet-row">
-      <div class="hoje-greet">${esc(greetName())} 👋</div>
-      <button class="hoje-filter-btn${advFiltersActive()?' active':''}" onclick="openFiltersModal()">🔽 Filtros</button>
+      <div class="hoje-greet">${esc(greetName())}</div>
+      <button class="hoje-filter-btn${advFiltersActive()?' active':''}" onclick="openFiltersModal()"><svg class="i"><use href="#i-filter"/></svg>Filtros</button>
     </div>
     <div class="hoje-hero">
       ${ringHTML(st.doneToday,st.total)}
@@ -4472,7 +4488,7 @@ function renderHoje(){
   const empty=nothing?`<div class="empty-state" style="padding:14px 0;"><div class="icon">${advFiltersActive()?'🔎':'✦'}</div>${advFiltersActive()?'Nada aqui para esse filtro':'Nada marcado para hoje'}${advFiltersActive()?'':`<span class="ex">Experimente: “Ligar ao dentista amanhã às 10h”</span><button class="try-btn" onclick="tryExample()">Experimentar</button>`}</div>`:'';
   el.innerHTML=`
     ${casaCard}
-    <div class="sdiv"${casaCard?' style="margin-top:14px;"':''}>📅 Hoje · ${fd(today)}</div>
+    <div class="sdiv"${casaCard?' style="margin-top:14px;"':''}>${ico('cal')} Hoje · ${fd(today)}</div>
     ${nextBlock}
     ${group('late','⚠️ Atrasadas',overdue)}
     ${group('','Hoje',todayTasks)}
