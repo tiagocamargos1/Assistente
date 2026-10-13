@@ -5,6 +5,10 @@
   "server": {
     "url": "https://tiagocamargos1.github.io/Assistente/",
     "androidScheme": "https",
-    "allowNavigation": ["accounts.google.com", "tiagocamargos1.github.io"]
+    "allowNavigation": [
+      "accounts.google.com",
+      "tiagocamargos1.github.io"
+    ],
+    "errorPath": "erro.html"
   }
 }
