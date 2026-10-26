@@ -1331,7 +1331,7 @@ async function savePrefs(){
 }
 function startListeners(){
   // Cancela os anteriores (cada listener é criado UMA vez — antes, cada atualização
-  // das tarefas/rotinas abria mais um listener de shared_tasks/ideas).
+  // das tarefas/rotinas abria mais um listener de tarefas partilhadas/ideas).
   [fbUnsubTasks,fbUnsubShared,fbUnsubNotes,fbUnsubRoutines,fbUnsubProjects,fbUnsubIdeas].forEach(u=>{try{u&&u();}catch(e){}});
   fbUnsubShared=null;fbUnsubIdeas=null;
   let myTasks=[],sharedTasks=[];
@@ -1695,34 +1695,14 @@ function startGroupListener(onTasks){
       fbUnsubGroupTasks=null;
       if(!g){onTasks([]);}
       else{
-        let first=true;
         fbUnsubGroupTasks=window.fbListenColErr(`groups/${g.id}/tasks`,t=>{
           const tt=t.map(x=>({...x,shared:true}));
           onTasks(tt);
-          if(first){first=false;migrateLegacyShared(g.id,tt);}
         },e=>{dbg('group tasks '+(e&&e.code||e));onTasks([]);});
       }
     }
     if(document.getElementById('groupModal')?.classList.contains('open'))renderGroupModal();
   },e=>{dbg('groups query '+(e&&e.code||e));onTasks([]);});
-}
-// TRANSIÇÃO: copia uma única vez as antigas shared_tasks para o grupo "familia"
-// (mesmo id; nunca sobrescreve uma tarefa que já exista no grupo).
-async function migrateLegacyShared(gid,current){
-  if(gid!=='familia'||!window.fbGetCol)return;
-  try{if(localStorage.getItem('migratedShared_'+gid))return;}catch(e){}
-  let old=[];
-  try{old=await window.fbGetCol('shared_tasks');}catch(e){dbg('shared_tasks read '+(e&&e.code||e));return;}
-  const have=new Set(current.map(t=>String(t.id)));
-  let n=0;
-  for(const t of old){
-    const id=String(t.id);
-    if(have.has(id)||!/^[A-Za-z0-9_-]{1,64}$/.test(id))continue;
-    try{await window.fbSave(`groups/${gid}/tasks/${id}`,{...t,id,shared:true});n++;}
-    catch(e){dbg('migrate '+id+' '+(e&&e.code||e));return;}
-  }
-  try{localStorage.setItem('migratedShared_'+gid,'1');}catch(e){}
-  if(n)notify(`👫 ${n} tarefa${n>1?'s':''} partilhada${n>1?'s':''} passada${n>1?'s':''} para o grupo.`,'info');
 }
 function newGroupId(){
   const r=crypto.getRandomValues(new Uint8Array(10));
