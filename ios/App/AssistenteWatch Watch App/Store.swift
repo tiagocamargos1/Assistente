@@ -29,9 +29,6 @@ struct ShopItem: Identifiable, Hashable {
     var bought: Bool
 }
 
-// ── Identidades da app (iguais ao index.html) ──
-private let OWNER_EMAIL = "tiagocamargos@tocsmartgroup.com"
-private let FAMILY_HOUSE = "casa"
 
 @MainActor
 final class Store: ObservableObject {
@@ -115,10 +112,13 @@ final class Store: ObservableObject {
         guard let id = appUid else { startPairing(); return }
         pairingTask?.cancel(); pairingTask = nil; pairingCode = nil
         cu = id
-        userName = id == "tiago" ? "Tiago" : id == "monique" ? "Monique" : (email.split(separator: "@").first.map(String.init) ?? id)
-        if let p = try? await Firestore.shared.get("prefs/\(id)"), let n = p["name"] as? String, !n.isEmpty { userName = n }
-        if email == OWNER_EMAIL || id == "tiago" { houseId = FAMILY_HOUSE }
-        else if let idx = try? await Firestore.shared.get("houseIndex/\(email)"), let h = idx["hid"] as? String { houseId = h }
+        userName = email.split(separator: "@").first.map(String.init) ?? id
+        if let p = try? await Firestore.shared.get("prefs/\(id)") {
+            if let n = p["name"] as? String, !n.isEmpty { userName = n }
+            else if let g = p["gProfile"] as? [String: Any], let n = g["given_name"] as? String, !n.isEmpty { userName = n }
+        }
+        // A casa vem sempre do índice e-mail → casa (sem e-mails fixos no código).
+        if let idx = try? await Firestore.shared.get("houseIndex/\(email)"), let h = idx["hid"] as? String { houseId = h }
         else { houseId = nil }
     }
 

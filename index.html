@@ -95,6 +95,19 @@ window.fbQueryEq = async (path, field, value) => {
   const snap = await getDocs(query(collection(db, path), where(field, '==', value)));
   return snap.docs.map(d => ({ ...d.data(), id: d.id }));
 };
+// Consulta em tempo real: documentos de `path` cujo array `field` contém `value`
+// (ex.: os grupos de partilha que têm o meu e-mail).
+window.fbListenArrayContains = (path, field, value, cb, onErr) => {
+  return onSnapshot(query(collection(db, path), where(field, 'array-contains', value)),
+    snap => cb(snap.docs.map(d => ({ ...d.data(), id: d.id }))), err => { if (onErr) onErr(err); });
+};
+window.fbListenColErr = (path, cb, onErr) => {
+  return onSnapshot(collection(db, path), snap => cb(snap.docs.map(d => ({ ...d.data(), id: d.id }))), err => { if (onErr) onErr(err); });
+};
+window.fbGetCol = async (path) => {
+  const snap = await getDocs(collection(db, path));
+  return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+};
 window.firebaseReady = true;
 window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -169,6 +182,13 @@ textarea::placeholder{color:var(--text-muted);white-space:pre-line;}
 .mic-btn-lead.listening{background:var(--red);color:white;animation:micPulse 1s ease-in-out infinite;}
 @keyframes micPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(192,96,96,0.4);}50%{transform:scale(1.05);box-shadow:0 0 0 8px rgba(192,96,96,0);}}
 .share-row{display:flex;align-items:center;gap:10px;margin-top:7px;}
+.grp-p{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;}
+.grp-in{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:16px;margin-bottom:10px;font-family:inherit;}
+.modal-box .close-btn.grp-main{background:var(--gold);color:var(--on-accent);border-color:var(--gold);}
+.grp-list{display:flex;flex-direction:column;gap:6px;}
+.grp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;word-break:break-all;}
+.grp-row small{color:var(--text-dim);}
+.grp-x{min-width:44px;min-height:44px;border:none;background:transparent;color:var(--text-muted);font-size:16px;cursor:pointer;}
 .share-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;}
 .tog-track{width:30px;height:17px;background:var(--border);border-radius:20px;position:relative;transition:background .2s;flex-shrink:0;}
 .tog-track.on{background:var(--purple);}.tog-knob{width:13px;height:13px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:left .2s;}
@@ -608,14 +628,6 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline-offset:0
   <div class="login-title">Assistente Pessoal</div>
   <div class="login-sub" id="loginSub">Entre com sua conta Google para começar</div>
   <div class="login-cards" id="loginCards">
-    <div class="login-card" id="lcardTiago" style="display:none;" onclick="handleProfileClick(&#39;tiago&#39;)">
-      <div class="login-avatar" id="lavT"><img id="limgT" src="" alt=""><span id="lemoT">T</span></div>
-      <div class="login-name">Tiago</div><div class="login-hint" id="lhintT">Continuar</div>
-    </div>
-    <div class="login-card" id="lcardMonique" style="display:none;" onclick="handleProfileClick(&#39;monique&#39;)">
-      <div class="login-avatar" id="lavM"><img id="limgM" src="" alt=""><span id="lemoM">M</span></div>
-      <div class="login-name">Monique</div><div class="login-hint" id="lhintM">Continuar</div>
-    </div>
   </div>
   <div class="login-divider" id="loginDivider" style="display:none;">ou</div>
   <button class="google-btn" onclick="startGoogleAuth()">
@@ -697,6 +709,7 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div class="mais-item" onclick="switchTab(&#39;week&#39;);closeMaisMenu()"><svg class="i"><use href="#i-cal"/></svg>Semana</div>
       <div class="mais-item" onclick="switchTab(&#39;notes&#39;);closeMaisMenu()"><svg class="i"><use href="#i-note"/></svg>Notas</div>
       <div class="mais-item" onclick="switchTab('ideias');closeMaisMenu()"><svg class="i"><use href="#i-bulb"/></svg>Ideias <span class="mais-n" id="maisNI"></span></div>
+      <div class="mais-item" onclick="openGroupModal();closeMaisMenu()"><svg class="i"><use href="#i-heart"/></svg>Partilha</div>
       <div class="mais-item" onclick="openReport();closeMaisMenu()"><svg class="i"><use href="#i-chart"/></svg>Relatório</div>
       <div class="mais-item" onclick="openOnboarding(true);closeMaisMenu()"><svg class="i"><use href="#i-sparkle"/></svg>Como funciona</div>
     </div>
@@ -775,6 +788,14 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
     <h2>📊 Relatório Semanal</h2>
     <div id="reportContent"></div>
     <button class="close-btn" onclick="document.getElementById(&#39;reportModal&#39;).classList.remove(&#39;open&#39;)">Fechar</button>
+  </div>
+</div>
+<!-- GRUPO DE PARTILHA -->
+<div class="modal-ov" id="groupModal">
+  <div class="modal-box">
+    <h2>👫 Partilha de tarefas</h2>
+    <div id="groupBody"></div>
+    <button class="close-btn" onclick="closeGroupModal()">Fechar</button>
   </div>
 </div>
 <!-- EDIT TASK MODAL -->
@@ -1004,7 +1025,9 @@ const IOS_REDIRECT='com.googleusercontent.apps.150189154211-rk2nslqrvo3o3q6q7s25
 function isIosNative(){
   try{return isNativeApp()&&window.Capacitor.getPlatform()==='ios';}catch(e){return false;}
 }
-const USERS={tiago:{name:'Tiago',emoji:'T',color:'#2a78d6'},monique:{name:'Monique',emoji:'M',color:'#9b6fa8'}};
+// Perfis conhecidos (nome/inicial/cor), preenchidos a partir da conta Google/Apple,
+// do perfil guardado neste aparelho e dos membros dos grupos. Nenhum nome fixo.
+const USERS={};
 // ── LOGIN DEBUG TRAIL ──────────────────────────────
 // The Google login was looping back to the login screen with zero visible
 // error, on desktop AND mobile, even after fixing the popup→redirect issue.
@@ -1061,7 +1084,8 @@ function priorityDef(p){return PRIORITIES[p]||PRIORITIES.media;}
 // — sempre derivado de priority a partir daqui pra frente.
 function taskPriority(t){return t.priority||(t.urgency==='urgent'?'urgente':'media');}
 function taskStatus(t){return t.done?'concluida':(t.inProgress?'andamento':'pendente');}
-function partnerKey(){return cu==='tiago'?'monique':cu==='monique'?'tiago':null;}
+// Outras identidades do meu grupo de partilha (para "atribuir a").
+function partnerKeys(){return myGroup?Object.keys(myGroup.members||{}).filter(k=>k!==cu):[];}
 // Which of the 5 default areas this person actually wants to see. Used to
 // be one-size-fits-all (all 5 hardcoded in the HTML for everyone), which
 // doesn't make sense for someone who, say, doesn't want "Deus" or isn't
@@ -1163,9 +1187,8 @@ function populateEditTaskProjectOptions(currentValue){
 function populateEditTaskAssigneeOptions(currentValue){
   const sel=document.getElementById('editTaskAssignee');
   if(!sel)return;
-  const pk=partnerKey();
   let html='<option value="">Ninguém em especial</option>';
-  if(pk)html+=`<option value="${pk}">${esc(USERS[pk].name)}</option>`;
+  for(const pk of partnerKeys())html+=`<option value="${esc(pk)}">${esc((USERS[pk]&&USERS[pk].name)||pk)}</option>`;
   html+=`<option value="${cu}">${esc(USERS[cu]?.name||'Eu')}</option>`;
   sel.innerHTML=html;
   sel.value=currentValue||'';
@@ -1258,12 +1281,14 @@ let projects=[];
 function fbPath(col,id){return`${col}/${id}`;}
 async function saveTask(task){
   if(!window.fbSave)return;
-  const col=task.shared?'shared_tasks':`users/${cu}/tasks`;
+  const col=task.shared?sharedCol():`users/${cu}/tasks`;
+  if(!col){notify('Para partilhar, cria ou entra num grupo em Mais → Partilha.','error');return;}
   await window.fbSave(`${col}/${task.id}`,task);
 }
 async function removeTask(id,shared){
   if(!window.fbSave)return;
-  const col=shared?'shared_tasks':`users/${cu}/tasks`;
+  const col=shared?sharedCol():`users/${cu}/tasks`;
+  if(!col)return;
   await window.fbDelete(`${col}/${id}`);
 }
 async function saveNote(note){
@@ -1317,8 +1342,8 @@ function startListeners(){
     document.getElementById('fbLbl').textContent='';
   };
   fbUnsubTasks=window.fbListenCol(`users/${cu}/tasks`,t=>{myTasks=t;mergeTasks();});
-  // Tiago/Monique: + tarefas partilhadas da família. Contas independentes nunca tocam em shared_tasks.
-  if(isFamily(cu))fbUnsubShared=window.fbListenCol('shared_tasks',t=>{sharedTasks=t;mergeTasks();});
+  // + tarefas do meu grupo de partilha (se pertencer a algum).
+  startGroupListener(t=>{sharedTasks=t;mergeTasks();});
   fbUnsubNotes=window.fbListenCol(`users/${cu}/notes`,n=>{
     notes=n.sort((a,b)=>((b.createdAt||'')>(a.createdAt||''))?1:-1);
     renderNotes();
@@ -1390,6 +1415,7 @@ let pinAutoSubmitting=false;
 function openPinScreen(uid){
   pendingPinUser=uid;
   pinAutoSubmitting=false;
+  hydrateProfile(uid);ensureLocalProfile(uid);
   document.getElementById('pinTitle').textContent=`Olá, ${USERS[uid].name}`;
   document.getElementById('pinInput').value='';
   document.getElementById('loginScreen').classList.add('hidden');
@@ -1614,14 +1640,172 @@ function pickColor(seed){
   let h=0;for(let i=0;i<seed.length;i++)h=(h*31+seed.charCodeAt(i))>>>0;
   return PALETTE[h%PALETTE.length];
 }
-function isFamily(uid){return uid==='tiago'||uid==='monique';}
+// ── GRUPOS DE PARTILHA ──
+// Qualquer conta cria um grupo (groups/{gid}) e acrescenta e-mails; quem está na lista
+// vê e edita as tarefas do grupo (groups/{gid}/tasks). Um grupo ativo de cada vez.
+let myGroup=null,fbUnsubGroups=null,fbUnsubGroupTasks=null,groupMemberSaved=null;
+// Mantém o nome antigo: "tenho com quem partilhar?" (o argumento já não conta).
+function isFamily(){return !!myGroup;}
+function sharedCol(){return myGroup?`groups/${myGroup.id}/tasks`:null;}
+function isGroupOwner(){return !!myGroup&&casaEmail()===myGroup.ownerEmail;}
 function partnerName(){
-  if(cu==='tiago')return 'Monique';
-  if(cu==='monique')return 'Tiago';
-  return null;
+  if(!myGroup)return null;
+  const names=Object.entries(myGroup.members||{}).filter(([k])=>k!==cu).map(([k,m])=>String((m&&m.name)||k).slice(0,40));
+  if(names.length)return names.join(', ');
+  const me=casaEmail();
+  const others=(myGroup.emails||[]).filter(e=>e!==me).map(e=>String(e).split('@')[0]);
+  return others.length?others.join(', '):(myGroup.name||'o grupo');
+}
+function hydrateGroupMembers(g){
+  for(const [k,m] of Object.entries(g.members||{})){
+    if(USERS[k]||!m)continue;
+    const n=String(m.name||'?').slice(0,40);
+    USERS[k]={name:n,emoji:n.charAt(0).toUpperCase(),color:safeColor(m.color||pickColor(k))};
+  }
+}
+async function ensureGroupMember(g){
+  const me=USERS[cu]||{};
+  const m=(g.members||{})[cu];
+  const key=g.id+'|'+cu;
+  if((m&&m.name===me.name)||groupMemberSaved===key||!me.name)return;
+  groupMemberSaved=key;
+  try{await window.fbSave(`groups/${g.id}`,{members:{[cu]:{name:String(me.name).slice(0,40),color:safeColor(me.color||pickColor(cu))}}});}
+  catch(e){dbg('group member '+(e&&e.code||e));}
+}
+function stopGroupListeners(){
+  [fbUnsubGroups,fbUnsubGroupTasks].forEach(u=>{try{u&&u();}catch(e){}});
+  fbUnsubGroups=fbUnsubGroupTasks=null;myGroup=null;
+}
+function startGroupListener(onTasks){
+  stopGroupListeners();
+  const email=casaEmail();
+  if(!email||!window.fbListenArrayContains){onTasks([]);return;}
+  const myCu=cu;
+  fbUnsubGroups=window.fbListenArrayContains('groups','emails',email,list=>{
+    if(cu!==myCu)return;
+    // Um grupo de cada vez: o mais antigo (para a família, o "familia" migrado).
+    list.sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
+    const g=list[0]||null;
+    const changedId=(g&&g.id)!==(myGroup&&myGroup.id);
+    myGroup=g;
+    if(g){hydrateGroupMembers(g);ensureGroupMember(g);}
+    applyFamilyUI();
+    if(changedId){
+      try{fbUnsubGroupTasks&&fbUnsubGroupTasks();}catch(e){}
+      fbUnsubGroupTasks=null;
+      if(!g){onTasks([]);}
+      else{
+        let first=true;
+        fbUnsubGroupTasks=window.fbListenColErr(`groups/${g.id}/tasks`,t=>{
+          const tt=t.map(x=>({...x,shared:true}));
+          onTasks(tt);
+          if(first){first=false;migrateLegacyShared(g.id,tt);}
+        },e=>{dbg('group tasks '+(e&&e.code||e));onTasks([]);});
+      }
+    }
+    if(document.getElementById('groupModal')?.classList.contains('open'))renderGroupModal();
+  },e=>{dbg('groups query '+(e&&e.code||e));onTasks([]);});
+}
+// TRANSIÇÃO: copia uma única vez as antigas shared_tasks para o grupo "familia"
+// (mesmo id; nunca sobrescreve uma tarefa que já exista no grupo).
+async function migrateLegacyShared(gid,current){
+  if(gid!=='familia'||!window.fbGetCol)return;
+  try{if(localStorage.getItem('migratedShared_'+gid))return;}catch(e){}
+  let old=[];
+  try{old=await window.fbGetCol('shared_tasks');}catch(e){dbg('shared_tasks read '+(e&&e.code||e));return;}
+  const have=new Set(current.map(t=>String(t.id)));
+  let n=0;
+  for(const t of old){
+    const id=String(t.id);
+    if(have.has(id)||!/^[A-Za-z0-9_-]{1,64}$/.test(id))continue;
+    try{await window.fbSave(`groups/${gid}/tasks/${id}`,{...t,id,shared:true});n++;}
+    catch(e){dbg('migrate '+id+' '+(e&&e.code||e));return;}
+  }
+  try{localStorage.setItem('migratedShared_'+gid,'1');}catch(e){}
+  if(n)notify(`👫 ${n} tarefa${n>1?'s':''} partilhada${n>1?'s':''} passada${n>1?'s':''} para o grupo.`,'info');
+}
+function newGroupId(){
+  const r=crypto.getRandomValues(new Uint8Array(10));
+  return 'gr_'+Array.from(r,b=>(b%36).toString(36)).join('');
+}
+function openGroupModal(){renderGroupModal();document.getElementById('groupModal').classList.add('open');}
+function closeGroupModal(){document.getElementById('groupModal').classList.remove('open');}
+function renderGroupModal(){
+  const el=document.getElementById('groupBody');
+  if(!el)return;
+  const email=casaEmail();
+  if(!email){el.innerHTML='<p class="grp-p">Entra com uma conta Google ou Apple com e-mail para partilhar tarefas.</p>';return;}
+  if(!myGroup){
+    el.innerHTML=`<p class="grp-p">Cria um grupo e acrescenta os e-mails de quem vai partilhar tarefas contigo (família, equipa…). Quem estiver na lista vê e edita as tarefas partilhadas.</p>
+      <input id="groupNameIn" maxlength="60" placeholder="Nome do grupo (ex.: Família)" class="grp-in">
+      <button class="close-btn grp-main" onclick="createGroup()">Criar grupo</button>`;
+    return;
+  }
+  const owner=isGroupOwner();
+  const rows=(myGroup.emails||[]).map(e=>`<div class="grp-row"><span>${esc(e)}${e===myGroup.ownerEmail?' <small>(dono)</small>':''}${e===email?' <small>(eu)</small>':''}</span>${owner&&e!==myGroup.ownerEmail?`<button class="grp-x" onclick='removeGroupEmail(${jsa(e)})' aria-label="Retirar">✕</button>`:''}</div>`).join('');
+  el.innerHTML=`<p class="grp-p"><strong>${esc(myGroup.name||'Grupo')}</strong> — quem está na lista vê e edita as tarefas partilhadas.</p>
+    <div class="grp-list">${rows}</div>
+    ${owner?`<div style="display:flex;gap:8px;margin-top:10px;"><input id="groupEmailIn" type="email" inputmode="email" autocomplete="off" placeholder="email@exemplo.com" class="grp-in" style="margin:0;flex:1;min-width:0;"><button class="close-btn grp-main" style="margin:0;width:auto;" onclick="addGroupEmail()">Acrescentar</button></div>`
+      :`<button class="close-btn" style="margin-top:12px;" onclick="leaveGroup()">Sair do grupo</button>`}`;
+}
+async function createGroup(){
+  const email=casaEmail();
+  if(!email)return;
+  const name=((document.getElementById('groupNameIn')||{}).value||'').trim().slice(0,60)||'O meu grupo';
+  const me=USERS[cu]||{};
+  try{
+    await window.fbSave(`groups/${newGroupId()}`,{name,ownerEmail:email,emails:[email],members:{[cu]:{name:String(me.name||'Eu').slice(0,40),color:safeColor(me.color||pickColor(cu))}},createdAt:new Date().toISOString()});
+    notify('👫 Grupo criado. Acrescenta agora os e-mails.','success');
+  }catch(e){notify('Não foi possível criar o grupo: '+(e.code||e.message),'error');}
+}
+async function addGroupEmail(){
+  if(!isGroupOwner())return;
+  const inp=document.getElementById('groupEmailIn');
+  const e=((inp&&inp.value)||'').trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){notify('Escreve um e-mail válido.','info');return;}
+  const list=myGroup.emails||[];
+  if(list.includes(e)){notify('Esse e-mail já está no grupo.','info');return;}
+  try{await window.fbSave(`groups/${myGroup.id}`,{emails:[...list,e]});if(inp)inp.value='';notify('✓ Acrescentado. Essa pessoa passa a ver as tarefas partilhadas ao abrir o app com esse e-mail.','success');}
+  catch(err){notify('Não foi possível acrescentar: '+(err.code||err.message),'error');}
+}
+async function removeGroupEmail(e){
+  if(!isGroupOwner()||e===myGroup.ownerEmail)return;
+  if(!confirm(`Retirar ${e} do grupo?`))return;
+  try{await window.fbSave(`groups/${myGroup.id}`,{emails:(myGroup.emails||[]).filter(x=>x!==e)});}
+  catch(err){notify('Não foi possível retirar: '+(err.code||err.message),'error');}
+}
+async function leaveGroup(){
+  if(!myGroup||isGroupOwner())return;
+  if(!confirm('Sair do grupo? Deixas de ver as tarefas partilhadas.'))return;
+  const email=casaEmail();
+  try{await window.fbSave(`groups/${myGroup.id}`,{emails:(myGroup.emails||[]).filter(x=>x!==email)});closeGroupModal();notify('Saíste do grupo.','info');}
+  catch(err){notify('Não foi possível sair: '+(err.code||err.message),'error');}
+}
+// Ao eliminar a conta: sai dos grupos; nos que são meus, apaga as tarefas e o grupo.
+async function leaveGroupsOnDelete(){
+  if(!myGroup)return;
+  const g=myGroup,email=casaEmail();
+  stopGroupListeners();
+  try{
+    if(email===g.ownerEmail){
+      for(const t of (await window.fbGetCol(`groups/${g.id}/tasks`))){try{await window.fbDelete(`groups/${g.id}/tasks/${t.id}`);}catch(e){}}
+      await window.fbDelete(`groups/${g.id}`);
+    }else{
+      await window.fbSave(`groups/${g.id}`,{emails:(g.emails||[]).filter(x=>x!==email)});
+    }
+  }catch(e){dbg('leave group '+(e&&e.code||e));}
 }
 function persistProfile(uid){
   try{if(USERS[uid])localStorage.setItem(`profile_${uid}`,JSON.stringify(USERS[uid]));}catch(e){}
+}
+// Garante USERS[uid] a partir da conta (Google/Apple) guardada neste aparelho.
+function ensureLocalProfile(uid){
+  if(USERS[uid]&&USERS[uid].name)return;
+  let gp=null;
+  try{gp=(gProfile&&cu===uid)?gProfile:JSON.parse(localStorage.getItem(`gprofile_${uid}`)||'null');}catch(e){}
+  const n=String((gp&&(gp.given_name||gp.name))||(gp&&gp.email?String(gp.email).split('@')[0]:'')||'Eu').slice(0,40);
+  USERS[uid]={name:n,emoji:n.charAt(0).toUpperCase(),color:pickColor(uid)};
+  persistProfile(uid);
 }
 function hydrateProfile(uid){
   if(USERS[uid])return;
@@ -1644,6 +1828,13 @@ async function saveAuthMapSafe(authUid,uid,profile){
     notify('Esta conta não corresponde ao perfil escolhido — entraste com o teu próprio perfil.','info');
     return fallback;
   }
+}
+// Contas antigas com id curto: legacyAliases/{email} → appUid (só a consola escreve;
+// cada conta só consegue ler o seu). Sem alias, a conta usa a identidade g_<id>.
+async function legacyIdFor(email){
+  if(!email||!window.fbGet)return null;
+  try{const a=await window.fbGet(`legacyAliases/${String(email).toLowerCase()}`);return (a&&typeof a.appUid==='string'&&a.appUid)||null;}
+  catch(e){return null;}
 }
 async function resolveDynamicUser(profile){
   const gid='g_'+profile.id;
@@ -1698,20 +1889,38 @@ function applyFamilyUI(){
   const wrap=document.getElementById('sharedSectionWrap');
   if(wrap)wrap.style.display=solo?'none':'';
 }
+// Contas que já entraram NESTE aparelho (conta Google/Apple guardada ou PIN).
+function knownLocalUids(){
+  const set=new Set();
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i)||'';
+      const m=k.match(/^(?:gprofile|pin)_(.+)$/);
+      if(m&&/^[A-Za-z0-9_-]{1,80}$/.test(m[1]))set.add(m[1]);
+    }
+  }catch(e){}
+  return [...set];
+}
 function renderDynamicLoginCards(){
-  const uid=localStorage.getItem('lastDynamicUser');
-  if(!uid||!hasPin(uid))return;
-  hydrateProfile(uid);
-  const p=USERS[uid];
-  if(!p)return;
   const cardsWrap=document.querySelector('.login-cards');
-  if(!cardsWrap||document.getElementById('lcard_'+uid))return;
-  const div=document.createElement('div');
-  div.className='login-card';
-  div.id='lcard_'+uid;
-  div.onclick=()=>handleProfileClick(uid);
-  div.innerHTML=`<div class="login-avatar" style="background:${safeColor(p.color)};color:#fff;font-weight:700;">${esc(p.emoji||(p.name||'U').charAt(0))}</div><div class="login-name">${esc(p.name||'Usuário')}</div><div class="login-hint">Continuar</div>`;
-  cardsWrap.appendChild(div);
+  if(!cardsWrap)return 0;
+  let n=0;
+  for(const uid of knownLocalUids()){
+    hydrateProfile(uid);ensureLocalProfile(uid);
+    const p=USERS[uid];
+    if(!p)continue;
+    n++;
+    if(document.getElementById('lcard_'+uid))continue;
+    let pic=null;try{pic=(JSON.parse(localStorage.getItem(`gprofile_${uid}`)||'null')||{}).picture||null;}catch(e){}
+    const div=document.createElement('div');
+    div.className='login-card';
+    div.id='lcard_'+uid;
+    div.onclick=()=>handleProfileClick(uid);
+    const av=(pic&&/^https:\/\//.test(String(pic)))?`<img src="${esc(pic)}" alt="" referrerpolicy="no-referrer" style="display:block;">`:esc(p.emoji||(p.name||'U').charAt(0));
+    div.innerHTML=`<div class="login-avatar" style="background:${safeColor(p.color)};color:#fff;font-weight:700;">${av}</div><div class="login-name">${esc(p.name||'Usuário')}</div><div class="login-hint">Continuar</div>`;
+    cardsWrap.appendChild(div);
+  }
+  return n;
 }
 // Only show a quick-access card for Tiago/Monique on a device that has
 // actually logged in as them before (Google session or PIN already set
@@ -1719,13 +1928,7 @@ function renderDynamicLoginCards(){
 // clean "Entrar com Google" screen, not be presented with two named
 // strangers' profile cards.
 function initLoginScreen(){
-  const knownHere=uid=>!!(localStorage.getItem(`gprofile_${uid}`)||hasPin(uid));
-  let hasCards=false;
-  if(knownHere('tiago')){const c=document.getElementById('lcardTiago');if(c){c.style.display='';hasCards=true;}}
-  if(knownHere('monique')){const c=document.getElementById('lcardMonique');if(c){c.style.display='';hasCards=true;}}
-  const dynamicUid=localStorage.getItem('lastDynamicUser');
-  if(dynamicUid&&hasPin(dynamicUid))hasCards=true;
-  renderDynamicLoginCards();
+  const hasCards=renderDynamicLoginCards()>0;
   const divider=document.getElementById('loginDivider');
   if(divider)divider.style.display=hasCards?'':'none';
   const sub=document.getElementById('loginSub');
@@ -1786,11 +1989,7 @@ async function startAppleAuth(){
     let pendingUid=null;
     try{pendingUid=localStorage.getItem('pendingLoginUid');localStorage.removeItem('pendingLoginUid');}catch(e){}
     if(pendingUid)cu=pendingUid;
-    if(!cu){
-      if(email==='tiagocamargos@tocsmartgroup.com')cu='tiago';
-      else if(email==='moniqueabril@gmail.com')cu='monique';
-      else cu=await resolveDynamicUser(gProfile);
-    }
+    if(!cu)cu=(await legacyIdFor(email))||await resolveDynamicUser(gProfile);
     dbg(`startAppleAuth: identity = ${cu}`);
     cu=await saveAuthMapSafe(fb.uid,cu,gProfile);
     try{localStorage.setItem(`authUidFor_${cu}`,fb.uid);}catch(e){}
@@ -1972,19 +2171,11 @@ async function onToken(tk){
       notify('Não foi possível autenticar com segurança: '+(authErr&&authErr.code||authErr&&authErr.message||'erro desconhecido'),'error');
       return;
     }
-    if(!cu){
-      const email=(gProfile.email||'').toLowerCase();
-      if(email==='moniqueabril@gmail.com')cu='monique';
-      else if(email==='tiagocamargos@tocsmartgroup.com')cu='tiago';
-      else cu=await resolveDynamicUser(gProfile);
-    }
+    if(!cu)cu=(await legacyIdFor((gProfile.email||'').toLowerCase()))||await resolveDynamicUser(gProfile);
     dbg(`onToken: resolved identity = ${cu}`);
     cu=await saveAuthMapSafe(authUid,cu,gProfile);
     try{localStorage.setItem(`authUidFor_${cu}`,authUid);}catch(e){}
     if(pendingRefreshToken){try{localStorage.setItem(`grefresh_${cu}`,pendingRefreshToken);}catch(e){} pendingRefreshToken=null;}
-    // Update avatar in login screen
-    const img=document.getElementById(`limg${cu.charAt(0).toUpperCase()+cu.slice(1)}`);
-    if(img&&gProfile.picture){img.src=gProfile.picture;img.style.display='block';img.nextSibling&&(img.nextSibling.style.display='none');}
     dbg('onToken: calling enterApp()');
     await enterApp();
     dbg('onToken: enterApp() done — SUCCESS');
@@ -2066,6 +2257,7 @@ async function enterApp(){
   // Nunca assumir uma identidade por defeito: sem sessão provada, volta ao login.
   if(!cu){document.getElementById('loginScreen').classList.remove('hidden');return;}
   hydrateProfile(cu);
+  ensureLocalProfile(cu);
   document.getElementById('loginScreen').classList.add('hidden');
   updateChip();
   // Wait for firebase
@@ -2147,7 +2339,8 @@ async function deleteAccount(){
   try{
     if(fbUnsubTasks)fbUnsubTasks();if(fbUnsubShared)fbUnsubShared();if(fbUnsubNotes)fbUnsubNotes();if(fbUnsubRoutines)fbUnsubRoutines();if(fbUnsubProjects)fbUnsubProjects();if(fbUnsubIdeas)fbUnsubIdeas();
     stopCasaListeners();
-    const cols={tasks,notes,routines,projects,ideas};
+    await leaveGroupsOnDelete();
+    const cols={tasks:tasks.filter(t=>!t.shared),notes,routines,projects,ideas};
     for(const [col,arr] of Object.entries(cols)){
       for(const it of (arr||[])){ if(it&&it.id){ try{await window.fbDelete(`users/${cu}/${col}/${it.id}`);}catch(e){} } }
     }
@@ -2179,6 +2372,7 @@ function logout(){
   if(!confirm('Sair?'))return;
   if(fbUnsubTasks)fbUnsubTasks();
   if(fbUnsubShared)fbUnsubShared();
+  stopGroupListeners();applyFamilyUI();
   try{localStorage.removeItem('loginDebugLog');}catch(e){}
   if(fbUnsubNotes)fbUnsubNotes();
   if(fbUnsubRoutines)fbUnsubRoutines();
@@ -2195,7 +2389,7 @@ function logout(){
   notify('Até logo!','info');
 }
 function updateChip(){
-  const u=USERS[cu]||USERS.tiago;
+  const u=USERS[cu]||{name:'',emoji:'?',color:'#2a78d6'};
   const av=document.getElementById('chipAv');
   if(gProfile?.picture){av.innerHTML=/^https:\/\//.test(String(gProfile.picture))?`<img src="${esc(gProfile.picture)}" style="width:28px;height:28px;border-radius:50%;" referrerpolicy="no-referrer">`:'';}
   else{av.textContent=u.emoji;av.style.background=u.color;}
@@ -2289,7 +2483,7 @@ async function reqPush(){
       sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
     }
     const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Lisbon';
-    await window.fbSave(`push_subscriptions/${cu}`,{uid:cu,name:USERS[cu]?.name||'',subscription:sub.toJSON(),briefingTime:time,timezone:tz,lastSent:null});
+    await window.fbSave(`push_subscriptions/${cu}`,{uid:cu,name:USERS[cu]?.name||'',email:casaEmail()||null,subscription:sub.toJSON(),briefingTime:time,timezone:tz,lastSent:null});
     notify(`🔔 Notificações ativadas! Briefing às ${time}.`,'success');
     syncNotifStatusToCasa('web');
   }catch(e){
@@ -3372,8 +3566,6 @@ function renderRoutines(){
 // diz a cada pessoa qual é a sua casa. A família Camargos mantém a casa "casa"
 // (é a que o ecrã do frigorífico e o job de lembretes conhecem por defeito).
 let CASA_ID=null;
-const FAMILY_CASA_ID='casa';
-const CASA_OWNER_EMAIL='tiagocamargos@tocsmartgroup.com';
 function houseIndexKey(email){return String(email||'').trim().toLowerCase();}
 function newHouseId(){
   const seed=(casaEmail()||cu||'')+'|'+Date.now();
@@ -3384,7 +3576,6 @@ function newHouseId(){
 async function resolveHouseId(){
   const email=casaEmail();
   if(!email||!window.fbGet)return null;
-  if(email===CASA_OWNER_EMAIL||cu==='tiago')return FAMILY_CASA_ID;
   try{
     const idx=await window.fbGet(`houseIndex/${houseIndexKey(email)}`);
     if(idx&&idx.hid){
@@ -3429,22 +3620,11 @@ async function offerHouseInvites(email,currentHid){
   }
   return null;
 }
-// Só o dono: os restantes membros são convidados em ⚙️ Tarefas da casa → Membros (a casa já existe no Firestore).
-const CASA_DEFAULT_EMAILS=[CASA_OWNER_EMAIL];
-const CASA_DEFAULT_TASKS=[
-  {id:'pacoca_manha',label:'Paçoca – Comida',time:'08:00'},
-  {id:'cafe',label:'Café da manhã das crianças',time:''},
-  {id:'vitamina',label:'Vitamina das crianças',time:''},
-  {id:'almoco',label:'Almoço das crianças',time:'13:30'},
-  {id:'lanche',label:'Lanche das crianças',time:''},
-  {id:'jantar',label:'Jantar das crianças',time:'20:00'},
-  {id:'pacoca_noite',label:'Paçoca – Comida',time:'20:00'}
-].map((t,i)=>({...t,order:i}));
 let casa=null,casaDay=null,casaDate=null,casaMember=false,casaView='day',casaMonth=null,casaMonthDays={},fbUnsubCasaMonth=null,casaTodayDay=null,fbUnsubCasaToday=null;
 let fbUnsubCasa=null,fbUnsubCasaDay=null,casaMidnightTimer=null;
 let casaDraftTasks=[],casaNotifChecked=false;
 function casaEmail(){return((gProfile&&gProfile.email)||localStorage.getItem(`gemail_${cu}`)||'').toLowerCase();}
-function casaIsOwner(){const oe=(casa&&casa.ownerEmail)||(CASA_ID===FAMILY_CASA_ID?CASA_OWNER_EMAIL:null);return !!oe&&(casaEmail()===oe||(CASA_ID===FAMILY_CASA_ID&&cu==='tiago'));}
+function casaIsOwner(){const oe=casa&&casa.ownerEmail;return !!oe&&casaEmail()===oe;}
 function casaTasks(){return((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));}
 function casaSetTabVisible(on){
   document.querySelectorAll('[data-tab="casa"],[data-mais="casa"],[data-mais="compras"],.qchip-casa').forEach(el=>el.style.display=on?'':'none');
@@ -3466,13 +3646,7 @@ function startCasaListener(){
 }
 function startCasaListenerFor(hid){
   fbUnsubCasa=window.fbListenDoc(`household/${hid}`,async data=>{
-    if(!data){
-      // Só a casa da família é criada aqui (as outras nascem em resolveHouseId)
-      if(hid===FAMILY_CASA_ID&&casaIsOwner()){
-        try{await window.fbSave(`household/${hid}`,{name:'Casa',ownerEmail:CASA_OWNER_EMAIL,emails:CASA_DEFAULT_EMAILS,tasks:CASA_DEFAULT_TASKS,members:{},createdAt:new Date().toISOString()});}catch(e){console.error('casa create',e);}
-      }
-      return;
-    }
+    if(!data)return; // as casas nascem em resolveHouseId
     casa=data;casaMember=true;casaSetTabVisible(true);
     // Regista-me como membro (uid → nome/cor), para os avatares e para o job de lembretes saber a quem enviar push
     const me=USERS[cu]||{};

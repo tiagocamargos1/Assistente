@@ -52,8 +52,22 @@ webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
 
 const AREA_LABELS = { deus: 'Deus', pessoal: 'Pessoal', familia: 'Família', financas: 'Finanças', negocios: 'Negócios' };
 
-function isFamily(uid) {
-  return uid === 'tiago' || uid === 'monique';
+// E-mail da pessoa: o que a app grava na subscrição (validado pelas regras = e-mail
+// do token); contas antigas sem esse campo → legacyAliases (e-mail → id curto).
+async function emailFor(uid, sub) {
+  if (sub && typeof sub.email === 'string' && sub.email) return sub.email.toLowerCase();
+  try {
+    const snap = await db.collection('legacyAliases').where('appUid', '==', uid).limit(1).get();
+    if (!snap.empty) return snap.docs[0].id.toLowerCase();
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+// Tarefas partilhadas: as de todos os grupos onde o e-mail da pessoa está na lista.
+async function groupTaskPaths(email) {
+  if (!email) return [];
+  const snap = await db.collection('groups').where('emails', 'array-contains', email).get();
+  return snap.docs.map((d) => `groups/${d.id}/tasks`);
 }
 
 function localHHMM(timezone) {
@@ -89,12 +103,12 @@ function isRoutineDue(r, dow) {
   return Array.isArray(r.weekdays) && r.weekdays.includes(dow);
 }
 
-async function buildBriefing(uid, dateStr, dow) {
+async function buildBriefing(uid, dateStr, dow, email) {
   const parts = [];
 
-  // Tasks: personal (new per-user subcollection) + (if family) household shared
+  // Tarefas: pessoais + as dos grupos de partilha da pessoa
   const collectionPaths = [`users/${uid}/tasks`];
-  if (isFamily(uid)) collectionPaths.push('shared_tasks');
+  try { collectionPaths.push(...(await groupTaskPaths(email))); } catch (e) { /* ignore */ }
   let pending = [];
   for (const path of collectionPaths) {
     const snap = await db.collection(path).get();
@@ -243,7 +257,7 @@ async function main() {
     }
     let body;
     try {
-      body = await buildBriefing(uid, todayStr, dow);
+      body = await buildBriefing(uid, todayStr, dow, await emailFor(uid, sub));
     } catch (e) {
       console.error('Failed building a briefing:', e.message);
       continue;
