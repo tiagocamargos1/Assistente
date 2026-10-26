@@ -2441,6 +2441,10 @@ async function processInput(){
   document.getElementById('sendBtn').disabled=false;
 }
 // ── SMART LOCAL PARSER ────────────────────────────
+// Limites de palavra seguros para acentos: o \b do JavaScript só conhece
+// letras ASCII, por isso falhava em "às", "amanhã", "já" (o título ficava
+// "Ligar ao dentista às" e "amanhã" no fim da frase não marcava a data).
+const WB='(?<![\\p{L}\\p{N}_])', WE='(?![\\p{L}\\p{N}_])';
 function parseInput(inp, today){
   const low=inp.toLowerCase().trim();
   const todayStr=today.toISOString().split('T')[0];
@@ -2448,16 +2452,16 @@ function parseInput(inp, today){
   const isBuy=/^(comprar|compras?|lista de compras)\b[:\-–—,]?\s*/i.test(low);
   const isIdea=!isBuy&&/^(ideia|idéia)\b[:\-–—,]?\s*/i.test(low);
   const isNote=!isIdea&&!isBuy&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
-  const isEvent=/\b(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)\b/i.test(low)
-    || /\b(às|as|ás)\s*\d{1,2}[h:]/i.test(low)
+  const isEvent=new RegExp(WB+'(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)'+WE,'iu').test(low)
+    || new RegExp(WB+'(às|as|ás)\\s*\\d{1,2}[h:]','iu').test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
-  const isUrgent=/\b(urgente|urgentemente|hoje|agora|já|imediato)\b/i.test(low);
+  const isUrgent=new RegExp(WB+'(urgente|urgentemente|hoje|agora|já|imediato)'+WE,'iu').test(low);
   const isAltaPrio=/\balta prioridade|prioridade alta\b/i.test(low);
   const isBaixaPrio=/\bbaixa prioridade|prioridade baixa\b/i.test(low);
   // ── Extract time ──
   let time=null;
   const timeMatch=inp.match(/\b(\d{1,2})[h:](\d{2})?\s*(am|pm)?/i)
-    || inp.match(/\b(às|as|ás)\s*(\d{1,2})[h:]?(\d{2})?\s*(am|pm)?/i);
+    || inp.match(new RegExp(WB+'(às|as|ás)\\s*(\\d{1,2})[h:]?(\\d{2})?\\s*(am|pm)?','iu'));
   if(timeMatch){
     let h,m=0;
     if(timeMatch[0].match(/às|as|ás/i)){h=parseInt(timeMatch[2]);m=parseInt(timeMatch[3]||'0');}
@@ -2467,10 +2471,10 @@ function parseInput(inp, today){
     time=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
   }
   // ── Extract date ──
-  let date=null;
+  let date=null, dmDateText=null;
   const dow={segunda:1,terça:2,terca:2,quarta:3,quinta:4,sexta:5,sábado:6,sabado:6,domingo:0};
   const months={janeiro:1,fevereiro:2,março:3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
-  if(/\bamanhã\b|\bamanha\b/i.test(low)){
+  if(new RegExp(WB+'(amanhã|amanha)'+WE,'iu').test(low)){
     const d=new Date(today);d.setDate(d.getDate()+1);date=d.toISOString().split('T')[0];
   } else if(/\bhoje\b/i.test(low)){
     date=todayStr;
@@ -2496,7 +2500,7 @@ function parseInput(inp, today){
     const dmMatch=inp.match(/(?<![\w-])(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?(?![\w-])/);
     if(dmMatch){
       const day=parseInt(dmMatch[1]),mon=parseInt(dmMatch[2]),yr=dmMatch[3]?parseInt(dmMatch[3]):today.getFullYear();
-      if(day>=1&&day<=31&&mon>=1&&mon<=12)date=`${yr<100?2000+yr:yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      if(day>=1&&day<=31&&mon>=1&&mon<=12){date=`${yr<100?2000+yr:yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;dmDateText=dmMatch[0];}
     }
     const deMatch=inp.match(/(\d{1,2})\s+de\s+(\w+)/i);
     if(deMatch&&months[deMatch[2].toLowerCase()]){
@@ -2509,9 +2513,10 @@ function parseInput(inp, today){
           .replace(/^(comprar|compras?|lista de compras)\b[:\-–—,]?\s*/i,'')
           .replace(/^(ideia|idéia)\b[:\-–—,]?\s*/i,'')
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
-    .replace(/\b(às|as|ás)\s*\d{1,2}[h:]?\d{0,2}\s*(am|pm)?\b/gi,'')
+    .replace(new RegExp(WB+'(às|as|ás)\\s*\\d{1,2}[h:]?\\d{0,2}\\s*(am|pm)?'+WE,'giu'),'')
     .replace(/\b\d{1,2}[h:]\d{0,2}\s*(am|pm)?\b/gi,'')
-    .replace(/\b(amanhã|amanha|hoje|semana que vem|semana próxima|próxima semana|segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)\b/gi,'')
+    .replace(new RegExp(WB+'(amanhã|amanha|hoje|semana que vem|semana próxima|próxima semana|segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)'+WE,'giu'),'')
+    .replace(date&&dmDateText?dmDateText:'\u0000','')
     .replace(/\s{2,}/g,' ').trim();
   if(!title)title=inp.trim();
   // ── Response ──
