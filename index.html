@@ -2216,10 +2216,18 @@ function urlBase64ToUint8Array(base64String){
 // lembretes da Casa não chegam a ninguém. No app nativo (iPhone) não existe
 // Web Push dentro da WKWebView: aí o pedido é o de notificações locais
 // (@capacitor/local-notifications), que é o que os lembretes da Casa usam.
+// Nome do aparelho para os textos de notificações (no iPad dizia "iPhone").
+function nomeAparelho(){
+  const p=window.Capacitor&&window.Capacitor.getPlatform?window.Capacitor.getPlatform():'web';
+  if(p==='android')return 'telemóvel';
+  const ua=navigator.userAgent||'';
+  const ipad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  return ipad?'iPad':'iPhone';
+}
 function pushBannerHTML(){
   const casaLine=(typeof casaMember!=='undefined'&&casaMember)?' Sem isto, os <strong>lembretes da Casa</strong> (horas-limite) não chegam a ti.':'';
   if(isNativeApp()){
-    return `<div class="push-banner"><p>🔔 Ativar notificações neste iPhone?${casaLine}</p><button class="push-yes" onclick="reqNativeNotif()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
+    return `<div class="push-banner"><p>🔔 Ativar notificações neste ${nomeAparelho()}?${casaLine}</p><button class="push-yes" onclick="reqNativeNotif()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
   }
   return `<div class="push-banner"><p>🔔 Receber o briefing do dia e os lembretes por notificação, mesmo com o app fechado?${casaLine}<br><span style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;">Briefing às <input type="time" id="briefingTimeInput" value="07:00" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 6px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;"></span></p><button class="push-yes" onclick="reqPush()">Ativar</button><button class="push-no" style="font-size:12px;" onclick="pushLater()">Agora não</button></div>`;
 }
@@ -2254,7 +2262,7 @@ async function reqNativeNotif(){
     const req=await plugin.requestPermissions();
     if(req.display!=='granted'){notify('Permite notificações em Definições → Assistente Pessoal → Notificações.','error');return;}
     await ensureReminderActionsRegistered();
-    notify('🔔 Notificações ativadas neste iPhone!','success');
+    notify(`🔔 Notificações ativadas neste ${nomeAparelho()}!`,'success');
     syncNotifStatusToCasa('native');
     if(typeof syncCasaLocalNotifs==='function')syncCasaLocalNotifs();
   }catch(e){notify('Não foi possível ativar: '+(e&&e.message||e),'error');}
@@ -2453,7 +2461,7 @@ function parseInput(inp, today){
   const isIdea=!isBuy&&/^(ideia|idéia)\b[:\-–—,]?\s*/i.test(low);
   const isNote=!isIdea&&!isBuy&&/^(nota:|anotação:|anota[çc]ao:|escrever que|lembrar de escrever)/i.test(low);
   const isEvent=new RegExp(WB+'(reunião|meeting|consulta|compromisso|almoço|jantar|café|call|ligação|entrevista|apresentação|voo|chegada|partida|aniversário)'+WE,'iu').test(low)
-    || new RegExp(WB+'(às|as|ás)\\s*\\d{1,2}[h:]','iu').test(low)
+    || new RegExp(WB+'(às|ás|as(?=\\s*\\d{1,2}\\s*(?:[h:]|am|pm|horas?)))\\s*\\d{1,2}[h:]','iu').test(low)
     || /\d{1,2}[h:]\d{0,2}\s*(am|pm|h\b)/i.test(low);
   const isUrgent=new RegExp(WB+'(urgente|urgentemente|hoje|agora|já|imediato)'+WE,'iu').test(low);
   const isAltaPrio=/\balta prioridade|prioridade alta\b/i.test(low);
@@ -2461,7 +2469,7 @@ function parseInput(inp, today){
   // ── Extract time ──
   let time=null;
   const timeMatch=inp.match(/\b(\d{1,2})[h:](\d{2})?\s*(am|pm)?/i)
-    || inp.match(new RegExp(WB+'(às|as|ás)\\s*(\\d{1,2})[h:]?(\\d{2})?\\s*(am|pm)?','iu'));
+    || inp.match(new RegExp(WB+'(às|ás|as(?=\\s*\\d{1,2}\\s*(?:[h:]|am|pm|horas?)))\\s*(\\d{1,2})[h:]?(\\d{2})?\\s*(am|pm)?','iu'));
   if(timeMatch){
     let h,m=0;
     if(timeMatch[0].match(/às|as|ás/i)){h=parseInt(timeMatch[2]);m=parseInt(timeMatch[3]||'0');}
@@ -2506,6 +2514,7 @@ function parseInput(inp, today){
     if(deMatch&&months[deMatch[2].toLowerCase()]){
       const day=parseInt(deMatch[1]),mon=months[deMatch[2].toLowerCase()];
       date=`${today.getFullYear()}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      dmDateText=deMatch[0];
     }
   }
   // ── Clean title ──
@@ -2513,10 +2522,10 @@ function parseInput(inp, today){
           .replace(/^(comprar|compras?|lista de compras)\b[:\-–—,]?\s*/i,'')
           .replace(/^(ideia|idéia)\b[:\-–—,]?\s*/i,'')
     .replace(/^(nota:|anotação:|anota[çc]ao:)\s*/i,'')
-    .replace(new RegExp(WB+'(às|as|ás)\\s*\\d{1,2}[h:]?\\d{0,2}\\s*(am|pm)?'+WE,'giu'),'')
+    .replace(new RegExp(WB+'(às|ás|as(?=\\s*\\d{1,2}\\s*(?:[h:]|am|pm|horas?)))\\s*\\d{1,2}[h:]?\\d{0,2}\\s*(am|pm|horas?)?'+WE,'giu'),'')
     .replace(/\b\d{1,2}[h:]\d{0,2}\s*(am|pm)?\b/gi,'')
     .replace(new RegExp(WB+'(amanhã|amanha|hoje|semana que vem|semana próxima|próxima semana|segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo)'+WE,'giu'),'')
-    .replace(date&&dmDateText?dmDateText:'\u0000','')
+    .replace(date&&dmDateText?new RegExp('(?:'+WB+'dia\\s+)?'+dmDateText.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&'),'iu'):'\u0000','')
     .replace(/\s{2,}/g,' ').trim();
   if(!title)title=inp.trim();
   // ── Response ──
