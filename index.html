@@ -1045,6 +1045,8 @@ const USERS={};
 // redirect to Google and back) and — if a login was attempted but didn't
 // finish successfully — that trail is shown right on the login screen so it
 // can be read/screenshotted directly, no console needed.
+// Regista no registo técnico (?debug=1) qualquer pedido bloqueado pela CSP.
+document.addEventListener('securitypolicyviolation',e=>{try{console.warn('CSP bloqueou',e.violatedDirective,e.blockedURI);dbg('CSP: '+e.violatedDirective+' '+String(e.blockedURI||'').slice(0,80));}catch(_){}});
 function dbg(msg){
   try{
     const log=JSON.parse(localStorage.getItem('loginDebugLog')||'[]');
