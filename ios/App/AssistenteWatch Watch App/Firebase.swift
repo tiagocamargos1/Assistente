@@ -172,6 +172,7 @@ actor Firestore {
         let url = URL(string: FirebaseConfig.firestoreBase + "/" + path + query)!
         var req = URLRequest(url: url); req.httpMethod = method
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if let ac = await AppCheck.shared.currentToken() { req.setValue(ac, forHTTPHeaderField: "X-Firebase-AppCheck") }
         if let b = body {
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
             req.httpBody = try JSONSerialization.data(withJSONObject: b)
