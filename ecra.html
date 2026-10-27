@@ -118,6 +118,7 @@ h2 .cnt{background:var(--gold);color:var(--bg);border-radius:999px;padding:2px 1
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const app = initializeApp({
   apiKey: "AIzaSyCwpeZ8z0dh0_4Ksf7x7ZAhYKkGL9Icnc4",
@@ -127,6 +128,12 @@ const app = initializeApp({
   messagingSenderId: "611661253806",
   appId: "1:611661253806:web:d5358f3ec3ccada1f0313f"
 }, 'ecra'); // nome próprio: sessão anónima separada da do Assistente no mesmo browser
+// App Check (reCAPTCHA Enterprise, escalão gratuito): prova ao Firebase que os pedidos vêm
+// deste site (e das apps iOS/Android que o carregam). Ainda NÃO obrigatório na consola —
+// só métricas. Se falhar, a app continua a funcionar.
+try {
+  initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider('6Le1ggIuAAAAAHA77e6UNxqbPtU_bL0UsCadAGrg'), isTokenAutoRefreshEnabled: true });
+} catch (e) { console.warn('App Check indisponível', e); }
 const db = getFirestore(app), auth = getAuth(app);
 // Casa a mostrar: ?h=<id> no URL; sem parâmetro usa a casa da família ('casa').
 const HID = (new URLSearchParams(location.search).get('h') || 'casa').replace(/[^A-Za-z0-9_-]/g, '') || 'casa';
