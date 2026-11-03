@@ -189,8 +189,18 @@ async function sendHouseReminders(houseSnap, subsByUid) {
   const targets = memberUids.map((uid) => subsByUid[uid]).filter(Boolean);
   if (!targets.length) return;
 
-  for (const task of house.tasks || []) {
+  // Casa+: só as tarefas programadas para hoje (dias da semana; «quando necessário» só se escolhida
+  // para o dia, em `extras`), e, se tiver responsável, o lembrete vai só para essa pessoa.
+  const dow = todayLocalDow(timezone);
+  const scheduled = (t) => { const k = t.kind || 'daily'; if (k === 'asneeded') return false; if (k === 'weekdays') return Array.isArray(t.days) && t.days.includes(dow); return true; };
+  const dayWho = day.who || {};
+  const todays = [...(house.tasks || []).filter((t) => t && scheduled(t)), ...((day.extras || []).filter((e) => e && e.time))];
+  const emailOfUid = Object.fromEntries(Object.entries(house.members || {}).map(([uid, m]) => [uid, String((m && m.email) || '').toLowerCase()]));
+  for (const task of todays) {
     if (!task || !task.label || !task.time || done[task.id]) continue;
+    const who = String((Object.prototype.hasOwnProperty.call(dayWho, task.id) ? dayWho[task.id] : task.who) || '').toLowerCase();
+    const taskTargets = who ? memberUids.filter((uid) => emailOfUid[uid] === who).map((uid) => subsByUid[uid]).filter(Boolean) : targets;
+    if (!taskTargets.length) continue;
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(task.time))) continue;
     const label = String(task.label).slice(0, 80);
     const tMin = minutesSinceMidnight(task.time);
@@ -205,7 +215,7 @@ async function sendHouseReminders(houseSnap, subsByUid) {
       const rkey = `${task.id}_${slot.key}`;
       if (reminded[rkey]) continue;
       let sent = 0;
-      for (const doc of targets) {
+      for (const doc of taskTargets) {
         const sub = doc.data();
         try {
           await webpush.sendNotification(sub.subscription, JSON.stringify({ title: slot.title, body: slot.body, url: './?tab=casa' }));
