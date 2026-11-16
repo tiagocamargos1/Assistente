@@ -211,8 +211,11 @@ function extraPeople(){ return ((casa&&casa.extraNames)||[]).filter(Boolean).map
 function renderWho(){
   $('who').innerHTML=members().map(m=>`<span><i style="background:${safeColor(m.color)}"></i>${esc(m.name)}</span>`).join('');
 }
+// Casa+: «quando necessário» só aparece quando escolhida para o dia (extras); «dias da semana» só nesses dias.
+function scheduled(t){ const k=t.kind||'daily'; if(k==='asneeded')return false; if(k==='weekdays')return Array.isArray(t.days)&&t.days.includes(new Date().getDay()); return true; }
+function whoName(t){ const w=String(((day&&day.who)||{})[t.id]!==undefined?day.who[t.id]:(t.who||'')).toLowerCase(); if(!w)return ''; const m=Object.values((casa&&casa.members)||{}).find(x=>x&&x.email&&String(x.email).toLowerCase()===w); return (m&&m.name)||w.split('@')[0]; }
 function tasks(){
-  const fixed=((casa&&casa.tasks)||[]).filter(t=>t&&t.label).sort((a,b)=>(a.order||0)-(b.order||0));
+  const fixed=((casa&&casa.tasks)||[]).filter(t=>t&&t.label&&scheduled(t)).sort((a,b)=>(a.order||0)-(b.order||0));
   const extras=((day&&day.extras)||[]).map(e=>({...e,extra:true}));
   return [...fixed,...extras];
 }
@@ -228,7 +231,7 @@ function renderTasks(){
     const d=done[t.id]; const tm=mins(t.time); const late=!d&&tm!==null&&nowMin>tm;
     return `<div class="item ${d?'done':''} ${late?'late':''}" data-id="${esc(t.id)}" data-label="${esc(t.label)}">
       <div class="chk">${d?'✓':''}</div>
-      <div class="lbl"><b>${esc(t.label)}</b><small>${d?`✓ ${esc(d.name||'')} · ${hm(d.at)}`:(late?`Em atraso — era até às ${esc(t.time)}`:(t.extra?'Só hoje':'Por fazer'))}</small></div>
+      <div class="lbl"><b>${esc(t.label)}</b><small>${d?`✓ ${esc(d.name||'')} · ${hm(d.at)}`:(late?`Em atraso — era até às ${esc(t.time)}`:(t.extra?'Só hoje':'Por fazer'))}${!d&&whoName(t)?` · 👤 ${esc(whoName(t))}`:''}</small></div>
       ${t.time&&!d?`<div class="time">${esc(t.time)}</div>`:''}
     </div>`;
   }).join('');
