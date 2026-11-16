@@ -745,7 +745,10 @@ Ex.: &quot;Pagar imposto amanhã às 10h&quot;" onkeydown="handleKey(event)"></t
       <div id="noteList"></div>
     </div>
     <div class="tab-content" id="tab-routines">
-      <button class="rep-btn" style="margin-top:0;margin-bottom:10px;" onclick="openNewRoutine()">+ Nova rotina</button>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="rep-btn" style="margin-top:0;flex:1;" onclick="openNewRoutine()">+ Nova rotina</button>
+        <button class="rep-btn" id="routineOrderBtn" style="margin-top:0;width:auto;padding:8px 14px;" onclick="toggleRoutineOrderMode()">↕ Ordenar</button>
+      </div>
       <div id="routineList"></div>
     </div>
 <div class="tab-content" id="tab-ideias">        
@@ -3508,7 +3511,8 @@ async function confirmNewRoutine(){
     weekdays=[...document.querySelectorAll('#newRoutineWeekdaysWrap input[type=checkbox]:checked')].map(c=>parseInt(c.value));
     if(!weekdays.length){notify('Selecione ao menos um dia da semana.','error');return;}
   }
-  const routine={id:Date.now().toString(),text,freq,weekdays,completions:{},area:currentArea||null,owner:cu,createdAt:new Date().toISOString()};
+  const maxOrder=routines.reduce((m,x)=>Math.max(m,typeof x.order==='number'?x.order:-1),routines.length-1);
+  const routine={id:Date.now().toString(),text,freq,weekdays,completions:{},area:currentArea||null,owner:cu,order:maxOrder+1,createdAt:new Date().toISOString()};
   await saveRoutine(routine);
   document.getElementById('newRoutineModal').classList.remove('open');
   notify('🔁 Rotina criada!','success');
@@ -3535,6 +3539,36 @@ async function toggleRoutineToday(id){
   r.completions=comp;
   await saveRoutine(r);
 }
+// Ordem escolhida pelo utilizador: campo numérico `order` em cada rotina.
+// Rotinas antigas (sem `order`) ficam pela ordem de criação, depois das ordenadas.
+let routineOrderMode=false;
+function sortedRoutines(){
+  const ts=r=>r.createdAt||String(r.id||'');
+  return routines.slice().sort((a,b)=>{
+    const ao=typeof a.order==='number'?a.order:Infinity, bo=typeof b.order==='number'?b.order:Infinity;
+    if(ao!==bo)return ao-bo;
+    return ts(a)<ts(b)?-1:ts(a)>ts(b)?1:0;
+  });
+}
+function toggleRoutineOrderMode(){
+  routineOrderMode=!routineOrderMode;
+  const b=document.getElementById('routineOrderBtn');
+  if(b){b.textContent=routineOrderMode?'✓ Concluir':'↕ Ordenar';
+    b.style.background=routineOrderMode?'var(--gold)':'';b.style.color=routineOrderMode?'var(--bg)':'';b.style.borderColor=routineOrderMode?'var(--gold)':'';}
+  renderRoutines();
+}
+async function moveRoutine(id,dir){
+  const list=sortedRoutines();
+  const i=list.findIndex(r=>String(r.id)===String(id)),j=i+dir;
+  if(i<0||j<0||j>=list.length)return;
+  [list[i],list[j]]=[list[j],list[i]];
+  const changed=[];
+  list.forEach((r,k)=>{if(r.order!==k){r.order=k;changed.push(r);}});
+  renderRoutines(); // resposta imediata; o listener do Firestore confirma a seguir
+  if(!window.fbSave)return;
+  try{await Promise.all(changed.map(r=>window.fbSave(`users/${cu}/routines/${r.id}`,{order:r.order})));}
+  catch(e){notify('Não foi possível guardar a nova ordem.','error');}
+}
 function renderRoutines(){
   const el=document.getElementById('routineList');
   if(!el)return;
@@ -3542,7 +3576,8 @@ function renderRoutines(){
   const ds=today.toISOString().split('T')[0];
   const dow=today.getDay();
   if(!routines.length){el.innerHTML=`<div class="empty-state"><div class="icon">🔁</div>Nenhuma rotina ainda<br><small style="font-size:11px;margin-top:6px;display:block;">Ex: oração diária, revisão semanal</small></div>`;return;}
-  el.innerHTML=routines.map(r=>{
+  const list=sortedRoutines();
+  el.innerHTML=list.map((r,idx)=>{
     const due=isRoutineDue(r,dow);
     const done=!!(r.completions&&r.completions[ds]);
     let dots='';
@@ -3562,7 +3597,10 @@ function renderRoutines(){
           <div class="note-meta">${r.freq==='daily'?'Todos os dias':'Semanal'}${!due?' · não é hoje':''}</div>
           <div style="display:flex;gap:3px;margin-top:6px;">${dots}</div>
         </div>
-        <button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="removeRoutine(${jsa(r.id)})">✕</button>
+        ${routineOrderMode?`<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+          <button class="rep-btn" aria-label="Subir" style="margin:0;width:38px;padding:5px 0;font-size:14px;${idx===0?'opacity:.3;pointer-events:none;':''}" onclick="moveRoutine(${jsa(r.id)},-1)">▲</button>
+          <button class="rep-btn" aria-label="Descer" style="margin:0;width:38px;padding:5px 0;font-size:14px;${idx===list.length-1?'opacity:.3;pointer-events:none;':''}" onclick="moveRoutine(${jsa(r.id)},1)">▼</button>
+        </div>`:`<button class="note-del" style="opacity:1;position:static;flex-shrink:0;" onclick="removeRoutine(${jsa(r.id)})">✕</button>`}
       </div>
     </div>`;
   }).join('');
